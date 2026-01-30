@@ -150,12 +150,12 @@ export default function CreateLeadPage() {
               value={dynamicFields[field.key] || ''}
               onValueChange={val => handleDynamicFieldChange(field.key, val)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl h-12">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Yes">Yes</SelectItem>
-                <SelectItem value="No">No</SelectItem>
+              <SelectContent className="bg-[#09090b] border-white/10 text-white">
+                <SelectItem value="Yes" className="focus:bg-violet-500/20 focus:text-white">Yes</SelectItem>
+                <SelectItem value="No" className="focus:bg-violet-500/20 focus:text-white">No</SelectItem>
               </SelectContent>
             </Select>
           )}
@@ -248,10 +248,10 @@ export default function CreateLeadPage() {
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger><SelectValue placeholder="Select application type" /></SelectTrigger>
+                        <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl h-12"><SelectValue placeholder="Select application type" /></SelectTrigger>
                       </FormControl>
-                      <SelectContent>
-                        {APPLICATION_TYPES.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
+                      <SelectContent className="bg-[#09090b] border-white/10 text-white">
+                        {APPLICATION_TYPES.map(type => <SelectItem key={type} value={type} className="focus:bg-violet-500/20 focus:text-white">{type}</SelectItem>)}
                       </SelectContent>
                     </Select>
                     <FormMessage />

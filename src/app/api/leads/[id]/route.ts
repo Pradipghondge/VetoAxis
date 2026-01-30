@@ -5,135 +5,76 @@ import { dbConnect } from '@/lib/dbConnect';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> } // Define as Promise
 ) {
   try {
     await dbConnect();
-
-    // Verify authentication
     const decoded = getAuthToken(request);
+    if (!decoded || typeof decoded !== 'object') return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
 
-    if (!decoded || typeof decoded !== 'object') {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
+    // FIX: Await params before accessing .id
+    const { id: leadId } = await params;
 
-    const leadId = params.id;
-
-    // Check if the lead exists
     const lead = await Lead.findById(leadId)
       .populate('createdBy', 'name email')
       .populate('statusHistory.changedBy', 'name email');
 
-    if (!lead) {
-      return NextResponse.json(
-        { message: 'Lead not found' },
-        { status: 404 }
-      );
-    }
+    if (!lead) return NextResponse.json({ message: 'Lead not found' }, { status: 404 });
 
-    // Only allow admins or the creator to access the lead
+    // Admin/Creator check logic remains the same
     if (decoded.role !== 'admin' && decoded.role !== 'super_admin' &&
         lead.createdBy && lead.createdBy._id.toString() !== decoded.id) {
-      return NextResponse.json(
-        { message: 'You do not have permission to view this lead' },
-        { status: 403 }
-      );
+      return NextResponse.json({ message: 'Access Denied' }, { status: 403 });
     }
 
     return NextResponse.json({ lead });
-  } catch (error) {
-    console.error('Error fetching lead:', error);
-    return NextResponse.json(
-      { message: 'Server error', error: (error as Error).message },
-      { status: 500 }
-    );
+  } catch (error: any) {
+    return NextResponse.json({ message: 'Server error', error: error.message }, { status: 500 });
   }
 }
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> } // Define as Promise
 ) {
   try {
     await dbConnect();
-
-    // Verify authentication
     const decoded = getAuthToken(request);
+    if (!decoded || typeof decoded !== 'object') return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
 
-    if (!decoded || typeof decoded !== 'object') {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
-
-    const leadId = params.id;
+    // FIX: Await params before accessing .id
+    const { id: leadId } = await params;
     const body = await request.json();
 
-    // Check if the lead exists
     const lead = await Lead.findById(leadId);
+    if (!lead) return NextResponse.json({ message: 'Lead not found' }, { status: 404 });
 
-    if (!lead) {
-      return NextResponse.json(
-        { message: 'Lead not found' },
-        { status: 404 }
-      );
-    }
-
-    // Only allow admins or the creator to update the lead
-    if (decoded.role !== 'admin' && decoded.role !== 'super_admin' &&
-        lead.createdBy && lead.createdBy.toString() !== decoded.id) {
-      return NextResponse.json(
-        { message: 'You do not have permission to update this lead' },
-        { status: 403 }
-      );
-    }
-
-    // Handle status updates (adding to status history)
+    // Handle status history and dynamic fields as before
     if (body.status && body.status !== lead.status) {
-      const statusHistory = {
+      lead.statusHistory.push({
         fromStatus: lead.status,
         toStatus: body.status,
         notes: body.statusNote || "",
         changedBy: decoded.id,
         timestamp: new Date()
-      };
-
-      lead.statusHistory.push(statusHistory);
+      });
       lead.status = body.status;
     }
 
-    // Handle dynamic fields updates if present
+    // Dynamic fields transformation
     if (body.fields && typeof body.fields === 'object') {
-      // Convert object to array format for mongoose
-      const fieldsArray = [];
-      for (const [key, value] of Object.entries(body.fields)) {
-        if (value) { // Only add non-empty values
-          fieldsArray.push({ key, value });
-        }
-      }
-      lead.fields = fieldsArray;
+      lead.fields = Object.entries(body.fields)
+        .filter(([_, v]) => v)
+        .map(([k, v]) => ({ key: k, value: v }));
     }
 
-    // Update other fields
-    if (body.firstName) lead.firstName = body.firstName;
-    if (body.lastName) lead.lastName = body.lastName;
-    if (body.email) lead.email = body.email;
-    if (body.phone) lead.phone = body.phone;
-    if (body.dateOfBirth) lead.dateOfBirth = body.dateOfBirth;
-    if (body.address) lead.address = body.address;
-    if (body.applicationType) lead.applicationType = body.applicationType;
-    if (body.lawsuit) lead.lawsuit = body.lawsuit;
-    if (body.notes) lead.notes = body.notes;
+    // Update basic fields
+    const updateable = ['firstName', 'lastName', 'email', 'phone', 'address', 'applicationType', 'lawsuit', 'notes'];
+    updateable.forEach(field => { if (body[field]) lead[field] = body[field]; });
 
     await lead.save();
-
-    return NextResponse.json({
-      message: 'Lead updated successfully',
-      lead
-    });
-  } catch (error) {
-    console.error('Error updating lead:', error);
-    return NextResponse.json(
-      { message: 'Server error', error: (error as Error).message },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: 'Updated successfully', lead });
+  } catch (error: any) {
+    return NextResponse.json({ message: 'Server error', error: error.message }, { status: 500 });
   }
 }

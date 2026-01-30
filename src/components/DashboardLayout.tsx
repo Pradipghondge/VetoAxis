@@ -5,40 +5,31 @@ import DashboardSidebar from './DashboardSidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
-interface DashboardLayoutProps {
-  children: ReactNode;
-}
-
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { logout } = useAuth();
-  // Lift the state here so the layout knows how much margin to apply
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const handleLogout = () => {
     if (logout) logout();
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Sidebar - Pass state and setter as props */}
+    // Use flex-row so Sidebar and Main Content sit side-by-side
+    <div className="flex flex-col md:flex-row bg-[#09090b] w-full flex-1 mx-auto overflow-hidden h-screen">
+      
+      {/* Sidebar - Positioned naturally by flex */}
       <DashboardSidebar 
         onLogout={handleLogout} 
-        isCollapsed={isCollapsed} 
-        setIsCollapsed={setIsCollapsed} 
+        open={open}
+        setOpen={setOpen}
       />
 
-      {/* Main content area */}
-      <div className={cn(
-        "flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out",
-        // Match the margins to the sidebar widths precisely
-        isCollapsed ? "lg:ml-20" : "lg:ml-72"
-      )}>
-        <main className="flex-1 p-4 lg:p-10 pt-8">
-          <div className="max-w-[1600px] mx-auto">
-            {children}
-          </div>
-        </main>
-      </div>
+      {/* Main content area - No more lg:ml-72, flex-1 handles the width */}
+      <main className="flex flex-1 flex-col w-full h-full overflow-y-auto bg-[#09090b]">
+        <div className="p-4 md:p-10 w-full max-w-[1600px] mx-auto">
+          {children}
+        </div>
+      </main>
     </div>
   );
 }

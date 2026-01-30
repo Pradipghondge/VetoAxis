@@ -1,736 +1,426 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import axios from 'axios';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartTooltip, ResponsiveContainer, LineChart, Line,
+    BarChart,
+    Bar,
+    Cell
+} from 'recharts';
 import {
-  AlertCircle,
-  Clock,
-  FileText,
-  RefreshCw,
-  Plus,
-  Users,
-  CheckCircle,
-  XCircle,
-  DollarSign,
-  AlertTriangle,
-  PhoneOff,
-  PhoneCall,
-  Copy,
-  ShieldAlert,
-  TimerOff,
-  FastForward,
-  Timer,
-  Clock1,
-  Clock2,
-  Clock3,
-  Clock4,
-  CreditCard,
-  FileQuestion,
-  ArrowUpRight,
-  Search,
-  BadgeCheck,
-  ChevronRight,
-  Loader2,
-  DollarSignIcon
+    AlertCircle, Clock, FileText, Plus, CheckCircle, XCircle, DollarSign,
+    AlertTriangle, PhoneOff, PhoneCall, Copy, ShieldAlert, TimerOff,
+    FastForward, Clock1, Clock2, Clock3, Clock4, CreditCard,
+    FileQuestion, ArrowUpRight, Search, BadgeCheck, ChevronRight,
+    TrendingUp, Activity, Bell, SearchIcon, Layers, Info, Loader2,
+    Settings, Zap, BarChart3,
+    Timer
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { LeadStatus } from '@/types';
-import { motion } from "framer-motion";
-import DashboardHeader from '@/components/DashboardHeader';
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from '@/lib/utils';
+import React from 'react';
 
-// All possible lead statuses
-const ALL_STATUSES: LeadStatus[] = [
-  "PENDING", "REJECTED", "VERIFIED", "REJECTED_BY_CLIENT", "PAID",
-  "DUPLICATE", "NOT_RESPONDING", "FELONY", "DEAD_LEAD", "WORKING",
-  "CALL_BACK", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4",
-  "CHARGEBACK", "WAITING_ID", "SENT_CLIENT", "QC", "ID_VERIFIED", 
-];
-
-// Status icons and colors
-const STATUS_CONFIG: Record<string, { icon: React.ReactNode, color: string, bgColor: string, description: string }> = {
-  PENDING: {
-    icon: <Clock className="h-5 w-5" />,
-    color: '#9C6500',
-    bgColor: '#FEF3C7',
-    description: 'Leads awaiting initial review'
-  },
-  REJECTED: {
-    icon: <XCircle className="h-5 w-5" />,
-    color: '#B91C1C',
-    bgColor: '#FEE2E2',
-    description: 'Leads that didn\'t meet requirements'
-  },
-  VERIFIED: {
-    icon: <CheckCircle className="h-5 w-5" />,
-    color: '#166534',
-    bgColor: '#DCFCE7',
-    description: 'Leads that have been verified'
-  },
-  REJECTED_BY_CLIENT: {
-    icon: <AlertTriangle className="h-5 w-5" />,
-    color: '#C2410C',
-    bgColor: '#FFEDD5',
-    description: 'Leads rejected by the client'
-  },
-  PAID: {
-    icon: <DollarSign className="h-5 w-5" />,
-    color: '#0369A1',
-    bgColor: '#E0F2FE',
-    description: 'Leads that have been paid'
-  },
-  DUPLICATE: {
-    icon: <Copy className="h-5 w-5" />,
-    color: '#7E22CE',
-    bgColor: '#F3E8FF',
-    description: 'Duplicate lead entries'
-  },
-  NOT_RESPONDING: {
-    icon: <PhoneOff className="h-5 w-5" />,
-    color: '#525252',
-    bgColor: '#E5E5E5',
-    description: 'Leads not responding to contact attempts'
-  },
-  FELONY: {
-    icon: <ShieldAlert className="h-5 w-5" />,
-    color: '#991B1B',
-    bgColor: '#FEE2E2',
-    description: 'Leads with felony issues'
-  },
-  DEAD_LEAD: {
-    icon: <TimerOff className="h-5 w-5" />,
-    color: '#1F2937',
-    bgColor: '#E5E7EB',
-    description: 'Leads that are no longer viable'
-  },
-  WORKING: {
-    icon: <FastForward className="h-5 w-5" />,
-    color: '#0E7490',
-    bgColor: '#CFFAFE',
-    description: 'Leads currently being worked on'
-  },
-  CALL_BACK: {
-    icon: <PhoneCall className="h-5 w-5" />,
-    color: '#16A34A',
-    bgColor: '#DCFCE7',
-    description: 'Leads scheduled for callback'
-  },
-  ATTEMPT_1: {
-    icon: <Clock1 className="h-5 w-5" />,
-    color: '#1D4ED8',
-    bgColor: '#DBEAFE',
-    description: 'First contact attempt'
-  },
-  ATTEMPT_2: {
-    icon: <Clock2 className="h-5 w-5" />,
-    color: '#1E40AF',
-    bgColor: '#DBEAFE',
-    description: 'Second contact attempt'
-  },
-  ATTEMPT_3: {
-    icon: <Clock3 className="h-5 w-5" />,
-    color: '#1E3A8A',
-    bgColor: '#DBEAFE',
-    description: 'Third contact attempt'
-  },
-  ATTEMPT_4: {
-    icon: <Clock4 className="h-5 w-5" />,
-    color: '#172554',
-    bgColor: '#DBEAFE',
-    description: 'Fourth contact attempt'
-  },
-  CHARGEBACK: {
-    icon: <CreditCard className="h-5 w-5" />,
-    color: '#9F1239',
-    bgColor: '#FFE4E6',
-    description: 'Leads with payment chargebacks'
-  },
-  WAITING_ID: {
-    icon: <FileQuestion className="h-5 w-5" />,
-    color: '#854D0E',
-    bgColor: '#FEF3C7',
-    description: 'Leads waiting for ID verification'
-  },
-  SENT_CLIENT: {
-    icon: <ArrowUpRight className="h-5 w-5" />,
-    color: '#065F46',
-    bgColor: '#D1FAE5',
-    description: 'Leads sent to client'
-  },
-  QC: {
-    icon: <Search className="h-5 w-5" />,
-    color: '#6B21A8',
-    bgColor: '#F3E8FF',
-    description: 'Leads in quality control'
-  },
-  ID_VERIFIED: {
-    icon: <BadgeCheck className="h-5 w-5" />,
-    color: '#15803D',
-    bgColor: '#DCFCE7',
-    description: 'Leads with verified ID'
-  },
-  BILLABLE: {
-    icon: <DollarSignIcon className="h-5 w-5" />,
-    color: '#15803D',
-    bgColor: '#DCFCE7',
-    description: 'Billable'
-  },
-  CAMPAIGN_PAUSED: {
-    icon: <DollarSignIcon className="h-5 w-5" />,
-    color: '#15803D',
-    bgColor: '#DCFCE7',
-    description: 'Campaign Paused'
-  },
-   SENT_TO_LAW_FIRM: {
-    icon: <DollarSignIcon className="h-5 w-5" />,
-    color: '#15803D',
-    bgColor: '#DCFCE7',
-    description: 'Sent To Law Firm'
-  }
+// --- 1. PREMIUM STATUS CONFIGURATION ---
+const STATUS_CONFIG: Record<string, { icon: React.ReactNode, color: string, description: string }> = {
+    PENDING: { icon: <Clock />, color: '#f59e0b', description: 'Awaiting initial system review' },
+    REJECTED: { icon: <XCircle />, color: '#ef4444', description: 'Disqualified lead parameters' },
+    VERIFIED: { icon: <CheckCircle />, color: '#10b981', description: 'Data points fully validated' },
+    REJECTED_BY_CLIENT: { icon: <AlertTriangle />, color: '#f97316', description: 'External client rejection' },
+    PAID: { icon: <DollarSign />, color: '#8b5cf6', description: 'Revenue transaction complete' },
+    DUPLICATE: { icon: <Copy />, color: '#a855f7', description: 'Redundant entry detected' },
+    NOT_RESPONDING: { icon: <PhoneOff />, color: '#737373', description: 'Communication attempts failed' },
+    FELONY: { icon: <ShieldAlert />, color: '#dc2626', description: 'Legal eligibility restriction' },
+    DEAD_LEAD: { icon: <TimerOff />, color: '#404040', description: 'Lead non-conversion state' },
+    WORKING: { icon: <FastForward />, color: '#3b82f6', description: 'Active pipeline progression' },
+    CALL_BACK: { icon: <PhoneCall />, color: '#06b6d4', description: 'Scheduled follow-up sequence' },
+    ATTEMPT_1: { icon: <Clock1 />, color: '#6366f1', description: 'Initial outreach attempt' },
+    ATTEMPT_2: { icon: <Clock2 />, color: '#4f46e5', description: 'Secondary contact phase' },
+    ATTEMPT_3: { icon: <Clock3 />, color: '#4338ca', description: 'Tertiary contact phase' },
+    ATTEMPT_4: { icon: <Clock4 />, color: '#3730a3', description: 'Final outreach protocol' },
+    CHARGEBACK: { icon: <CreditCard />, color: '#be123c', description: 'Financial reversal alert' },
+    WAITING_ID: { icon: <FileQuestion />, color: '#d97706', description: 'Pending identity documents' },
+    SENT_CLIENT: { icon: <ArrowUpRight />, color: '#059669', description: 'Transferred to client portal' },
+    QC: { icon: <Search />, color: '#7c3aed', description: 'Quality assurance evaluation' },
+    ID_VERIFIED: { icon: <BadgeCheck />, color: '#16a34a', description: 'Confirmed identity status' },
+    BILLABLE: { icon: <Zap />, color: '#10b981', description: 'Validated for invoicing' },
+    CAMPAIGN_PAUSED: { icon: <Timer />, color: '#737373', description: 'Active campaign on hold' },
+    SENT_TO_LAW_FIRM: { icon: <FileText />, color: '#8b5cf6', description: 'Transferred to legal council' }
 };
 
-interface StatusCount {
-  _id: LeadStatus;
-  count: number;
-}
+// --- 2. SUB-COMPONENTS ---
 
-interface RecentActivity {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  statusHistory: {
-    fromStatus: string;
-    toStatus: string;
-    timestamp: string;
-    notes: string;
-  };
-  user: {
-    name: string;
-  }[];
-}
+const MiniSparkline = ({ data, color }: { data: any[], color: string }) => (
+    <div className="h-10 w-28">
+        <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data}>
+                <Line type="monotone" dataKey="v" stroke={color} strokeWidth={2.5} dot={false} />
+            </LineChart>
+        </ResponsiveContainer>
+    </div>
+);
+
+const MetricCard = ({ label, value, color, icon, percentage, loading }: any) => (
+    <Card className="bg-[#111114] border-white/5 relative overflow-hidden group">
+        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform duration-500">
+            {React.cloneElement(icon, { className: "h-24 w-24" })}
+        </div>
+        <CardContent className="p-8 space-y-4">
+            <div className="flex justify-between items-start">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500">{label}</p>
+                {!loading && <MiniSparkline data={[{ v: 10 }, { v: 25 }, { v: 15 }, { v: 45 }, { v: 30 }, { v: 60 }]} color={color} />}
+            </div>
+            <div className="space-y-1">
+                <div className="text-4xl font-black text-white tabular-nums tracking-tighter">
+                    {loading ? <Skeleton className="h-10 w-24 bg-white/5" /> : value}
+                </div>
+                {percentage && (
+                    <div className="flex items-center gap-2">
+                        <div className="h-1 flex-1 bg-white/5 rounded-full overflow-hidden">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${percentage}%` }}
+                                className="h-full rounded-full"
+                                style={{ backgroundColor: color, boxShadow: `0 0 10px ${color}66` }}
+                            />
+                        </div>
+                        <span className="text-[10px] font-bold text-neutral-500">{percentage}%</span>
+                    </div>
+                )}
+            </div>
+        </CardContent>
+    </Card>
+);
+
+// --- 3. MAIN DASHBOARD ---
 
 export default function Dashboard() {
-  const { user, loading: authLoading, authChecked } = useAuth();
-  const router = useRouter();
-  const [statusCounts, setStatusCounts] = useState<StatusCount[]>([]);
-  const [totalLeads, setTotalLeads] = useState(0);
-  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+    const { user, loading: authLoading, authChecked } = useAuth();
+    const router = useRouter();
+    const [stats, setStats] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-  // Get count for a specific status
-  const getStatusCount = (status: LeadStatus) => {
-    return statusCounts.find(s => s._id === status)?.count || 0;
-  };
+    const fetchLeadStats = async () => {
+        setLoading(true);
+        try {
+            const { data } = await axios.get(`/api/leads/stats?t=${Date.now()}`);
+            setStats(data);
+        } catch (err) {
+            setError('System sync failed. Terminal disconnected.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  // Calculate percentage for a status
-  const getStatusPercentage = (status: LeadStatus) => {
-    const count = getStatusCount(status);
-    return totalLeads > 0 ? ((count / totalLeads) * 100).toFixed(1) : '0';
-  };
+    useEffect(() => {
+        if (authChecked && !authLoading && user) fetchLeadStats();
+    }, [user, authChecked, authLoading]);
 
-  // Group statuses
-  const pendingStatuses = ["PENDING", "WAITING_ID"];
-  const processingStatuses = ["WORKING", "QC", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4", "CALL_BACK"];
-  const completedStatuses = ["VERIFIED", "ID_VERIFIED", "SENT_CLIENT", "PAID"];
-  const issueStatuses = ["REJECTED", "REJECTED_BY_CLIENT", "DUPLICATE", "NOT_RESPONDING", "FELONY", "DEAD_LEAD", "CHARGEBACK"];
+    // CATEGORIZATION ENGINE: Bucket 23+ statuses into readable insights
+    const categorizedStats = useMemo(() => {
+        if (!stats?.statusCounts) return { pipelines: 0, closures: 0, issues: 0, actions: 0 };
 
-  const fetchLeadStats = async () => {
-    setLoading(true);
-    setError(null);
+        const getSum = (statuses: string[]) =>
+            stats.statusCounts
+                .filter((s: any) => statuses.includes(s._id))
+                .reduce((sum: number, s: any) => sum + s.count, 0);
 
-    try {
-      const { data } = await axios.get(`/api/leads/stats?t=${Date.now()}`);
-      setStatusCounts(data.statusCounts || []);
-      setTotalLeads(data.totalLeads || 0);
-      setRecentActivity(data.recentActivity || []);
-    } catch (error: any) {
-      console.error('Error fetching lead stats:', error);
-      if (axios.isAxiosError(error) && error.response) {
-        console.error('Server response data:', error.response.data);
-      }
-      setError(error.response?.data?.message || 'Failed to load statistics');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (authChecked && !authLoading && user) {
-      fetchLeadStats();
-
-      // Set up auto-refresh interval
-      const refreshInterval = setInterval(() => {
-        fetchLeadStats();
-      }, 120000); // Refresh every 2 minutes
-
-      return () => clearInterval(refreshInterval);
-    }
-  }, [user, authChecked, authLoading]);
-
-  const StatusCard = ({ status }: { status: LeadStatus }) => {
-    const config = STATUS_CONFIG[status];
-    const count = getStatusCount(status);
-    const percentage = getStatusPercentage(status);
+        return {
+            pipelines: getSum(["WORKING", "QC", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4", "CALL_BACK"]),
+            closures: getSum(["VERIFIED", "ID_VERIFIED", "SENT_CLIENT", "PAID", "BILLABLE", "SENT_TO_LAW_FIRM"]),
+            issues: getSum(["REJECTED", "REJECTED_BY_CLIENT", "DUPLICATE", "NOT_RESPONDING", "FELONY", "DEAD_LEAD", "CHARGEBACK"]),
+            actions: getSum(["PENDING", "WAITING_ID", "QC"])
+        };
+    }, [stats]);
 
     return (
-      <motion.div
-        whileHover={{ y: -4 }}
-        transition={{ type: "spring", stiffness: 300 }}
-      >
-        <TooltipProvider delayDuration={300}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Card className="overflow-hidden h-full border-transparent hover:border-primary/20 transition-all duration-300 shadow-sm hover:shadow-md">
-                <CardContent className="p-4 pb-3">
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="p-1.5 rounded-md"
-                        style={{ backgroundColor: config.bgColor, color: config.color }}
-                      >
-                        {config.icon}
-                      </div>
-                      <span className="font-medium text-sm whitespace-nowrap overflow-hidden text-ellipsis">
-                        {status.replace(/_/g, ' ')}
-                      </span>
+        <DashboardLayout>
+            <div className="max-w-[1700px] mx-auto space-y-12 pb-24">
+
+                {/* SECTION 1: SYSTEM COMMAND HEADER */}
+                <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8">
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                </span>
+                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400">System Encrypted & Active</span>
+                            </div>
+                            <div className="h-4 w-[1px] bg-white/10" />
+                            <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+                                ID: {user?.role?.toUpperCase() || 'AGENT'} // {user?.name?.split(' ')[0].toUpperCase()}
+                            </span>
+                        </div>
+                        <h1 className="text-5xl font-black text-white tracking-tighter flex items-center gap-3">
+                            Terminal <span className="text-neutral-700">/</span>
+                            <span className="bg-gradient-to-r from-[#8b5cf6] to-violet-400 bg-clip-text text-transparent">
+                                {user?.name?.split(' ')[0] || 'Admin'}
+                            </span>
+                        </h1>
                     </div>
-                    <Badge
-                      variant="outline"
-                      className="font-semibold"
-                      style={{
-                        color: config.color,
-                        borderColor: config.color,
-                        backgroundColor: config.bgColor
-                      }}
-                    >
-                      {count}
-                    </Badge>
-                  </div>
-                  <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${percentage}%` }}
-                      transition={{ duration: 1, ease: "easeOut" }}
-                      className="h-full rounded-full"
-                      style={{ backgroundColor: config.color }}
+
+                    <div className="flex items-center gap-4 w-full xl:w-auto">
+                        <div className="relative flex-1 xl:w-96 group">
+                            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-600 group-focus-within:text-violet-400 transition-colors" />
+                            <input
+                                placeholder="Search leads, users, or system files..."
+                                className="w-full bg-[#111114] border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-sm text-white focus:border-violet-500/50 outline-none transition-all shadow-inner"
+                            />
+                        </div>
+                        <Button className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white rounded-2xl px-8 h-14 font-bold shadow-[0_0_20px_rgba(139,92,246,0.2)] hover:shadow-[0_0_30px_rgba(139,92,246,0.4)] transition-all">
+                            <Plus className="mr-2 h-5 w-5" /> New Lead
+                        </Button>
+                    </div>
+                </div>
+
+                {/* SECTION 2: HIGH-FIDELITY METRICS */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <MetricCard
+                        label="Total Data Volume" value={stats?.totalLeads || 0} color="#8b5cf6"
+                        icon={<Layers />} loading={loading}
                     />
-                  </div>
-                  <div className="flex justify-between mt-2 items-center">
-                    <span className="text-xs text-muted-foreground">{percentage}%</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 px-2 text-xs hover:bg-transparent hover:text-primary"
-                      onClick={() => router.push(`/leads?status=${status}`)}
-                    >
-                      View
-                      <ChevronRight className="h-3 w-3 ml-1" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TooltipTrigger>
-            <TooltipContent side="top">
-              <p>{config.description}</p>
-              <p className="font-medium">{count} leads ({percentage}%)</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </motion.div>
+                    <MetricCard
+                        label="Active Pipeline" value={categorizedStats.pipelines} color="#3b82f6"
+                        icon={<TrendingUp />} percentage={((categorizedStats.pipelines / (stats?.totalLeads || 1)) * 100).toFixed(0)}
+                        loading={loading}
+                    />
+                    <MetricCard
+                        label="Verified Closures" value={categorizedStats.closures} color="#10b981"
+                        icon={<BadgeCheck />} percentage={((categorizedStats.closures / (stats?.totalLeads || 1)) * 100).toFixed(0)}
+                        loading={loading}
+                    />
+                    <MetricCard
+                        label="Risk Anomalies" value={categorizedStats.issues} color="#ef4444"
+                        icon={<ShieldAlert />} loading={loading}
+                    />
+                </div>
+
+                {/* SECTION 3: CORE ANALYTICS ENGINE */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                    {/* Main Performance Matrix */}
+                    <Card className="lg:col-span-2 bg-[#111114] border-white/5 pt-10 shadow-2xl relative overflow-hidden group">
+                        {/* Header Section */}
+                        <CardHeader className="px-8 flex flex-row items-center justify-between">
+                            <div className="space-y-1">
+                                <CardTitle className="text-xl font-black text-white uppercase tracking-tighter">Status Distribution Matrix</CardTitle>
+                                <CardDescription className="text-[10px] font-bold text-neutral-500 uppercase">
+                                    Real-time volume analysis across {Object.keys(STATUS_CONFIG).length} system states
+                                </CardDescription>
+                            </div>
+                            <div className="flex bg-white/5 p-1 rounded-xl">
+                                <Badge variant="outline" className="bg-white/5 border-white/10 text-neutral-400 text-[9px] font-black uppercase">
+                                    Total Volume: {stats?.totalLeads || 0}
+                                </Badge>
+                            </div>
+                        </CardHeader>
+
+                        <CardContent className="h-[450px] w-full p-8 pt-4">
+                            <ResponsiveContainer width="100%" height="100%">
+                                {/* Horizontal Bar Chart for high-density status data */}
+                                <BarChart
+                                    layout="vertical"
+                                    data={Object.keys(STATUS_CONFIG).map(status => ({
+                                        name: status.replace(/_/g, ' '),
+                                        value: stats?.statusCounts.find((s: any) => s._id === status)?.count || 0,
+                                        color: STATUS_CONFIG[status].color
+                                    })).sort((a, b) => b.value - a.value)} // Automatically sorts most important statuses to the top
+                                    margin={{ left: 40, right: 40 }}
+                                >
+                                    <XAxis type="number" hide />
+                                    <YAxis
+                                        dataKey="name"
+                                        type="category"
+                                        stroke="#525252"
+                                        fontSize={9}
+                                        width={130}
+                                        tickLine={false}
+                                        axisLine={false}
+                                        tick={{ fontWeight: 800, fill: '#737373' }}
+                                    />
+                                    <RechartTooltip
+                                        cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                                        contentStyle={{ backgroundColor: '#09090b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                                        itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
+                                    />
+                                    <Bar
+                                        dataKey="value"
+                                        radius={[0, 4, 4, 0]}
+                                        barSize={10}
+                                        animationDuration={1500}
+                                    >
+                                        {/* Dynamic coloring based on your STATUS_CONFIG */}
+                                        {Object.keys(STATUS_CONFIG).map((entry, index) => (
+                                            <Cell
+                                                key={`cell-${index}`}
+                                                fill={STATUS_CONFIG[entry]?.color || '#8b5cf6'}
+                                                className="drop-shadow-[0_0_8px_rgba(139,92,246,0.3)]"
+                                            />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </CardContent>
+
+                        {/* Subtle texture background */}
+                        <div className="absolute inset-0 -z-10 opacity-[0.03] pointer-events-none bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px]" />
+                    </Card>
+
+                    {/* Categorized Insights & Live Feed */}
+                    <div className="space-y-8">
+                        {/* Global Insights Card Remains the same */}
+                        <Card className="bg-[#111114] border-white/5 shadow-xl">
+                            <CardHeader className="p-8">
+                                <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Global Insights</CardTitle>
+                            </CardHeader>
+                            <CardContent className="px-8 pb-10 space-y-6">
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-[11px] font-bold text-neutral-400"><span>OUTREACH</span><span>{categorizedStats.pipelines}</span></div>
+                                    <div className="h-2 bg-white/5 rounded-full"><motion.div initial={{ width: 0 }} animate={{ width: '65%' }} className="h-full bg-blue-500 rounded-full shadow-[0_0_10px_#3b82f6]" /></div>
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-[11px] font-bold text-neutral-400"><span>CONVERSIONS</span><span>{categorizedStats.closures}</span></div>
+                                    <div className="h-2 bg-white/5 rounded-full"><motion.div initial={{ width: 0 }} animate={{ width: '82%' }} className="h-full bg-emerald-500 rounded-full shadow-[0_0_10px_#10b981]" /></div>
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-[11px] font-bold text-neutral-400"><span>SYSTEM ACTIONS</span><span>{categorizedStats.actions}</span></div>
+                                    <div className="h-2 bg-white/5 rounded-full"><motion.div initial={{ width: 0 }} animate={{ width: '30%' }} className="h-full bg-violet-500 rounded-full shadow-[0_0_10px_#8b5cf6]" /></div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* FIXED: Live Pulse Feed with Proper Truncation and Scrolling */}
+                        <Card className="bg-[#111114] border-white/5 flex flex-col h-[330px] shadow-xl overflow-hidden">
+                            <CardHeader className="p-8 border-b border-white/5">
+                                <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-neutral-500">Live Pulse Feed</CardTitle>
+                            </CardHeader>
+                            {/* flex-1 and overflow-hidden here ensure the ScrollArea stays contained */}
+                            <ScrollArea className="flex-1 w-full overflow-y-auto">
+                                <div className="p-8 space-y-6">
+                                    {stats?.recentActivity?.map((act: any, i: number) => (
+                                        <div key={i} className="flex gap-4 items-center group w-full overflow-hidden">
+                                            {/* shrink-0 prevents the avatar from getting squished by long names */}
+                                            <div className="h-10 w-10 shrink-0 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-xs font-black text-violet-400">
+                                                {act.firstName[0]}
+                                            </div>
+
+                                            {/* min-w-0 is critical for Flexbox to allow children to truncate */}
+                                            <div className="flex-1 min-w-0 space-y-1">
+                                                <p className="text-xs font-bold text-white group-hover:text-violet-400 transition-colors truncate">
+                                                    {act.firstName} {act.lastName}
+                                                </p>
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                                                    <p className="text-[10px] text-neutral-500 font-medium truncate">
+                                                        {act.statusHistory.toStatus}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {/* shrink-0 ensures the icon remains visible */}
+                                            <ChevronRight className="shrink-0 h-4 w-4 text-neutral-800" />
+                                        </div>
+                                    ))}
+                                </div>
+                            </ScrollArea>
+                        </Card>
+                    </div>
+                </div>
+
+                {/* SECTION 4: GRANULAR STATUS INVENTORY (The Full Grid) */}
+                <div className="space-y-8">
+                    <div className="flex items-center gap-6">
+                        <h2 className="text-3xl font-black text-white tracking-tighter uppercase">Status Inventory</h2>
+                        <div className="h-[1px] flex-1 bg-white/5" />
+                        <div className="flex gap-3">
+                            <Button variant="outline" className="border-white/5 bg-white/5 h-10 px-4 rounded-xl text-neutral-400 text-xs font-bold uppercase hover:text-white">Filter</Button>
+                            <Button variant="outline" className="border-white/5 bg-white/5 h-10 px-4 rounded-xl text-neutral-400 text-xs font-bold uppercase hover:text-white">Export</Button>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+                        {Object.keys(STATUS_CONFIG).map((status, index) => {
+                            const config = STATUS_CONFIG[status];
+                            const count = stats?.statusCounts.find((s: any) => s._id === status)?.count || 0;
+                            const perc = stats?.totalLeads > 0 ? ((count / stats.totalLeads) * 100).toFixed(1) : '0';
+
+                            return (
+                                <motion.div
+                                    key={status}
+                                    initial={{ opacity: 0, y: 15 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.02 }}
+                                >
+                                    <HoverCard openDelay={50}>
+                                        <HoverCardTrigger asChild>
+                                            <Card className="bg-[#111114] border-white/5 hover:border-violet-500/20 transition-all cursor-pointer group shadow-lg">
+                                                <CardContent className="p-6 space-y-5">
+                                                    <div className="flex justify-between items-center">
+                                                        <div className="p-3 rounded-2xl bg-white/5 transition-all group-hover:bg-violet-500/10" style={{ color: count > 0 ? config.color : '#525252' }}>
+                                                            {React.cloneElement(config.icon as any, { className: "h-5 w-5" })}
+                                                        </div>
+                                                        <span className="text-2xl font-black text-white tabular-nums tracking-tighter">{count}</span>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500 group-hover:text-neutral-300 transition-colors">{status.replace(/_/g, ' ')}</p>
+                                                        <div className="flex items-center gap-3 mt-3">
+                                                            <div className="h-1.5 flex-1 bg-white/5 rounded-full overflow-hidden">
+                                                                <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${perc}%`, backgroundColor: config.color, boxShadow: `0 0 8px ${config.color}44` }} />
+                                                            </div>
+                                                            <span className="text-[10px] font-bold text-neutral-600">{perc}%</span>
+                                                        </div>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        </HoverCardTrigger>
+                                        <HoverCardContent className="bg-[#09090b] border-white/10 w-72 shadow-3xl rounded-2xl backdrop-blur-xl">
+                                            <div className="space-y-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 rounded-lg bg-white/5" style={{ color: config.color }}>{config.icon}</div>
+                                                    <h4 className="text-sm font-black text-white uppercase tracking-tight">{status.replace(/_/g, ' ')}</h4>
+                                                </div>
+                                                <p className="text-xs text-neutral-500 leading-relaxed font-medium">{config.description}</p>
+                                                <div className="h-[1px] bg-white/5" />
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-[10px] font-black text-neutral-500 uppercase">Live Count: {count}</span>
+                                                    <Button
+                                                        variant="link"
+                                                        className="h-auto p-0 text-[10px] font-black uppercase text-violet-400 hover:text-violet-300"
+                                                        onClick={() => router.push(`/leads?status=${status}`)}
+                                                    >
+                                                        Access Logs <ChevronRight className="ml-1 h-3 w-3" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </HoverCardContent>
+                                    </HoverCard>
+                                </motion.div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+        </DashboardLayout>
     );
-  };
-
-  const ActivityItem = ({ activity }: { activity: RecentActivity }) => {
-    const fromConfig = activity.statusHistory.fromStatus ?
-      STATUS_CONFIG[activity.statusHistory.fromStatus as LeadStatus] :
-      { color: '#6B7280', bgColor: '#F3F4F6', icon: <Clock className="h-5 w-5" /> };
-
-    const toConfig = STATUS_CONFIG[activity.statusHistory.toStatus as LeadStatus];
-
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-start space-x-4 p-4 rounded-lg border border-border/50 shadow-sm bg-card"
-      >
-        <div
-          className="p-2 rounded-full flex-shrink-0"
-          style={{ backgroundColor: toConfig.bgColor, color: toConfig.color }}
-        >
-          {toConfig.icon}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1">
-            <h4 className="font-medium truncate">
-              {activity.firstName} {activity.lastName}
-            </h4>
-            <span className="text-xs text-muted-foreground">
-              • {format(new Date(activity.statusHistory.timestamp), 'MMM d, h:mm a')}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2 mt-1">
-            <div
-              className="p-1 rounded"
-              style={{ backgroundColor: fromConfig.bgColor, color: fromConfig.color }}
-            >
-              <Badge variant="outline" className="text-xs border-none bg-transparent">
-                {activity.statusHistory.fromStatus || 'New'}
-              </Badge>
-            </div>
-            <ChevronRight className="h-3 w-3 text-muted-foreground" />
-            <div
-              className="p-1 rounded"
-              style={{ backgroundColor: toConfig.bgColor, color: toConfig.color }}
-            >
-              <Badge variant="outline" className="text-xs border-none bg-transparent">
-                {activity.statusHistory.toStatus}
-              </Badge>
-            </div>
-          </div>
-
-          {activity.statusHistory.notes && (
-            <p className="mt-1 text-sm text-muted-foreground truncate">
-              {activity.statusHistory.notes}
-            </p>
-          )}
-        </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-shrink-0"
-          onClick={() => router.push(`/leads/${activity._id}`)}
-        >
-          View Lead
-          <ChevronRight className="h-4 w-4 ml-1" />
-        </Button>
-      </motion.div>
-    );
-  };
-
-  return (
-    <DashboardLayout>
-      <div className="space-y-8">
-        {/* Header */}
-      <DashboardHeader/>
-
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-destructive/15 text-destructive border border-destructive/30 px-4 py-3 rounded-lg flex items-center"
-          >
-            <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
-            <span>{error}</span>
-          </motion.div>
-        )}
-
-        {/* // Update only the Key Metrics Cards section in your Dashboard component */}
-        {/* // Keep all other parts the same
-
-        // Key Metrics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
-          >
-            <Card className="border-0 bg-white dark:bg-slate-900 shadow-md hover:shadow-lg transition-all">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded">
-                    <FileText className="h-5 w-5 text-slate-700 dark:text-slate-300" />
-                  </div>
-                  <div className="flex items-center">
-                    <div className="h-2 w-2 rounded-full bg-slate-700 dark:bg-slate-300 mr-2"></div>
-                    <span className="text-xs font-medium uppercase tracking-wider text-slate-600 dark:text-slate-400">All Leads</span>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Lead Count</h3>
-                  {loading ? (
-                    <Skeleton className="h-10 w-20" />
-                  ) : (
-                    <div className="text-3xl font-bold text-slate-900 dark:text-white">{totalLeads}</div>
-                  )}
-                </div>
-
-                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
-                  <Button
-                    onClick={() => router.push('/leads')}
-                    variant="ghost"
-                    className="w-full justify-between p-0 h-auto font-medium text-slate-800 dark:text-slate-200 hover:bg-transparent hover:text-slate-900"
-                  >
-                    <span>View All Leads</span>
-                    <ChevronRight className="h-4 w-4 text-slate-500" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-          >
-            <Card className="border-0 bg-white dark:bg-slate-900 shadow-md hover:shadow-lg transition-all">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-2 bg-amber-50 dark:bg-amber-900/20 rounded">
-                    <Clock className="h-5 w-5 text-amber-700 dark:text-amber-400" />
-                  </div>
-                  <div className="flex items-center">
-                    <div className="h-2 w-2 rounded-full bg-amber-600 dark:bg-amber-500 mr-2"></div>
-                    <span className="text-xs font-medium uppercase tracking-wider text-slate-600 dark:text-slate-400">Pending Review</span>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">Pending Leads</h3>
-                  {loading ? (
-                    <Skeleton className="h-10 w-20" />
-                  ) : (
-                    <div className="text-3xl font-bold text-slate-900 dark:text-white">
-                      {pendingStatuses.reduce((sum, status) => sum + getStatusCount(status as LeadStatus), 0)}
-                    </div>
-                  )}
-                  {!loading && totalLeads > 0 && (
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      {((pendingStatuses.reduce((sum, status) => sum + getStatusCount(status as LeadStatus), 0) / totalLeads) * 100).toFixed(1)}% of caseload
-                    </p>
-                  )}
-                </div>
-
-                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
-                  <Button
-                    onClick={() => router.push('/leads?status=PENDING')}
-                    variant="ghost"
-                    className="w-full justify-between p-0 h-auto font-medium text-slate-800 dark:text-slate-200 hover:bg-transparent hover:text-slate-900"
-                  >
-                    <span>Review Pending</span>
-                    <ChevronRight className="h-4 w-4 text-slate-500" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            <Card className="border-0 bg-white dark:bg-slate-900 shadow-md hover:shadow-lg transition-all">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded">
-                    <CheckCircle className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
-                  </div>
-                  <div className="flex items-center">
-                    <div className="h-2 w-2 rounded-full bg-emerald-600 dark:bg-emerald-500 mr-2"></div>
-                    <span className="text-xs font-medium uppercase tracking-wider text-slate-600 dark:text-slate-400">Verified</span>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">Completed Leads</h3>
-                  {loading ? (
-                    <Skeleton className="h-10 w-20" />
-                  ) : (
-                    <div className="text-3xl font-bold text-slate-900 dark:text-white">
-                      {completedStatuses.reduce((sum, status) => sum + getStatusCount(status as LeadStatus), 0)}
-                    </div>
-                  )}
-                  {!loading && totalLeads > 0 && (
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      {((completedStatuses.reduce((sum, status) => sum + getStatusCount(status as LeadStatus), 0) / totalLeads) * 100).toFixed(1)}% success rate
-                    </p>
-                  )}
-                </div>
-
-                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
-                  <Button
-                    onClick={() => router.push('/leads?status=VERIFIED')}
-                    variant="ghost"
-                    className="w-full justify-between p-0 h-auto font-medium text-slate-800 dark:text-slate-200 hover:bg-transparent hover:text-slate-900"
-                  >
-                    <span>View Verified</span>
-                    <ChevronRight className="h-4 w-4 text-slate-500" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-          >
-            <Card className="border-0 bg-white dark:bg-slate-900 shadow-md hover:shadow-lg transition-all">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
-                    <Users className="h-5 w-5 text-blue-700 dark:text-blue-400" />
-                  </div>
-                  <div className="flex items-center">
-                    <div className="h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-500 mr-2"></div>
-                    <span className="text-xs font-medium uppercase tracking-wider text-slate-600 dark:text-slate-400">In Process</span>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">Processing Leads</h3>
-                  {loading ? (
-                    <Skeleton className="h-10 w-20" />
-                  ) : (
-                    <div className="text-3xl font-bold text-slate-900 dark:text-white">
-                      {processingStatuses.reduce((sum, status) => sum + getStatusCount(status as LeadStatus), 0)}
-                    </div>
-                  )}
-                  {!loading && totalLeads > 0 && (
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      {((processingStatuses.reduce((sum, status) => sum + getStatusCount(status as LeadStatus), 0) / totalLeads) * 100).toFixed(1)}% in progress
-                    </p>
-                  )}
-                </div>
-
-                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
-                  <Button
-                    onClick={() => router.push('/leads?status=WORKING')}
-                    variant="ghost"
-                    className="w-full justify-between p-0 h-auto font-medium text-slate-800 dark:text-slate-200 hover:bg-transparent hover:text-slate-900"
-                  >
-                    <span>View Processing</span>
-                    <ChevronRight className="h-4 w-4 text-slate-500" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-        </div>
-        {/* All Status Cards */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold tracking-tight">Lead Status Overview</h2>
-            <HoverCard>
-              <HoverCardTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <AlertCircle className="mr-2 h-4 w-4" />
-                  Status Info
-                </Button>
-              </HoverCardTrigger>
-              <HoverCardContent className="w-80">
-                <h3 className="font-semibold mb-2">Lead Status Colors</h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Each status is color-coded to help you quickly identify lead categories.
-                </p>
-                <ScrollArea className="h-80">
-                  <div className="space-y-2">
-                    {ALL_STATUSES.map(status => (
-                      <div key={status} className="flex items-center gap-2">
-                        <div className="h-3 w-3 rounded-full" style={{ backgroundColor: STATUS_CONFIG[status].color }}></div>
-                        <span className="text-sm font-medium">{status.replace(/_/g, ' ')}</span>
-                        <span className="text-xs text-muted-foreground">{STATUS_CONFIG[status].description}</span>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </HoverCardContent>
-            </HoverCard>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {ALL_STATUSES.map((status, index) => (
-              <motion.div
-                key={status}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.05 * index }}
-              >
-                <StatusCard status={status} />
-              </motion.div>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold tracking-tight">Recent Activity</h2>
-            <Button variant="outline" size="sm" onClick={() => router.push('/leads')}>
-              All Leads <ChevronRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-
-          {loading ? (
-            <div className="space-y-4">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Card key={i} className="p-4">
-                  <div className="flex items-start space-x-4">
-                    <Skeleton className="h-10 w-10 rounded-full" />
-                    <div className="space-y-2 flex-1">
-                      <Skeleton className="h-4 w-[200px]" />
-                      <Skeleton className="h-4 w-[300px]" />
-                      <Skeleton className="h-4 w-[150px]" />
-                    </div>
-                    <Skeleton className="h-9 w-[100px]" />
-                  </div>
-                </Card>
-              ))}
-            </div>
-          ) : recentActivity.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2">
-              {recentActivity.slice(0, 6).map((activity, index) => (
-                <ActivityItem key={index} activity={activity} />
-              ))}
-            </div>
-          ) : (
-            <Card className="p-12">
-              <div className="text-center space-y-3">
-                <Clock className="h-12 w-12 text-muted-foreground mx-auto" />
-                <h3 className="text-lg font-medium">No Recent Activity</h3>
-                <p className="text-muted-foreground">Lead status changes will appear here</p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => router.push('/leads/create')}
-                  className="mt-2"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create a New Lead
-                </Button>
-              </div>
-            </Card>
-          )}
-        </div>
-      </div>
-    </DashboardLayout>
-  );
 }
