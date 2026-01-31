@@ -823,16 +823,16 @@ export default function AdminPage() {
                             defaultValue={field.value}
                           >
                             <FormControl>
-                              <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                              <SelectTrigger>
                                 <SelectValue placeholder="Select role" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent className="bg-[#09090b] border-white/10 text-white">
+                            <SelectContent>
                               {USER_ROLES
                                 // Only show super_admin option to super admins
                                 .filter(role => role !== 'super_admin' || isSuperAdmin())
                                 .map((role) => (
-                                  <SelectItem key={role} value={role} className="focus:bg-violet-500/20 focus:text-white">
+                                  <SelectItem key={role} value={role}>
                                     {role === 'super_admin' ? 'Super Admin' :
                                       role.charAt(0).toUpperCase() + role.slice(1)}
                                   </SelectItem>
@@ -861,19 +861,19 @@ export default function AdminPage() {
                               disabled={!isSuperAdmin() && !!currentUser?.organization?.id}
                             >
                               <FormControl>
-                                <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                                <SelectTrigger>
                                   <SelectValue placeholder="Select organization" />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent className="bg-[#09090b] border-white/10 text-white">
+                              <SelectContent>
                                 {/* If not super admin, only show current user's organization */}
                                 {!isSuperAdmin() && currentUser?.organization ? (
-                                  <SelectItem value={currentUser.organization.id} className="focus:bg-violet-500/20 focus:text-white">
+                                  <SelectItem value={currentUser.organization.id}>
                                     {currentUser.organization.name}
                                   </SelectItem>
                                 ) : (
                                   organizations.map((org) => (
-                                    <SelectItem key={org._id} value={org._id} className="focus:bg-violet-500/20 focus:text-white">
+                                    <SelectItem key={org._id} value={org._id}>
                                       {org.name}
                                     </SelectItem>
                                   ))
@@ -1248,16 +1248,16 @@ export default function AdminPage() {
                           defaultValue={field.value}
                         >
                           <FormControl>
-                            <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                            <SelectTrigger>
                               <SelectValue placeholder="Select role" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent className="bg-[#09090b] border-white/10 text-white">
+                          <SelectContent>
                             {USER_ROLES
                               // Only show super_admin option to super admins
                               .filter(role => role !== 'super_admin' || isSuperAdmin())
                               .map((role) => (
-                                <SelectItem key={role} value={role} className="focus:bg-violet-500/20 focus:text-white">
+                                <SelectItem key={role} value={role}>
                                   {role === 'super_admin' ? 'Super Admin' :
                                     role.charAt(0).toUpperCase() + role.slice(1)}
                                 </SelectItem>
@@ -1283,19 +1283,19 @@ export default function AdminPage() {
                             disabled={!isSuperAdmin() && !!currentUser?.organization?.id}
                           >
                             <FormControl>
-                              <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                              <SelectTrigger>
                                 <SelectValue placeholder="Select organization" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent className="bg-[#09090b] border-white/10 text-white">
+                            <SelectContent>
                               {/* If not super admin, only show current user's organization */}
                               {!isSuperAdmin() && currentUser?.organization ? (
-                                <SelectItem value={currentUser.organization.id} className="focus:bg-violet-500/20 focus:text-white">
+                                <SelectItem value={currentUser.organization.id}>
                                   {currentUser.organization.name}
                                 </SelectItem>
                               ) : (
                                 organizations.map((org) => (
-                                  <SelectItem key={org._id} value={org._id} className="focus:bg-violet-500/20 focus:text-white">
+                                  <SelectItem key={org._id} value={org._id}>
                                     {org.name}
                                   </SelectItem>
                                 ))
@@ -1394,16 +1394,16 @@ export default function AdminPage() {
                         defaultValue={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                          <SelectTrigger>
                             <SelectValue placeholder="Select role" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="bg-[#09090b] border-white/10 text-white">
+                        <SelectContent>
                           {USER_ROLES
                             // Only show super_admin option to super admins
                             .filter(role => role !== 'super_admin' || isSuperAdmin())
                             .map((role) => (
-                              <SelectItem key={role} value={role} className="focus:bg-violet-500/20 focus:text-white">
+                              <SelectItem key={role} value={role}>
                                 {role === 'super_admin' ? 'Super Admin' :
                                   role.charAt(0).toUpperCase() + role.slice(1)}
                               </SelectItem>
@@ -1432,19 +1432,19 @@ export default function AdminPage() {
                           disabled={!isSuperAdmin() && !!currentUser?.organization?.id}
                         >
                           <FormControl>
-                            <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                            <SelectTrigger>
                               <SelectValue placeholder="Select organization" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent className="bg-[#09090b] border-white/10 text-white">
+                          <SelectContent>
                             {/* If not super admin, only show current user's organization */}
                             {!isSuperAdmin() && currentUser?.organization ? (
-                              <SelectItem value={currentUser.organization.id} className="focus:bg-violet-500/20 focus:text-white">
+                              <SelectItem value={currentUser.organization.id}>
                                 {currentUser.organization.name}
                               </SelectItem>
                             ) : (
                               organizations.map((org) => (
-                                <SelectItem key={org._id} value={org._id} className="focus:bg-violet-500/20 focus:text-white">
+                                <SelectItem key={org._id} value={org._id}>
                                   {org.name}
                                 </SelectItem>
                               ))
