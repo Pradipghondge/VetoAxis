@@ -11,7 +11,7 @@ export default function LoginPage() {
   return (
     <Suspense fallback={
       // Updated to Midnight Indigo background
-      <div className="flex h-screen w-full flex-col items-center justify-center bg-[#09090b]">
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
         <div className="relative flex items-center justify-center">
           {/* Subtle Electric Violet pulse effect */}
           <div className="absolute h-16 w-16 animate-ping rounded-full bg-[#8b5cf6]/20" />
