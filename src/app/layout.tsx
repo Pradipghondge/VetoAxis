@@ -24,7 +24,7 @@ export default function RootLayout({
       <body className={cn(inter.className, "bg-background text-foreground antialiased")}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >

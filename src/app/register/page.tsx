@@ -36,11 +36,12 @@ export default function Register() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Create an account</CardTitle>
-          <CardDescription className="text-center">
+    <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      {/* Background Glow Effect Removed */}
+      <Card className="w-full max-w-md border-stone-200 bg-white shadow-sm">
+        <CardHeader className="space-y-1 pb-6 text-center">
+          <CardTitle className="text-2xl font-bold tracking-tight text-gray-900 text-center">Create an account</CardTitle>
+          <CardDescription className="text-gray-600 text-center">
             Enter your information to create an account
           </CardDescription>
         </CardHeader>
@@ -52,40 +53,43 @@ export default function Register() {
               </Alert>
             )}
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name" className="text-[10px] font-black uppercase tracking-widest text-gray-700">Full Name</Label>
               <Input
                 id="name"
                 placeholder="John Doe"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                className="pl-3 h-12 bg-white border-gray-300 text-gray-900 focus:ring-gray-500 focus:border-gray-500 rounded-lg"
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-gray-700">Email</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="pl-3 h-12 bg-white border-gray-300 text-gray-900 focus:ring-gray-500 focus:border-gray-500 rounded-lg"
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-gray-700">Password</Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="pl-3 h-12 bg-white border-gray-300 text-gray-900 focus:ring-gray-500 focus:border-gray-500 rounded-lg"
                 required
                 minLength={6}
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white font-bold transition-all rounded-lg mt-2" disabled={loading}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -95,9 +99,9 @@ export default function Register() {
                 'Create Account'
               )}
             </Button>
-            <p className="text-center text-sm">
+            <p className="text-center text-[10px] font-bold uppercase tracking-[0.3em] text-gray-600">
               Already have an account?{' '}
-              <Link href="/login" className="text-blue-600 hover:underline">
+              <Link href="/login" className="font-normal tracking-normal ml-1 text-gray-900 hover:underline">
                 Sign In
               </Link>
             </p>
