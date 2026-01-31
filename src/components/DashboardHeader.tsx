@@ -70,7 +70,7 @@ export default function DashboardHeader() {
               </Button>
             </DropdownMenuTrigger>
             
-            <DropdownMenuContent align="end" className="w-64 p-2 rounded-2xl border-border bg-popover text-popover-foreground shadow-2xl">
+            <DropdownMenuContent align="end" className="w-64">
               <DropdownMenuLabel className="px-3 py-4">
                 <div className="flex flex-col space-y-1">
                   <div className="flex items-center gap-2">

@@ -89,7 +89,7 @@ export default function ClientLeads() {
                     <SelectValue placeholder="Filter by Status" />
                   </div>
                 </SelectTrigger>
-                <SelectContent className="bg-popover border-border text-popover-foreground shadow-xl">
+                <SelectContent>
                   <SelectItem value="All">All Statuses</SelectItem>
                   {Object.keys(STATUS_CONFIG).map(s => (
                     <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>

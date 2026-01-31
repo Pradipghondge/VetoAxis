@@ -225,10 +225,10 @@ export default function LeadDetailPage() {
                 <FormItem>
                   <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">New Status</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl><SelectTrigger className="bg-background border-input rounded-xl h-12 text-foreground">
+                    <FormControl><SelectTrigger>
                       <SelectValue placeholder="Select Status" />
                     </SelectTrigger></FormControl>
-                    <SelectContent className="bg-popover border-border text-popover-foreground">
+                    <SelectContent>
                       {['PENDING', 'WORKING', 'VERIFIED', 'PAID', 'REJECTED'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                     </SelectContent>
                   </Select>

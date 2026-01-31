@@ -142,7 +142,6 @@ export default function CreateLeadPage() {
           {field.type === 'text' || field.type === 'date' ? (
             <Input
               type={field.type}
-              className="bg-secondary"
               value={dynamicFields[field.key] || ''}
               onChange={e => handleDynamicFieldChange(field.key, e.target.value)}
               placeholder={`Enter ${field.label.toLowerCase()}`}
@@ -153,7 +152,7 @@ export default function CreateLeadPage() {
               onValueChange={val => handleDynamicFieldChange(field.key, val)}
             >
               <FormControl>
-                <SelectTrigger className="bg-secondary">
+                <SelectTrigger>
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
               </FormControl>
@@ -220,7 +219,7 @@ export default function CreateLeadPage() {
                       <FormLabel>{fieldName === 'dateOfBirth' ? 'Date of Birth' :
                         fieldName.charAt(0).toUpperCase() + fieldName.slice(1)}</FormLabel>
                       <FormControl>
-                        <Input type={fieldName === 'email' ? 'email' : fieldName === 'dateOfBirth' ? 'date' : 'text'} {...field} className="bg-secondary" />
+                        <Input type={fieldName === 'email' ? 'email' : fieldName === 'dateOfBirth' ? 'date' : 'text'} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -252,7 +251,7 @@ export default function CreateLeadPage() {
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger className="bg-secondary"><SelectValue placeholder="Select application type" /></SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder="Select application type" /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {APPLICATION_TYPES.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
@@ -278,7 +277,7 @@ export default function CreateLeadPage() {
                   <FormItem className="col-span-2">
                     <FormLabel>Lawsuit (if applicable)</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Enter lawsuit information if relevant" className="bg-secondary" />
+                      <Input {...field} placeholder="Enter lawsuit information if relevant" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -291,7 +290,7 @@ export default function CreateLeadPage() {
                       <Textarea
                         placeholder="Add any additional notes about this lead"
                         {...field}
-                        className="bg-secondary min-h-[100px]"
+                        className="min-h-[100px]"
                       />
                     </FormControl>
                     <FormMessage />
