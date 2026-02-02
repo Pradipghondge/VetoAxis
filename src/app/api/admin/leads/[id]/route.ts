@@ -6,9 +6,10 @@ import User from '@/models/User';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: leadId } = await params;
     await dbConnect();
 
     // Verify authentication
@@ -20,7 +21,6 @@ export async function GET(
 
     const userId = decoded.id;
     const userRole = decoded.role;
-    const leadId = params.id;
 
     // Check if the lead exists
     const lead = await Lead.findById(leadId)
@@ -62,9 +62,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: leadId } = await params;
     await dbConnect();
 
     // Verify authentication
@@ -74,7 +75,6 @@ export async function PUT(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const leadId = params.id;
     const body = await request.json();
     const { status, notes } = body;
 

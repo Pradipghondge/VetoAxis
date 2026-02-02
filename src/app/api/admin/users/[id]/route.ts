@@ -5,9 +5,10 @@ import { dbConnect } from '@/lib/dbConnect';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: userId } = await params;
     await dbConnect();
 
     // Already returns decoded token payload
@@ -16,8 +17,6 @@ export async function PUT(
     if (!decoded || typeof decoded !== 'object') {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
-
-    const userId = params.id;
     const body = await request.json();
 
     // Check if the user exists
@@ -125,9 +124,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: userId } = await params;
     await dbConnect();
 
     // Already returns decoded token payload
@@ -137,7 +137,6 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const userId = params.id;
 
     // Check if the user exists
     const user = await User.findById(userId);

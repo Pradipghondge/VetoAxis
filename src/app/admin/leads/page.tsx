@@ -60,9 +60,12 @@ import {
   MoreHorizontal,
   RefreshCw,
   FileEdit,
-  List,
-  BarChart,
+  BarChart3,
+  Users,
+  CheckCircle2,
+  XCircle,
   Eye,
+  ShieldCheck,
 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -71,15 +74,14 @@ import { z } from 'zod';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useRouter } from 'next/navigation';
 
-// Define Lead status options from your model
 const LEAD_STATUSES = [
-  "PENDING", "REJECTED", "VERIFIED", "REJECTED_BY_CLIENT", "PAID",
-  "DUPLICATE", "NOT_RESPONDING", "FELONY", "DEAD_LEAD", "WORKING",
-  "CALL_BACK", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4",
-  "CHARGEBACK", "WAITING_ID", "SENT_CLIENT", "QC", "ID_VERIFIED", "BILLABLE","CAMPAIGN_PAUSED", "SENT_TO_LAW_FIRM"
+  "PENDING", "REJECTED", "VERIFIED", "REJECTED_BY_CLIENT", "PAID", 
+  "DUPLICATE", "NOT_RESPONDING", "FELONY", "DEAD_LEAD", "WORKING", 
+  "CALL_BACK", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4", 
+  "CHARGEBACK", "WAITING_ID", "SENT_CLIENT", "QC", "ID_VERIFIED", 
+  "BILLABLE", "CAMPAIGN_PAUSED", "SENT_TO_LAW_FIRM"
 ];
 
-// Define the schema for updating lead status
 const updateLeadSchema = z.object({
   status: z.enum(LEAD_STATUSES as [string, ...string[]]),
   notes: z.string().optional(),
@@ -87,7 +89,6 @@ const updateLeadSchema = z.object({
 
 type UpdateLeadFormValues = z.infer<typeof updateLeadSchema>;
 
-// Define Lead type
 interface Lead {
   _id: string;
   firstName: string;
@@ -97,17 +98,7 @@ interface Lead {
   status: string;
   applicationType: string;
   createdAt: string;
-  createdBy: {
-    name: string;
-    email: string;
-  };
-  statusHistory: {
-    fromStatus: string;
-    toStatus: string;
-    notes: string;
-    timestamp: string;
-    changedBy: string;
-  }[];
+  createdBy: { name: string; email: string; };
 }
 
 export default function LeadManagement() {
@@ -119,82 +110,46 @@ export default function LeadManagement() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
-  const [stats, setStats] = useState({
-    total: 0,
-    pending: 0,
-    verified: 0,
-    rejected: 0,
-  });
+  const [stats, setStats] = useState({ total: 0, pending: 0, verified: 0, rejected: 0 });
 
   const updateForm = useForm<UpdateLeadFormValues>({
     resolver: zodResolver(updateLeadSchema),
-    defaultValues: {
-      status: 'PENDING',
-      notes: '',
-    },
+    defaultValues: { status: 'PENDING', notes: '' },
   });
 
-  useEffect(() => {
-    fetchLeads();
-  }, [statusFilter]);
+  useEffect(() => { fetchLeads(); }, [statusFilter]);
 
   const fetchLeads = async () => {
     setLoading(true);
     try {
-      const endpoint = statusFilter
-        ? `/api/admin/leads?status=${statusFilter}`
+      const endpoint = statusFilter && statusFilter !== 'All' 
+        ? `/api/admin/leads?status=${statusFilter}` 
         : '/api/admin/leads';
-
       const { data } = await axios.get(endpoint);
       setLeads(data.leads);
-
-      // Calculate stats
-      const totalLeads = data.leads.length;
-      const pendingCount = data.leads.filter((lead: Lead) => lead.status === 'PENDING').length;
-      const verifiedCount = data.leads.filter((lead: Lead) => lead.status === 'VERIFIED' || lead.status === 'ID_VERIFIED').length;
-      const rejectedCount = data.leads.filter((lead: Lead) => lead.status === 'REJECTED' || lead.status === 'REJECTED_BY_CLIENT').length;
-
+      
       setStats({
-        total: totalLeads,
-        pending: pendingCount,
-        verified: verifiedCount,
-        rejected: rejectedCount,
+        total: data.leads.length,
+        pending: data.leads.filter((l: Lead) => l.status === 'PENDING').length,
+        verified: data.leads.filter((l: Lead) => l.status === 'VERIFIED' || l.status === 'ID_VERIFIED').length,
+        rejected: data.leads.filter((l: Lead) => l.status === 'REJECTED' || l.status === 'REJECTED_BY_CLIENT').length,
       });
-
     } catch (error) {
-      console.error('Error fetching leads:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load leads",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+      toast({ title: "Error", description: "Failed to load leads", variant: "destructive" });
+    } finally { setLoading(false); }
   };
 
   const onUpdateLead = async (values: UpdateLeadFormValues) => {
     if (!selectedLead) return;
-
     setSubmitting(true);
     try {
       await axios.put(`/api/admin/leads/${selectedLead._id}`, values);
-      toast({
-        title: "Success",
-        description: "Lead status updated successfully",
-      });
+      toast({ title: "Success", description: "Lead status updated" });
       fetchLeads();
       setUpdateDialogOpen(false);
     } catch (error: any) {
-      console.error('Error updating lead:', error);
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to update lead",
-        variant: "destructive",
-      });
-    } finally {
-      setSubmitting(false);
-    }
+      toast({ title: "Error", description: error.response?.data?.message || "Update failed", variant: "destructive" });
+    } finally { setSubmitting(false); }
   };
 
   const handleUpdateLeadClick = (lead: Lead) => {
@@ -206,367 +161,182 @@ export default function LeadManagement() {
 
   const filteredLeads = leads.filter((lead) =>
     `${lead.firstName} ${lead.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    lead.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    lead.phone?.includes(searchQuery) ||
-    lead.status.toLowerCase().includes(searchQuery.toLowerCase())
+    lead.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const getStatusColor = (status: string) => {
+  const getStatusStyle = (status: string) => {
     switch (status) {
-      case 'VERIFIED':
-      case 'ID_VERIFIED':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-      case 'REJECTED':
-      case 'REJECTED_BY_CLIENT':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
-      case 'PENDING':
-      case 'WAITING_ID':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
-      case 'PAID':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400';
+      case 'VERIFIED': case 'ID_VERIFIED': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'REJECTED': case 'REJECTED_BY_CLIENT': return 'bg-rose-50 text-rose-700 border-rose-200';
+      case 'PENDING': return 'bg-amber-50 text-amber-700 border-amber-200';
+      default: return 'bg-slate-50 text-slate-700 border-slate-200';
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    }).format(new Date(dateString));
   };
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col space-y-6 max-w-6xl mx-auto px-4 md:px-8">
-        <div className="flex flex-col md:flex-row justify-between gap-4 md:items-center">
+      <div className="flex flex-col space-y-8 max-w-7xl mx-auto px-6 py-8">
+        
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Lead Management</h1>
-            <p className="text-muted-foreground">Review and update lead statuses</p>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Lead Management</h1>
+            <p className="text-slate-500 mt-1">Configure and monitor your lead pipeline</p>
           </div>
+          <Badge className="bg-emerald-50 text-emerald-600 border border-emerald-100 px-4 py-1.5 rounded-full flex gap-2 items-center">
+            <ShieldCheck className="h-4 w-4" /> Pipeline Protected
+          </Badge>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Total Leads</p>
-                  <h3 className="text-2xl font-bold">{stats.total}</h3>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            { label: 'Total Leads', val: stats.total, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
+            { label: 'Pending', val: stats.pending, icon: BarChart3, color: 'text-amber-600', bg: 'bg-amber-50' },
+            { label: 'Verified', val: stats.verified, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+            { label: 'Rejected', val: stats.rejected, icon: XCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
+          ].map((stat, i) => (
+            <Card key={i} className="border-none shadow-sm bg-white overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-sm font-medium text-slate-500">{stat.label}</p>
+                    <h3 className="text-2xl font-bold mt-1 text-slate-900">{stat.val}</h3>
+                  </div>
+                  <div className={`p-3 rounded-xl ${stat.bg}`}>
+                    <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                  </div>
                 </div>
-                <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/20">
-                  <List className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Pending</p>
-                  <h3 className="text-2xl font-bold">{stats.pending}</h3>
-                </div>
-                <div className="p-2 rounded-full bg-yellow-100 dark:bg-yellow-900/20">
-                  <BarChart className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Verified</p>
-                  <h3 className="text-2xl font-bold">{stats.verified}</h3>
-                </div>
-                <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/20">
-                  <BarChart className="h-5 w-5 text-green-600 dark:text-green-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Rejected</p>
-                  <h3 className="text-2xl font-bold">{stats.rejected}</h3>
-                </div>
-                <div className="p-2 rounded-full bg-red-100 dark:bg-red-900/20">
-                  <BarChart className="h-5 w-5 text-red-600 dark:text-red-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        <Card className="overflow-hidden">
-          <CardHeader className="pb-3">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <CardTitle>All Leads</CardTitle>
-                <CardDescription>Manage lead statuses and information</CardDescription>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Search leads..."
-                    className="pl-8 w-full md:w-[260px]"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-
-                <Select
-                  value={statusFilter}
-                  onValueChange={setStatusFilter}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Filter by status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="All">All Statuses</SelectItem>
-                    {LEAD_STATUSES.map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {status.replace(/_/g, ' ')}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={fetchLeads}
-                  className="hidden md:flex"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-
-          <Separator />
-
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="text-center">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-                  <p className="text-sm text-muted-foreground">Loading leads...</p>
+        {/* Main Content Area */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          {/* Table Card */}
+          <Card className="lg:col-span-12 border-none shadow-md bg-white">
+            <CardHeader className="px-6 py-5">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <span className="p-2 bg-indigo-50 rounded-lg"><Users className="h-5 w-5 text-indigo-600" /></span>
+               Lead Records
+                </CardTitle>
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input 
+                      placeholder="Search name or email..." 
+                      className="pl-10 w-full md:w-[300px] border-slate-200 focus:ring-indigo-500" 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-[160px] border-slate-200">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="All">All Statuses</SelectItem>
+                      {LEAD_STATUSES.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Application Type</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead className="w-[80px]">Actions</TableHead>
+            </CardHeader>
+            <Separator className="opacity-50" />
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader className="bg-slate-50/50">
+                  <TableRow className="border-slate-100">
+                    <TableHead className="font-semibold text-slate-600 px-6">Name & ID</TableHead>
+                    <TableHead className="font-semibold text-slate-600">Contact Details</TableHead>
+                    <TableHead className="font-semibold text-slate-600">Application</TableHead>
+                    <TableHead className="font-semibold text-slate-600">Status</TableHead>
+                    <TableHead className="font-semibold text-slate-600">Created At</TableHead>
+                    <TableHead className="text-right px-6">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    <TableRow><TableCell colSpan={6} className="h-64 text-center"><Loader2 className="animate-spin mx-auto h-8 w-8 text-indigo-600" /></TableCell></TableRow>
+                  ) : filteredLeads.map((lead) => (
+                    <TableRow key={lead._id} className="hover:bg-slate-50/50 transition-colors border-slate-100">
+                      <TableCell className="px-6">
+                        <div className="font-semibold text-slate-900">{lead.firstName} {lead.lastName}</div>
+                        <div className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">#{lead._id.slice(-6)}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm text-slate-600">{lead.email}</div>
+                        <div className="text-xs text-slate-400">{lead.phone}</div>
+                      </TableCell>
+                      <TableCell className="text-sm font-medium text-slate-600">{lead.applicationType || "N/A"}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`font-medium rounded-md px-2 py-0.5 border ${getStatusStyle(lead.status)}`}>
+                          {lead.status.replace(/_/g, ' ')}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-slate-500">
+                        {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() : '-'}
+                      </TableCell>
+                      <TableCell className="text-right px-6">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-600"><MoreHorizontal className="h-5 w-5" /></Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem onClick={() => handleUpdateLeadClick(lead)} className="cursor-pointer">
+                              <FileEdit className="mr-2 h-4 w-4" /> Update Status
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push(`/admin/leads/${lead._id}`)} className="cursor-pointer">
+                              <Eye className="mr-2 h-4 w-4" /> View Details
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredLeads.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="h-24 text-center">
-                          {searchQuery || statusFilter ? (
-                            <>
-                              <p className="text-muted-foreground">No leads match your filters</p>
-                              <Button
-                                variant="link"
-                                onClick={() => {
-                                  setSearchQuery('');
-                                  setStatusFilter('');
-                                }}
-                                className="mt-2"
-                              >
-                                Clear filters
-                              </Button>
-                            </>
-                          ) : (
-                            <p className="text-muted-foreground">No leads found</p>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredLeads.map((lead) => (
-                        <TableRow key={lead._id.toString()}>
-                          <TableCell>
-                            <div>
-                              <div className="font-medium">{lead.firstName} {lead.lastName}</div>
-                              <div className="text-xs text-muted-foreground">
-                                ID: {lead._id.substring(lead._id.length - 6).toUpperCase()}
-                              </div>
-                            </div>
-                          </TableCell>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+            <CardFooter className="px-6 py-4 flex justify-between bg-slate-50/30 rounded-b-xl border-t">
+              <span className="text-sm text-slate-500 font-medium">{filteredLeads.length} leads in view</span>
+              <Button variant="outline" size="sm" onClick={fetchLeads} className="border-slate-200 text-slate-600 bg-white shadow-sm">
+                <RefreshCw className="mr-2 h-3.5 w-3.5" /> Force Refresh
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
 
-                          <TableCell>
-                            <div className="text-sm">
-                              {lead.email && <div>{lead.email}</div>}
-                              {lead.phone && <div>{lead.phone}</div>}
-                            </div>
-                          </TableCell>
-
-                          <TableCell>
-                            <div className="text-sm">{lead.applicationType || "N/A"}</div>
-                          </TableCell>
-
-                          <TableCell>
-                            <Badge variant="secondary" className={getStatusColor(lead.status)}>
-                              {lead.status.replace(/_/g, ' ')}
-                            </Badge>
-                          </TableCell>
-
-                          <TableCell>
-                            <div className="text-sm">
-                              {lead.createdAt ? formatDate(lead.createdAt) : '-'}
-                              {lead.createdBy && (
-                                <div className="text-xs text-muted-foreground">
-                                  by {lead.createdBy.name}
-                                </div>
-                              )}
-                            </div>
-                          </TableCell>
-
-                          <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => handleUpdateLeadClick(lead)}>
-                                  <FileEdit className="mr-2 h-4 w-4" />
-                                  Update Status
-                                </DropdownMenuItem>
-                                {/* // In the actions dropdown menu within the table, add this item: */}
-                                <DropdownMenuItem onClick={() => router.push(`/admin/leads/${lead._id}`)}>
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  View Details
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-
-          <CardFooter className="p-4 border-t flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
-              {filteredLeads.length} {filteredLeads.length === 1 ? 'lead' : 'leads'}
-              {searchQuery && ` matching "${searchQuery}"`}
-              {statusFilter && ` with status "${statusFilter}"`}
-            </div>
-            <Button variant="outline" size="sm" onClick={fetchLeads}>
-              <RefreshCw className="mr-2 h-3.5 w-3.5" />
-              Refresh
-            </Button>
-          </CardFooter>
-        </Card>
-
-        {/* Update Lead Status Dialog */}
+        {/* Update Dialog */}
         <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Update Lead Status</DialogTitle>
-              <DialogDescription>
-                Change the status for this lead
-              </DialogDescription>
+              <DialogTitle className="text-xl">Update Lead Status</DialogTitle>
+              <DialogDescription>Apply changes to {selectedLead?.firstName}'s lead status.</DialogDescription>
             </DialogHeader>
-
-            {selectedLead && (
-              <div className="py-2">
-                <div className="font-medium">{selectedLead.firstName} {selectedLead.lastName}</div>
-                <div className="text-sm text-muted-foreground">{selectedLead.email}</div>
-                <div className="mt-2">
-                  <Badge variant="secondary" className={getStatusColor(selectedLead.status)}>
-                    Current: {selectedLead.status.replace(/_/g, ' ')}
-                  </Badge>
-                </div>
-              </div>
-            )}
-
             <Form {...updateForm}>
-              <form onSubmit={updateForm.handleSubmit(onUpdateLead)} className="space-y-4">
-                <FormField
-                  control={updateForm.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>New Status*</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {LEAD_STATUSES.map((status) => (
-                            <SelectItem key={status} value={status}>
-                              {status.replace(/_/g, ' ')}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={updateForm.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Notes</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Add notes about this status change (optional)"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
+              <form onSubmit={updateForm.handleSubmit(onUpdateLead)} className="space-y-5">
+                <FormField control={updateForm.control} name="status" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-700">Classification</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl><SelectTrigger className="border-slate-200"><SelectValue /></SelectTrigger></FormControl>
+                      <SelectContent className="max-h-60">{LEAD_STATUSES.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </FormItem>
+                )} />
+                <FormField control={updateForm.control} name="notes" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-700">Internal Notes</FormLabel>
+                    <FormControl><Textarea placeholder="Add context for this change..." className="resize-none border-slate-200" {...field} /></FormControl>
+                  </FormItem>
+                )} />
                 <DialogFooter>
-                  <Button type="submit" disabled={submitting}>
-                    {submitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Updating...
-                      </>
-                    ) : (
-                      <>
-                        <FileEdit className="mr-2 h-4 w-4" />
-                        Update Status
-                      </>
-                    )}
+                  <Button type="submit" disabled={submitting} className="w-full bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all">
+                    {submitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <FileEdit className="h-4 w-4 mr-2" />}
+                    Confirm Changes
                   </Button>
                 </DialogFooter>
               </form>

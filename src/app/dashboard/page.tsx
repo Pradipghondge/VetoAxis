@@ -1,23 +1,20 @@
 "use client"
 
 import * as React from "react"
-import { useEffect, useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import axios from 'axios'
 import DashboardLayout from '@/components/DashboardLayout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell, PieChart, Pie } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts'
 import {
     Plus,
     LayoutDashboard,
     TrendingUp,
     CheckCircle,
     Activity,
-    ChevronRight,
-    ChevronLeft
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { motion } from "framer-motion"
@@ -51,7 +48,7 @@ export default function DashboardPage() {
         if (!isDragging || !scrollContainerRef.current) return
         e.preventDefault()
         const x = e.pageX - scrollContainerRef.current.offsetLeft
-        const walk = (x - startX) * 2 // Scroll Speed
+        const walk = (x - startX) * 2 
         scrollContainerRef.current.scrollLeft = scrollLeft - walk
     }
 
@@ -64,8 +61,7 @@ export default function DashboardPage() {
 
     useEffect(() => { if (!authLoading && user) fetchStats() }, [user, authLoading])
 
-    // Calculate aggregated stats for the charts
-    const categorizedStats = React.useMemo(() => {
+    const categorizedStats = useMemo(() => {
         if (!stats?.statusCounts) return { pipelines: 0, closures: 0, issues: 0 }
         
         const getBucketCount = (bucket: string[]) => 
@@ -81,94 +77,54 @@ export default function DashboardPage() {
         }
     }, [stats])
 
-    // Carousel Navigation Logic
-    const scroll = (direction: 'left' | 'right') => {
-        if (scrollContainerRef.current) {
-            const { scrollLeft, clientWidth } = scrollContainerRef.current
-            const scrollTo = direction === 'left' ? scrollLeft - clientWidth / 2 : scrollLeft + clientWidth / 2
-            scrollContainerRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' })
-        }
-    }
-
     return (
         <DashboardLayout>
-            <div className="flex flex-col gap-6 w-full max-w-[1700px] max-w-full overflow-hidden mx-auto">
+            <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
 
-                {/* Dashboard Title & Inset Header Section */}
-                <div className="flex items-center justify-between px-2">
-                    <div className="space-y-0.5">
-                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">HELLO</h1>
-                        <p className="text-[13px] text-muted-foreground">{user?.name}</p>
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div className="space-y-1">
+                        <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-tight">Dashboard</h1>
+                        <p className="text-sm text-muted-foreground font-medium">
+                            Welcome back, {user?.name || '...'}
+                        </p>
                     </div>
-                <Link href="/leads/create">
-                    <Button size="sm" className="h-9 rounded-md px-4 text-xs font-semibold gap-2">
-                        <Plus className="h-3.5 w-3.5" /> Create Leads
-                    </Button>
-                </Link>
+                    <Link href="/leads/create" className="w-full md:w-auto">
+                        <Button size="sm" className="font-bold gap-2 rounded-lg w-full md:w-auto">
+                            <Plus className="h-4 w-4" /> New Lead
+                        </Button>
+                    </Link>
                 </div>
 
-                {/* SECTION 1: Monochrome Metric Strip */}
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <Card className="rounded-xl border shadow-sm">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Leads</CardTitle>
-                            <LayoutDashboard className="h-3.5 w-3.5 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{stats?.totalLeads || 0}</div>
-                            <p className="text-[10px] text-muted-foreground mt-1">Live data uplink active</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="rounded-xl border shadow-sm">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Pipeline</CardTitle>
-                            <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">0</div>
-                            <p className="text-[10px] text-muted-foreground mt-1">Currently in outreach phase</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="rounded-xl border shadow-sm">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Conversions</CardTitle>
-                            <CheckCircle className="h-3.5 w-3.5 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">2</div>
-                            <p className="text-[10px] text-muted-foreground mt-1">Verified records ready for billing</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="rounded-xl border shadow-sm text-destructive">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-xs font-medium uppercase tracking-wider">Risk Alerts</CardTitle>
-                            <Activity className="h-3.5 w-3.5" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">1</div>
-                            <p className="text-[10px] mt-1 opacity-70">Manual protocol bypass required</p>
-                        </CardContent>
-                    </Card>
+                {/* 4 Summary Cards */}
+                <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+                    {[
+                        { label: 'Total Leads', val: stats?.totalLeads, icon: LayoutDashboard },
+                        { label: 'In Pipeline', val: categorizedStats.pipelines, icon: TrendingUp },
+                        { label: 'Conversions', val: categorizedStats.closures, icon: CheckCircle },
+                        { label: 'Risk Alerts', val: categorizedStats.issues, icon: Activity, color: 'text-red-500' },
+                    ].map((m, i) => (
+                        <Card key={i} className="bg-card/50 border shadow-none">
+                            <CardHeader className="flex flex-row items-center justify-between pb-2">
+                                <CardTitle className="text-[10px] font-bold text-muted-foreground uppercase">{m.label}</CardTitle>
+                                <m.icon className={`h-4 w-4 ${m.color || 'text-muted-foreground'}`} />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold italic">{m.val ?? 0}</div>
+                            </CardContent>
+                        </Card>
+                    ))}
                 </div>
 
-                {/* SECTION 2: Ingestion Matrix Interactive Chart & Pulse Feed */}
-                <div className="grid gap-6 lg:grid-cols-7">
-                    {/* Horizontal Bar Chart for high-density status data */}
-                    <Card className="lg:col-span-4 rounded-2xl border shadow-sm overflow-hidden bg-card/40">
-                        <CardHeader className="p-6 flex flex-row items-center justify-between">
-                            <div className="space-y-0.5">
-                                <CardTitle className="text-sm font-semibold tracking-tight uppercase tracking-widest text-muted-foreground">
-                                    Status Matrix
-                                </CardTitle>
-                                <CardDescription className="text-[10px] font-medium uppercase opacity-60">
-                                    Real-time analysis across system states
-                                </CardDescription>
-                            </div>
-                            <Badge variant="outline" className="bg-background/50 border-border text-[9px] font-bold tabular-nums">
-                                TOTAL: {stats?.totalLeads || 0}
-                            </Badge>
+                {/* Chart and Feed Section */}
+                <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
+                    {/* Status Chart */}
+                    <Card className="lg:col-span-2 shadow-none bg-card/40">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle className="text-sm font-bold uppercase tracking-wider">Status Distribution</CardTitle>
+                            <Badge variant="outline" className="text-[10px] font-bold">LIVE</Badge>
                         </CardHeader>
-                        <CardContent className="h-[340px] px-2 pb-6">
+                        <CardContent className="h-[250px] md:h-[300px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart
                                     layout="vertical"
@@ -176,44 +132,15 @@ export default function DashboardPage() {
                                         name: status.replace(/_/g, ' '),
                                         value: stats?.statusCounts.find((s: any) => s._id === status)?.count || 0,
                                         color: STATUS_CONFIG[status].color
-                                    })).sort((a, b) => b.value - a.value)} // Important statuses to the top
-                                    margin={{ left: 20, right: 40, top: 0, bottom: 0 }}
+                                    })).sort((a, b) => b.value - a.value)}
+                                    margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
                                 >
                                     <XAxis type="number" hide />
-                                    <YAxis
-                                        dataKey="name"
-                                        type="category"
-                                        stroke="var(--muted-foreground)"
-                                        fontSize={9}
-                                        width={120}
-                                        tickLine={false}
-                                        axisLine={false}
-                                        tick={{ fontWeight: 700, fill: 'var(--muted-foreground)' }}
-                                    />
-                                    <Tooltip
-                                        cursor={{ fill: 'var(--muted)', opacity: 0.1 }}
-                                        contentStyle={{
-                                            backgroundColor: 'var(--background)',
-                                            border: '1px solid var(--border)',
-                                            borderRadius: '8px',
-                                            fontSize: '11px',
-                                            fontWeight: 'bold'
-                                        }}
-                                        itemStyle={{ color: 'var(--foreground)' }}
-                                    />
-                                    <Bar
-                                        dataKey="value"
-                                        radius={[0, 4, 4, 0]}
-                                        barSize={12}
-                                        animationDuration={1500}
-                                    >
-                                        {/* Dynamic coloring based on your STATUS_CONFIG Registry */}
-                                        {Object.keys(STATUS_CONFIG).map((entry, index) => (
-                                            <Cell
-                                                key={`cell-${index}`}
-                                                fill={STATUS_CONFIG[entry]?.color || 'var(--primary)'}
-                                                className="opacity-80 hover:opacity-100 transition-opacity"
-                                            />
+                                    <YAxis dataKey="name" type="category" fontSize={10} width={80} tickLine={false} axisLine={false} />
+                                    <Tooltip cursor={{ fill: 'transparent' }} />
+                                    <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={10}>
+                                        {Object.keys(STATUS_CONFIG).map((entry, idx) => (
+                                            <Cell key={idx} fill={STATUS_CONFIG[entry]?.color || 'var(--primary)'} />
                                         ))}
                                     </Bar>
                                 </BarChart>
@@ -221,187 +148,138 @@ export default function DashboardPage() {
                         </CardContent>
                     </Card>
 
-                    {/* Pulse Feed Table (Matched to image_0302c8.png) */}
-                    <Card className="lg:col-span-3 rounded-2xl border shadow-sm bg-card/40">
-                        <CardHeader className="p-6 border-b">
-                            <CardTitle className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                                All Leads
-                            </CardTitle>
+                    {/* Pulse Feed */}
+                    <Card className="shadow-none bg-card/40">
+                        <CardHeader className="border-b">
+                            <CardTitle className="text-sm font-bold uppercase">Recent Pulse</CardTitle>
                         </CardHeader>
-                        <CardContent className="p-0 max-h-[360px] overflow-y-auto no-scrollbar">
-                            <div className="divide-y border-border">
-                                {stats?.recentActivity?.map((act: any, i: number) => (
-                                    <div key={i} className="flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors">
-                                        <div className="h-9 w-9 rounded-md bg-muted border border-border flex items-center justify-center text-[11px] font-bold">
-                                            {act.firstName[0]}{act.lastName[0]}
+                        <CardContent className="p-0 h-[250px] md:h-[300px] overflow-y-auto no-scrollbar">
+                            <div className="divide-y">
+                                {stats?.recentActivity?.length > 0 ? stats.recentActivity.map((act: any, i: number) => (
+                                    <div key={i} className="flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors">
+                                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold">
+                                            {act.firstName?.[0]}{act.lastName?.[0]}
                                         </div>
-                                        <div className="flex-1 space-y-0.5">
-                                            <p className="text-sm font-semibold leading-none">{act.firstName} {act.lastName}</p>
-                                            <p className="text-[11px] text-muted-foreground uppercase tracking-tight">
-                                                State: <span className="text-foreground font-medium">{act.statusHistory.toStatus}</span>
-                                            </p>
+                                        <div className="flex-1">
+                                            <p className="text-xs font-bold">{act.firstName} {act.lastName}</p>
+                                            <p className="text-[10px] text-muted-foreground uppercase">{act.statusHistory.toStatus.replace(/_/g, ' ')}</p>
                                         </div>
-                                        <div className="text-[10px] text-muted-foreground tabular-nums font-bold">
+                                        <div className="text-[10px] text-muted-foreground font-mono italic">
                                             {format(new Date(act.statusHistory.timestamp), 'HH:mm')}
                                         </div>
                                     </div>
-                                ))}
+                                )) : (
+                                    <div className="text-center text-xs text-muted-foreground p-8">No recent activity.</div>
+                                )}
                             </div>
                         </CardContent>
                     </Card>
                 </div>
 
-                {/* --- ADDED SECTION: STATUS INVENTORY CAROUSEL --- */}
-                <div className="space-y-4 px-2 select-none">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground opacity-50">
-                            Drag to Explore
-                        </h2>
-                    </div>
-
-                    <div
-                        ref={scrollContainerRef}
-                        onMouseDown={handleMouseDown}
-                        onMouseLeave={handleMouseLeave}
-                        onMouseUp={handleMouseUp}
-                        onMouseMove={handleMouseMove}
-                        className={`flex gap-4 overflow-x-auto no-scrollbar scroll-smooth snap-x pb-4 cursor-${isDragging ? 'grabbing' : 'grab'} active:cursor-grabbing`}
-                    >
-                        {Object.keys(STATUS_CONFIG).map((status) => {
-                            const config = STATUS_CONFIG[status];
-                            const count = stats?.statusCounts?.find((s: any) => s._id === status)?.count || 0;
-                            const percentage = stats?.totalLeads > 0 ? (count / stats.totalLeads) * 100 : 0;
-
-                            return (
-                                <Card
-                                    key={status}
-                                    className="min-w-[240px] rounded-xl border border-border snap-start bg-card flex-none transition-all hover:border-primary/20"
-                                >
-                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                        <CardTitle className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                                            {status.replace(/_/g, ' ')}
-                                        </CardTitle>
-                                        <div style={{ color: count > 0 ? config.color : 'var(--muted-foreground)' }} className="opacity-70">
-                                            {React.isValidElement(config.icon) ? React.cloneElement(config.icon as any, { size: 14 }) : null}
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <div className="text-3xl font-bold tabular-nums italic text-foreground">
-                                            {count}
-                                        </div>
-                                        <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
-                                            <motion.div
-                                                initial={{ width: 0 }}
-                                                animate={{ width: `${percentage}%` }}
-                                                transition={{ duration: 1.2 }}
-                                                className="h-full"
-                                                style={{ backgroundColor: count > 0 ? config.color : 'transparent' }}
-                                            />
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            );
-                        })}
-                    </div>
-                </div>
-
-
-                {/* --- STAGE 5: ADVANCED ANALYTICS MATRIX --- */}
-                <div className="grid gap-8 lg:grid-cols-2 mt-8 px-2 pb-20">
-
-                    {/* Conversion Efficiency Funnel */}
-                    <Card className="rounded-[2.5rem] border shadow-sm bg-card/40 ring-1 ring-border/50 overflow-hidden">
-                        <CardHeader className="p-8 border-b border-border/30">
-                            <CardTitle className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                            Status Matrix
-                            </CardTitle>
+                {/* Pipeline and Efficiency Section */}
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                    <Card className="shadow-none bg-card/40">
+                        <CardHeader>
+                            <CardTitle className="text-sm font-bold uppercase tracking-wider">Funnel Overview</CardTitle>
                         </CardHeader>
-                        <CardContent className="h-[350px] p-8">
+                        <CardContent className="h-[250px] md:h-[300px]">
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart
-                                    data={[
-                                        { stage: 'Total Ingested', value: stats?.totalLeads || 0 },
-                                        { stage: 'In Pipeline', value: categorizedStats.pipelines },
-                                        { stage: 'Verified', value: stats?.statusCounts.find((s: any) => s._id === 'VERIFIED')?.count || 0 },
-                                        { stage: 'Paid Closures', value: stats?.statusCounts.find((s: any) => s._id === 'PAID')?.count || 0 },
-                                    ]}
-                                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                                >
-                                    <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
-                                    <XAxis
-                                        dataKey="stage"
-                                        axisLine={false}
-                                        tickLine={false}
-                                        tick={{ fontSize: 10, fontWeight: 700, fill: 'var(--muted-foreground)' }}
-                                    />
+                                <BarChart data={[
+                                    { stage: 'Total', value: stats?.totalLeads || 0 },
+                                    { stage: 'Active', value: categorizedStats.pipelines },
+                                    { stage: 'Verified', value: stats?.statusCounts.find((s: any) => s._id === 'VERIFIED')?.count || 0 },
+                                    { stage: 'Paid', value: stats?.statusCounts.find((s: any) => s._id === 'PAID')?.count || 0 },
+                                ]}>
+                                    <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                                    <XAxis dataKey="stage" fontSize={10} axisLine={false} tickLine={false} />
                                     <YAxis hide />
-                                    <Tooltip
-                                        cursor={{ fill: 'var(--muted)', opacity: 0.1 }}
-                                        contentStyle={{ backgroundColor: 'var(--background)', borderRadius: '12px', border: '1px solid var(--border)', fontSize: '12px' }}
-                                    />
-                                    <Bar
-                                        dataKey="value"
-                                        fill="var(--foreground)"
-                                        radius={[10, 10, 0, 0]}
-                                        barSize={60}
-                                    >
-                                        {/* Visual gradient effect matching the Ingestion Matrix */}
-                                        <Cell fillOpacity={0.8} />
-                                        <Cell fillOpacity={0.6} />
-                                        <Cell fillOpacity={0.4} />
-                                        <Cell fillOpacity={0.2} />
+                                    <Tooltip />
+                                    <Bar dataKey="value" fill="currentColor" radius={[4, 4, 0, 0]} barSize={30} className="text-primary">
+                                        <Cell fillOpacity={0.9} />
+                                        <Cell fillOpacity={0.7} />
+                                        <Cell fillOpacity={0.5} />
+                                        <Cell fillOpacity={0.3} />
                                     </Bar>
                                 </BarChart>
                             </ResponsiveContainer>
                         </CardContent>
                     </Card>
 
-                    {/* Categorical Proportion Gauge */}
-                    <Card className="rounded-[2.5rem] border shadow-sm bg-card/40 ring-1 ring-border/50 overflow-hidden">
-                        <CardHeader className="p-8 border-b border-border/30">
-                            <CardTitle className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                            Status Matrix
-                            </CardTitle>
-                          
+                    <Card className="shadow-none bg-card/40 flex flex-col">
+                        <CardHeader>
+                            <CardTitle className="text-sm font-bold uppercase tracking-wider">Success Ratio</CardTitle>
                         </CardHeader>
-                        <CardContent className="h-[350px] p-0 flex items-center justify-center">
+                        <div className="flex-1 flex items-center justify-center relative h-[220px] md:h-auto">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
                                         data={[
-                                            { name: 'Active Pipeline', value: categorizedStats.pipelines, color: 'var(--primary)' },
-                                            { name: 'Verified Closures', value: categorizedStats.closures, color: 'var(--foreground)' },
-                                            { name: 'Risk Anomalies', value: categorizedStats.issues, color: '#ef4444' },
+                                            { name: 'Active', value: categorizedStats.pipelines },
+                                            { name: 'Converted', value: categorizedStats.closures },
+                                            { name: 'Risk', value: categorizedStats.issues },
                                         ]}
-                                        cx="50%"
-                                        cy="50%"
-                                        innerRadius={80}
-                                        outerRadius={110}
-                                        paddingAngle={8}
-                                        dataKey="value"
+                                        innerRadius="70%" outerRadius="90%" paddingAngle={5} dataKey="value"
                                     >
-                                        {/* Dynamic mapping to themed colors */}
-                                        <Cell fill="var(--primary)" fillOpacity={0.8} />
+                                        <Cell fill="var(--primary)" />
                                         <Cell fill="var(--foreground)" fillOpacity={0.2} />
-                                        <Cell fill="#ef4444" fillOpacity={0.5} />
+                                        <Cell fill="#ef4444" />
                                     </Pie>
-                                    <Tooltip
-                                        contentStyle={{ backgroundColor: 'var(--background)', borderRadius: '12px', border: '1px solid var(--border)', fontSize: '11px' }}
-                                    />
                                 </PieChart>
                             </ResponsiveContainer>
-
-                            {/* Center Label for the Gauge */}
-                            <div className="absolute flex flex-col items-center justify-center">
-                                <span className="text-3xl font-black italic tracking-tighter tabular-nums">
-                                    {stats?.totalLeads > 0 ? (((categorizedStats.closures / stats.totalLeads) * 100).toFixed(0)) : 0}%
-                                </span>
-                                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-muted-foreground">
-                                    Success Rate
-                                </span>
+                            <div className="absolute text-center">
+                                <div className="text-3xl font-black italic">
+                                    {stats?.totalLeads > 0 ? `${((categorizedStats.closures / stats.totalLeads) * 100).toFixed(0)}%` : '0%'}
+                                </div>
+                                <div className="text-[10px] uppercase font-bold text-muted-foreground">Efficiency</div>
                             </div>
-                        </CardContent>
+                        </div>
                     </Card>
+                </div>
+
+                {/* Status List Carousel */}
+                <div className="space-y-4">
+                    <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 px-1">Inventory Status Matrix</h2>
+                    <div
+                        ref={scrollContainerRef}
+                        onMouseDown={handleMouseDown}
+                        onMouseLeave={handleMouseLeave}
+                        onMouseUp={handleMouseUp}
+                        onMouseMove={handleMouseMove}
+                        className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory cursor-grab active:cursor-grabbing py-4"
+                    >
+                        {Object.keys(STATUS_CONFIG).map((status, index) => {
+                            const config = STATUS_CONFIG[status];
+                            const count = stats?.statusCounts?.find((s: any) => s._id === status)?.count || 0;
+                            const percentage = stats?.totalLeads > 0 ? (count / stats.totalLeads) * 100 : 0;
+
+                            return (
+                                <div key={status} className="snap-start flex-shrink-0 w-[220px] first:ml-1 last:mr-1">
+                                    <Card className="w-full border shadow-none bg-card">
+                                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                                            <CardTitle className="text-[9px] font-bold uppercase text-muted-foreground">
+                                                {status.replace(/_/g, ' ')}
+                                            </CardTitle>
+                                            <div style={{ color: config.color }} className="opacity-50">
+                                                {React.isValidElement(config.icon) ? React.cloneElement(config.icon as any, { size: 12 }) : null}
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent className="space-y-3">
+                                            <div className="text-2xl font-bold italic">{count}</div>
+                                            <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
+                                                <motion.div
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: `${percentage}%` }}
+                                                    transition={{ duration: 0.5, ease: "easeOut" }}
+                                                    className="h-full"
+                                                    style={{ backgroundColor: count > 0 ? config.color : 'transparent' }}
+                                                />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
         </DashboardLayout>
