@@ -266,15 +266,7 @@ export default function CreateLeadPage() {
                   </p>
                 </div>
 
-                <FormField control={form.control} name="lawsuit" render={({ field }) => (
-                  <FormItem className="col-span-1 md:col-span-2">
-                    <FormLabel className="text-sm">Lawsuit (if applicable)</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Enter lawsuit information" className="h-10" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+                
 
                 <FormField control={form.control} name="notes" render={({ field }) => (
                   <FormItem className="col-span-1 md:col-span-2">
