@@ -91,7 +91,8 @@ export default function ClientLeads() {
                 <span className="p-2 bg-indigo-50 rounded-lg">
                   <Filter className="h-5 w-5 text-indigo-600" />
                 </span>
-Record Filters              </CardTitle>
+                Record Filters
+              </CardTitle>
               
               <div className="flex flex-wrap items-center gap-3">
                 <div className="relative">
@@ -104,6 +105,7 @@ Record Filters              </CardTitle>
                   />
                 </div>
                 
+                <span className="text-sm font-medium text-slate-500">Status:</span>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-[160px] border-slate-200">
                     <SelectValue placeholder="All Statuses" />
@@ -139,7 +141,7 @@ Record Filters              </CardTitle>
                 <TableRow className="border-slate-100">
                   <TableHead className="font-semibold text-slate-600 px-6 py-4">Client Identity</TableHead>
                   <TableHead className="font-semibold text-slate-600">Communication</TableHead>
-                  <TableHead className="font-semibold text-slate-600">Current Phase</TableHead>
+                  <TableHead className="font-semibold text-slate-600">Status</TableHead>
                   <TableHead className="font-semibold text-slate-600">Entry Date</TableHead>
                   <TableHead className="text-right px-6">Actions</TableHead>
                 </TableRow>
@@ -163,7 +165,7 @@ Record Filters              </CardTitle>
                     <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="h-9 w-9 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center text-xs font-bold border border-indigo-100">
-                          {lead.firstName[0]}{lead.lastName[0]}
+                          {lead.firstName?.[0]}{lead.lastName?.[0]}
                         </div>
                         <div>
                           <div className="font-semibold text-slate-900">{lead.firstName} {lead.lastName}</div>
@@ -187,7 +189,7 @@ Record Filters              </CardTitle>
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm text-slate-500">
-                      {format(new Date(lead.createdAt), 'MMM dd, yyyy')}
+                      {format(new Date(lead.createdAt), 'MMM dd, yyyy hh:mm a')}
                     </TableCell>
                     <TableCell className="text-right px-6">
                       <div className="flex justify-end gap-2">
@@ -247,7 +249,7 @@ Record Filters              </CardTitle>
         </Card>
       </div>
 
-      {/* History Dialog Redesigned */}
+      {/* History Dialog */}
       <Dialog open={historyDialog.open} onOpenChange={(open) => !open && setHistoryDialog({ open: false, lead: null })}>
         <DialogContent className="max-w-lg p-0 overflow-hidden border-none shadow-2xl">
           <DialogHeader className="p-6 bg-slate-900 text-white">

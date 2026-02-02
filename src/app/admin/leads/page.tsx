@@ -73,6 +73,8 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useRouter } from 'next/navigation';
+// ADDED: Import format from date-fns
+import { format } from 'date-fns';
 
 const LEAD_STATUSES = [
   "PENDING", "REJECTED", "VERIFIED", "REJECTED_BY_CLIENT", "PAID", 
@@ -221,7 +223,7 @@ export default function LeadManagement() {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <CardTitle className="text-xl flex items-center gap-2">
                   <span className="p-2 bg-indigo-50 rounded-lg"><Users className="h-5 w-5 text-indigo-600" /></span>
-               Lead Records
+                Lead Records
                 </CardTitle>
                 <div className="flex items-center gap-3">
                   <div className="relative">
@@ -254,7 +256,7 @@ export default function LeadManagement() {
                     <TableHead className="font-semibold text-slate-600">Contact Details</TableHead>
                     <TableHead className="font-semibold text-slate-600">Application</TableHead>
                     <TableHead className="font-semibold text-slate-600">Status</TableHead>
-                    <TableHead className="font-semibold text-slate-600">Created At</TableHead>
+                    <TableHead className="font-semibold text-slate-600">Entry Date</TableHead>
                     <TableHead className="text-right px-6">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -277,8 +279,9 @@ export default function LeadManagement() {
                           {lead.status.replace(/_/g, ' ')}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm text-slate-500">
-                        {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() : '-'}
+                      <TableCell className="text-sm text-slate-500 whitespace-nowrap">
+                        {/* FIXED: Using date-fns format for 12-hour AM/PM */}
+                        {lead.createdAt ? format(new Date(lead.createdAt), 'MMM dd, yyyy hh:mm a') : '-'}
                       </TableCell>
                       <TableCell className="text-right px-6">
                         <DropdownMenu>

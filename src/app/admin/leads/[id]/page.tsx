@@ -71,6 +71,7 @@ import {
   ArrowUp,
   ArrowDown
 } from 'lucide-react';
+import { format } from 'date-fns';
 import { toast } from '@/components/ui/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -212,38 +213,6 @@ export default function LeadDetailsPage() {
     }
   };
 
- // Replace both date formatting functions with these implementations
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-
-  // Get month, day, and year components
-  const month = String(date.getMonth() + 1).padStart(2, '0'); // months are 0-indexed
-  const day = String(date.getDate()).padStart(2, '0');
-  const year = date.getFullYear();
-
-  // Format as mm-dd-yyyy
-  return `${month}-${day}-${year}`;
-};
-
-const formatDateTime = (dateString: string) => {
-  const date = new Date(dateString);
-
-  // Get month, day, and year components
-  const month = String(date.getMonth() + 1).padStart(2, '0'); // months are 0-indexed
-  const day = String(date.getDate()).padStart(2, '0');
-  const year = date.getFullYear();
-
-  // Get time in 12-hour format with AM/PM
-  let hours = date.getHours();
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12;
-  hours = hours ? hours : 12; // the hour '0' should be '12'
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-
-  // Format as mm-dd-yyyy hh:mm AM/PM
-  return `${month}-${day}-${year} ${hours}:${minutes} ${ampm}`;
-};
-
   if (loading) {
     return (
       <DashboardLayout>
@@ -378,12 +347,12 @@ const formatDateTime = (dateString: string) => {
 
             <div className="flex flex-col">
               <span className="text-sm font-medium text-muted-foreground">Created</span>
-              <span className="text-sm">{formatDateTime(lead.createdAt)}</span>
+              <span className="text-sm">{format(new Date(lead.createdAt), 'MMM dd, yyyy hh:mm a')}</span>
             </div>
 
             <div className="flex flex-col">
               <span className="text-sm font-medium text-muted-foreground">Last Updated</span>
-              <span className="text-sm">{formatDateTime(lead.updatedAt)}</span>
+              <span className="text-sm">{format(new Date(lead.updatedAt), 'MMM dd, yyyy hh:mm a')}</span>
             </div>
 
             <div className="flex flex-col">
@@ -422,7 +391,7 @@ const formatDateTime = (dateString: string) => {
                       <span className="text-sm font-medium text-muted-foreground">Date of Birth</span>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span>{formatDate(lead.dateOfBirth)}</span>
+                        <span>{format(new Date(lead.dateOfBirth), 'MMM dd, yyyy')}</span>
                       </div>
                     </div>
                   )}
@@ -523,7 +492,7 @@ const formatDateTime = (dateString: string) => {
                         <div className="grid gap-1">
                           <div className="text-sm font-medium flex gap-2">
                             <Clock className="h-4 w-4 text-muted-foreground" />
-                            {formatDateTime(entry.timestamp)}
+                            {format(new Date(entry.timestamp), 'MMM dd, yyyy hh:mm a')}
                           </div>
 
                           <div className="flex items-center gap-3 mt-1">

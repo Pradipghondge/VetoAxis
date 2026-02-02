@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { format } from 'date-fns';
 import axios from 'axios';
 import {
   Card,
@@ -636,14 +637,12 @@ export default function AdminPage() {
     }
   };
 
-  const formatDate = (dateString: string | Date) => {
-    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    }).format(date);
-  };
+  // Find this function:
+const formatDate = (dateString: string | Date) => {
+  const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+  // Use the date-fns format function for Date + AM/PM Time
+  return format(date, 'MMM dd, yyyy hh:mm a');
+};
 
   return (
     <DashboardLayout>
@@ -1053,7 +1052,7 @@ export default function AdminPage() {
                       <TableHead>Role</TableHead>
                       <TableHead>Organization</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Joined</TableHead>
+                      <TableHead>Entry Date</TableHead>
                       <TableHead className="w-[80px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
