@@ -7,9 +7,10 @@ import Lead from '@/models/Lead';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: orgId } = await params;
     await dbConnect();
 
     // Verify authentication
@@ -19,7 +20,6 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const orgId = params.id;
 
     // For non-super-admins, verify they're requesting their own org
     if (decoded.role !== 'super_admin') {
@@ -65,9 +65,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: orgId } = await params;
     await dbConnect();
 
     // Verify authentication
@@ -85,7 +86,6 @@ export async function PUT(
       );
     }
 
-    const orgId = params.id;
     const body = await request.json();
 
     // Get the organization
