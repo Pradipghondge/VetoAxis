@@ -3,7 +3,7 @@ import { Zap } from 'lucide-react';
 import ClientLeads from '@/components/clientLeads';
 
 export const metadata = {
-  title: 'Leads | Velocity CRM',
+  title: 'Leads | VetoAxis',
   description: 'View and manage your leads.',
 };
 
