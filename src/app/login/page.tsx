@@ -18,7 +18,7 @@ export default function LoginPage() {
           <Zap className="h-10 w-10 text-[#8b5cf6] animate-pulse fill-[#8b5cf6]/20" />
         </div>
         <p className="mt-6 text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">
-          Initializing Velocity...
+          Initializing VetoAxis...
         </p>
       </div>
     }>

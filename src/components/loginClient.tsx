@@ -122,7 +122,7 @@ export default function LoginClient() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="name@velocity.com"
+                    placeholder="name@VetoAxis.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10 h-12 bg-white border-gray-300 text-gray-900 focus:ring-gray-500 focus:border-gray-500 rounded-lg"
@@ -174,7 +174,7 @@ export default function LoginClient() {
       </motion.div>
 
       <div className="mt-12 text-center text-[10px] font-bold uppercase tracking-[0.3em] text-gray-600">
-        <p>© {new Date().getFullYear()} Velocity Systems — High Performance CRM</p>
+        <p>© {new Date().getFullYear()} VetoAxis Systems — High Performance CRM</p>
       </div>
     </div>
   );
