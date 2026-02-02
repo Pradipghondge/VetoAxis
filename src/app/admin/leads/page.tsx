@@ -258,7 +258,7 @@ export default function LeadManagement() {
                   <TableRow className="border-slate-100">
                     <TableHead className="font-semibold text-slate-600 px-6">Name & ID</TableHead>
                     <TableHead className="font-semibold text-slate-600">Contact Details</TableHead>
-                    <TableHead className="font-semibold text-slate-600">Application</TableHead>
+                    <TableHead className="font-semibold text-slate-600">Case Type</TableHead>
                     <TableHead className="font-semibold text-slate-600">Status</TableHead>
                     <TableHead className="font-semibold text-slate-600">Buyer Code</TableHead>
                     <TableHead className="font-semibold text-slate-600">Entry Date</TableHead>
