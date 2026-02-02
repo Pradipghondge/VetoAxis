@@ -116,22 +116,13 @@ export default function DashboardPage() {
                     ))}
                 </div>
 
-                {/* SECTION 2: Ingestion Matrix Interactive Chart & Pulse Feed */}
-                <div className="grid gap-6 lg:grid-cols-7">
-                    {/* Horizontal Bar Chart for high-density status data */}
-                    <Card className="lg:col-span-4 rounded-2xl border shadow-sm overflow-hidden bg-card/40">
-                        <CardHeader className="p-6 flex flex-row items-center justify-between">
-                            <div className="space-y-0.5">
-                                <CardTitle className="text-sm font-semibold tracking-tight uppercase tracking-widest text-muted-foreground">
-                                    Success Rate
-                                </CardTitle>
-                                <CardDescription className="text-[10px] font-medium uppercase opacity-60">
-                                    Real-time analysis across system states
-                                </CardDescription>
-                            </div>
-                            <Badge variant="outline" className="bg-background/50 border-border text-[9px] font-bold tabular-nums">
-                                TOTAL: {stats?.totalLeads || 0}
-                            </Badge>
+                {/* Chart and Feed Section */}
+                <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
+                    {/* Status Chart */}
+                    <Card className="lg:col-span-2 shadow-none bg-card/40">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle className="text-sm font-bold uppercase tracking-wider">Status Distribution</CardTitle>
+                            <Badge variant="outline" className="text-[10px] font-bold">LIVE</Badge>
                         </CardHeader>
                         <CardContent className="h-[250px] md:h-[300px]">
                             <ResponsiveContainer width="100%" height="100%">
@@ -185,70 +176,11 @@ export default function DashboardPage() {
                     </Card>
                 </div>
 
-                {/* --- ADDED SECTION: STATUS INVENTORY CAROUSEL --- */}
-                <div className="space-y-4 px-2 select-none">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground opacity-50">
-                            Drag to Explore
-                        </h2>
-                    </div>
-
-                    <div
-                        ref={scrollContainerRef}
-                        onMouseDown={handleMouseDown}
-                        onMouseLeave={handleMouseLeave}
-                        onMouseUp={handleMouseUp}
-                        onMouseMove={handleMouseMove}
-                        className={`flex gap-4 overflow-x-auto no-scrollbar scroll-smooth snap-x pb-4 cursor-${isDragging ? 'grabbing' : 'grab'} active:cursor-grabbing`}
-                    >
-                        {Object.keys(STATUS_CONFIG).map((status) => {
-                            const config = STATUS_CONFIG[status];
-                            const count = stats?.statusCounts?.find((s: any) => s._id === status)?.count || 0;
-                            const percentage = stats?.totalLeads > 0 ? (count / stats.totalLeads) * 100 : 0;
-
-                            return (
-                                <Card
-                                    key={status}
-                                    className="min-w-[240px] rounded-xl border border-border snap-start bg-card flex-none transition-all hover:border-primary/20"
-                                >
-                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                        <CardTitle className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                                            {status.replace(/_/g, ' ')}
-                                        </CardTitle>
-                                        <div style={{ color: count > 0 ? config.color : 'var(--muted-foreground)' }} className="opacity-70">
-                                            {React.isValidElement(config.icon) ? React.cloneElement(config.icon as any, { size: 14 }) : null}
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <div className="text-3xl font-bold tabular-nums italic text-foreground">
-                                            {count}
-                                        </div>
-                                        <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
-                                            <motion.div
-                                                initial={{ width: 0 }}
-                                                animate={{ width: `${percentage}%` }}
-                                                transition={{ duration: 1.2 }}
-                                                className="h-full"
-                                                style={{ backgroundColor: count > 0 ? config.color : 'transparent' }}
-                                            />
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            );
-                        })}
-                    </div>
-                </div>
-
-
-                {/* --- STAGE 5: ADVANCED ANALYTICS MATRIX --- */}
-                <div className="grid gap-8 lg:grid-cols-2 mt-8 px-2 pb-20">
-
-                    {/* Conversion Efficiency Funnel */}
-                    <Card className="rounded-[2.5rem] border shadow-sm bg-card/40 ring-1 ring-border/50 overflow-hidden">
-                        <CardHeader className="p-8 border-b border-border/30">
-                            <CardTitle className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                            Lead Pipeline
-                            </CardTitle>
+                {/* Pipeline and Efficiency Section */}
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                    <Card className="shadow-none bg-card/40">
+                        <CardHeader>
+                            <CardTitle className="text-sm font-bold uppercase tracking-wider">Funnel Overview</CardTitle>
                         </CardHeader>
                         <CardContent className="h-[250px] md:h-[300px]">
                             <ResponsiveContainer width="100%" height="100%">
@@ -273,13 +205,9 @@ export default function DashboardPage() {
                         </CardContent>
                     </Card>
 
-                    {/* Categorical Proportion Gauge */}
-                    <Card className="rounded-[2.5rem] border shadow-sm bg-card/40 ring-1 ring-border/50 overflow-hidden">
-                        <CardHeader className="p-8 border-b border-border/30">
-                            <CardTitle className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                            Conversion Success
-                            </CardTitle>
-                          
+                    <Card className="shadow-none bg-card/40 flex flex-col">
+                        <CardHeader>
+                            <CardTitle className="text-sm font-bold uppercase tracking-wider">Success Ratio</CardTitle>
                         </CardHeader>
                         <div className="flex-1 flex items-center justify-center relative h-[220px] md:h-auto">
                             <ResponsiveContainer width="100%" height="100%">
