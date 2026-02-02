@@ -14,7 +14,7 @@ export function SiteHeader() {
       <div className="flex w-full items-center gap-2 px-4 lg:px-6">
         <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-foreground" />
         <Separator orientation="vertical" className="mx-2 h-4" />
-        <h1 className="text-sm font-semibold tracking-tight uppercase">Dashbord</h1>
+        <h1 className="text-sm font-semibold tracking-tight uppercase">Dashboard</h1>
         <div className="ml-auto flex items-center gap-2">
           <Button 
             variant="ghost" 
