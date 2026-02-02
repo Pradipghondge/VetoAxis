@@ -158,7 +158,7 @@ export default function DashboardPage() {
                         <CardHeader className="p-6 flex flex-row items-center justify-between">
                             <div className="space-y-0.5">
                                 <CardTitle className="text-sm font-semibold tracking-tight uppercase tracking-widest text-muted-foreground">
-                                    Status Matrix
+                                    Success Rate
                                 </CardTitle>
                                 <CardDescription className="text-[10px] font-medium uppercase opacity-60">
                                     Real-time analysis across system states
@@ -313,7 +313,7 @@ export default function DashboardPage() {
                     <Card className="rounded-[2.5rem] border shadow-sm bg-card/40 ring-1 ring-border/50 overflow-hidden">
                         <CardHeader className="p-8 border-b border-border/30">
                             <CardTitle className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                            Status Matrix
+                            Lead Pipeline
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="h-[350px] p-8">
@@ -360,7 +360,7 @@ export default function DashboardPage() {
                     <Card className="rounded-[2.5rem] border shadow-sm bg-card/40 ring-1 ring-border/50 overflow-hidden">
                         <CardHeader className="p-8 border-b border-border/30">
                             <CardTitle className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                            Status Matrix
+                            Conversion Success
                             </CardTitle>
                           
                         </CardHeader>
