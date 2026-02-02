@@ -5,36 +5,21 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import axios from 'axios';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
 import {
-  Loader2, Search, Plus, MoreHorizontal, Filter, Clock, Eye, History,
-  ChevronRight, ChevronLeft, RefreshCw, Mail, PhoneCall, Zap, Activity,
-  ShieldAlert, CheckCircle, XCircle, AlertTriangle, Layers
+  Loader2, Search, History, ChevronRight, ChevronLeft, 
+  Mail, PhoneCall, UserPlus, ExternalLink, RefreshCw,
+  ShieldCheck, Filter, X
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { LeadStatus } from '@/types';
-import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
-
-// --- PREMIUM STATUS CONFIG (Synced with Dashboard) ---
-const STATUS_CONFIG: Record<string, { color: string, icon: React.ReactNode }> = {
-  PENDING: { color: '#f59e0b', icon: <Clock className="h-3.5 w-3.5" /> },
-  REJECTED: { color: '#ef4444', icon: <XCircle className="h-3.5 w-3.5" /> },
-  VERIFIED: { color: '#10b981', icon: <CheckCircle className="h-3.5 w-3.5" /> },
-  PAID: { color: '#8b5cf6', icon: <Zap className="h-3.5 w-3.5" /> },
-  WORKING: { color: '#3b82f6', icon: <Activity className="h-3.5 w-3.5" /> },
-  CHARGEBACK: { color: '#be123c', icon: <ShieldAlert className="h-3.5 w-3.5" /> },
-  // ... rest use standard neutral
-};
 
 export default function ClientLeads() {
   const { user, loading: authLoading, authChecked } = useAuth();
@@ -65,208 +50,259 @@ export default function ClientLeads() {
     if (authChecked && !authLoading && user) fetchLeads();
   }, [user, authChecked, authLoading, pagination.page, statusFilter, searchInput]);
 
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case 'VERIFIED': case 'PAID': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'REJECTED': case 'CHARGEBACK': return 'bg-rose-50 text-rose-700 border-rose-200';
+      case 'PENDING': return 'bg-amber-50 text-amber-700 border-amber-200';
+      case 'WORKING': return 'bg-blue-50 text-blue-700 border-blue-200';
+      default: return 'bg-slate-50 text-slate-700 border-slate-200';
+    }
+  };
+
   return (
     <DashboardLayout>
-      <div className="space-y-8 pb-20 max-w-[1700px] mx-auto">
-        {/* SECTION 2: THE COMMAND BAR (Search & Filters) */}
-        <Card className="bg-card border-border shadow-sm">
-          <CardContent className="p-4 flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1 group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-              <input 
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Search leads by name, email, or phone..." 
-                className="w-full bg-background border border-input rounded-xl py-3 pl-10 pr-4 text-sm text-foreground focus:border-primary/30 outline-none transition-all"
-              />
+      <div className="flex flex-col space-y-8 max-w-7xl mx-auto px-6 py-8">
+        
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Lead Database</h1>
+            <p className="text-slate-500 mt-1">Manage, filter, and track your lead conversions</p>
+          </div>
+          <div className="flex items-center gap-3">
+             <Badge className="bg-emerald-50 text-emerald-600 border border-emerald-100 px-4 py-1.5 rounded-full flex gap-2 items-center">
+              <ShieldCheck className="h-4 w-4" /> Database Encrypted
+            </Badge>
+            <Button 
+              onClick={() => router.push('/leads/create')}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md transition-all gap-2"
+            >
+              <UserPlus className="h-4 w-4" /> Add New Lead
+            </Button>
+          </div>
+        </div>
+
+        {/* Main Table Card */}
+        <Card className="border-none shadow-md bg-white overflow-hidden">
+          <CardHeader className="px-6 py-5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <CardTitle className="text-xl flex items-center gap-2 font-bold text-slate-800">
+                <span className="p-2 bg-indigo-50 rounded-lg">
+                  <Filter className="h-5 w-5 text-indigo-600" />
+                </span>
+Record Filters              </CardTitle>
+              
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input 
+                    placeholder="Search name, email, ID..." 
+                    className="pl-10 w-full md:w-[280px] border-slate-200 focus:ring-indigo-500" 
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                  />
+                </div>
+                
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[160px] border-slate-200">
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All Statuses</SelectItem>
+                    <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="VERIFIED">Verified</SelectItem>
+                    <SelectItem value="PAID">Paid</SelectItem>
+                    <SelectItem value="WORKING">Working</SelectItem>
+                    <SelectItem value="REJECTED">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {(searchInput || statusFilter) && (
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => { setSearchInput(''); setStatusFilter(''); }}
+                    className="text-slate-400 hover:text-rose-600"
+                  >
+                    <X className="h-4 w-4 mr-1" /> Clear
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardHeader>
+          
+          <Separator className="opacity-50" />
+          
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader className="bg-slate-50/50">
+                <TableRow className="border-slate-100">
+                  <TableHead className="font-semibold text-slate-600 px-6 py-4">Client Identity</TableHead>
+                  <TableHead className="font-semibold text-slate-600">Communication</TableHead>
+                  <TableHead className="font-semibold text-slate-600">Current Phase</TableHead>
+                  <TableHead className="font-semibold text-slate-600">Entry Date</TableHead>
+                  <TableHead className="text-right px-6">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-64 text-center">
+                      <Loader2 className="animate-spin mx-auto h-8 w-8 text-indigo-600" />
+                      <p className="text-sm text-slate-500 mt-2">Fetching records...</p>
+                    </TableCell>
+                  </TableRow>
+                ) : leads.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-32 text-center text-slate-500">
+                      No leads found matching your criteria.
+                    </TableCell>
+                  </TableRow>
+                ) : leads.map((lead) => (
+                  <TableRow key={lead._id} className="hover:bg-slate-50/50 transition-colors border-slate-100">
+                    <TableCell className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center text-xs font-bold border border-indigo-100">
+                          {lead.firstName[0]}{lead.lastName[0]}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-slate-900">{lead.firstName} {lead.lastName}</div>
+                          <div className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">#{lead._id.slice(-6)}</div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <div className="text-sm text-slate-600 flex items-center gap-1.5">
+                          <Mail className="h-3 w-3 text-slate-400" /> {lead.email}
+                        </div>
+                        <div className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
+                          <PhoneCall className="h-3 w-3 text-slate-400" /> {lead.phone}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={`font-medium rounded-md px-2.5 py-0.5 border ${getStatusStyle(lead.status)}`}>
+                        {lead.status.replace(/_/g, ' ')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-slate-500">
+                      {format(new Date(lead.createdAt), 'MMM dd, yyyy')}
+                    </TableCell>
+                    <TableCell className="text-right px-6">
+                      <div className="flex justify-end gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
+                          onClick={() => setHistoryDialog({ open: true, lead })}
+                        >
+                          <History className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-slate-400 hover:text-slate-900 hover:bg-slate-100"
+                          onClick={() => router.push(`/leads/${lead._id}`)}
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+          
+          <CardFooter className="px-6 py-4 flex flex-col sm:flex-row items-center justify-between bg-slate-50/30 border-t gap-4">
+            <div className="text-sm text-slate-500 font-medium">
+              Showing {((pagination.page - 1) * 10) + 1} to {Math.min(pagination.page * 10, pagination.total)} of {pagination.total} leads
             </div>
             
-            <div className="flex gap-4">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[200px] bg-background border-input text-muted-foreground rounded-xl h-12 focus:ring-primary/30">
-                  <div className="flex items-center gap-2">
-                    <Filter className="h-3.5 w-3.5" />
-                    <SelectValue placeholder="Filter by Status" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All Statuses</SelectItem>
-                  {Object.keys(STATUS_CONFIG).map(s => (
-                    <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
+            <div className="flex items-center gap-2">
               <Button 
                 variant="outline" 
-                onClick={() => { setSearchInput(''); setStatusFilter(''); }}
-                className="border-input bg-background text-muted-foreground rounded-xl h-12 px-6 hover:text-foreground"
-              >
-                Clear
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* SECTION 3: THE TERMINAL TABLE */}
-        <Card className="bg-card border-border overflow-hidden shadow-sm">
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-32 space-y-4">
-                <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground text-nowrap">Loading Leads...</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
-                      <TableHead className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest py-5 pl-8">Client Name</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest py-5">Contact Details</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest py-5">Status</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest py-5">Created At</TableHead>
-                      <TableHead className="text-right text-[10px] font-bold uppercase text-muted-foreground tracking-widest py-5 pr-8">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {leads.map((lead) => (
-                      <TableRow 
-                        key={lead._id}
-                        className="border-border group hover:bg-muted/50 transition-all cursor-pointer"
-                        onClick={() => router.push(`/leads/${lead._id}`)}
-                      >
-                        <TableCell className="py-5 pl-8">
-                          <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-xl bg-muted border border-border flex items-center justify-center text-xs font-bold text-primary group-hover:border-primary/30 transition-all">
-                              {lead.firstName[0]}{lead.lastName[0]}
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-sm font-bold text-foreground leading-none mb-1 group-hover:text-primary transition-colors">
-                                {lead.firstName} {lead.lastName}
-                              </span>
-                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">ID: {lead._id.slice(-6).toUpperCase()}</span>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col space-y-1">
-                            <div className="flex items-center text-xs text-muted-foreground gap-2">
-                              <Mail className="h-3 w-3 text-muted-foreground" />
-                              {lead.email}
-                            </div>
-                            <div className="flex items-center text-xs text-muted-foreground gap-2">
-                              <PhoneCall className="h-3 w-3 text-muted-foreground" />
-                              {lead.phone}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge 
-                            className="bg-muted border-border text-foreground font-bold text-[10px] py-1 px-3 rounded-lg flex items-center gap-2 w-fit group-hover:border-primary/20 transition-all"
-                            style={{ boxShadow: `0 0 10px ${(STATUS_CONFIG[lead.status] || {color: 'var(--muted-foreground)'}).color}22` }}
-                          >
-                            <span style={{ color: (STATUS_CONFIG[lead.status] || {color: 'var(--muted-foreground)'}).color }}>
-                              {(STATUS_CONFIG[lead.status] || {icon: <Clock />}).icon}
-                            </span>
-                            {lead.status.replace(/_/g, ' ')}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-xs font-bold text-muted-foreground tabular-nums">
-                          {format(new Date(lead.createdAt), 'MMM dd, yyyy')}
-                        </TableCell>
-                        <TableCell className="text-right pr-8">
-                          <div className="flex justify-end gap-2">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 rounded-lg bg-muted hover:bg-primary/20 hover:text-primary"
-                              onClick={(e) => { e.stopPropagation(); setHistoryDialog({ open: true, lead }); }}
-                            >
-                              <History className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 rounded-lg bg-muted hover:bg-primary hover:text-primary-foreground"
-                              onClick={(e) => { e.stopPropagation(); router.push(`/leads/${lead._id}`); }}
-                            >
-                              <ChevronRight className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* SECTION 4: PAGINATION LOG */}
-        <div className="flex items-center justify-between px-2">
-           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-             Showing {((pagination.page - 1) * 10) + 1} - {Math.min(pagination.page * 10, pagination.total)} of {pagination.total} leads
-           </p>
-           <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
+                size="sm"
                 disabled={pagination.page === 1}
                 onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
-                className="bg-card border-border text-foreground h-10 w-10 p-0 rounded-xl"
+                className="border-slate-200 bg-white"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4 mr-1" /> Previous
               </Button>
-              <div className="h-10 px-4 flex items-center bg-primary/10 border border-primary/20 rounded-xl text-[10px] font-black text-primary uppercase">
-                Page {pagination.page}
+              <div className="text-xs font-bold px-3 py-1 bg-white border border-slate-200 rounded text-slate-600">
+                {pagination.page} / {pagination.pages || 1}
               </div>
               <Button 
                 variant="outline" 
-                size="sm" 
+                size="sm"
                 disabled={pagination.page >= pagination.pages}
                 onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-                className="bg-card border-border text-foreground h-10 w-10 p-0 rounded-xl"
+                className="border-slate-200 bg-white"
               >
-                <ChevronRight className="h-4 w-4" />
+                Next <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
-           </div>
-        </div>
+            </div>
+          </CardFooter>
+        </Card>
       </div>
 
-      {/* RE-STYLED HISTORY DIALOG */}
+      {/* History Dialog Redesigned */}
       <Dialog open={historyDialog.open} onOpenChange={(open) => !open && setHistoryDialog({ open: false, lead: null })}>
-        <DialogContent className="bg-card border-border text-foreground max-w-xl rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold uppercase tracking-tight flex items-center gap-3">
-              <History className="h-5 w-5 text-primary" />
+        <DialogContent className="max-w-lg p-0 overflow-hidden border-none shadow-2xl">
+          <DialogHeader className="p-6 bg-slate-900 text-white">
+            <DialogTitle className="text-xl flex items-center gap-2">
+              <History className="h-5 w-5 text-indigo-400" />
               Activity History
             </DialogTitle>
-            <DialogDescription className="text-muted-foreground font-medium">History for {historyDialog.lead?.firstName} {historyDialog.lead?.lastName}</DialogDescription>
+            <DialogDescription className="text-slate-400">
+              Tracking timeline for {historyDialog.lead?.firstName} {historyDialog.lead?.lastName}
+            </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="h-[400px] mt-4 pr-4">
-             <div className="space-y-6 relative pl-4">
-                <div className="absolute left-[19px] top-2 bottom-2 w-[1px] bg-border" />
-                {historyDialog.lead?.statusHistory?.map((log: any, i: number) => (
-                  <div key={i} className="relative pl-8">
-                     <div className="absolute left-0 top-1 h-3 w-3 rounded-full bg-card border-2 border-primary shadow-sm" />
-                     <div className="flex flex-col space-y-1">
-                        <div className="flex items-center justify-between">
-                           <span className="text-[10px] font-bold text-foreground uppercase">{log.toStatus}</span>
-                           <span className="text-[9px] font-bold text-muted-foreground uppercase tabular-nums">{format(new Date(log.timestamp), 'MMM dd, HH:mm')}</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground leading-relaxed bg-muted/50 p-2 rounded-lg border border-border">
-                           {log.notes || "No notes provided."}
-                        </p>
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest pt-1">Updated by: {log.changedBy?.name || "System"}</span>
-                     </div>
+
+          <ScrollArea className="max-h-[400px] p-6 bg-white">
+            <div className="space-y-6 relative">
+              <div className="absolute left-[7px] top-2 bottom-2 w-[1px] bg-slate-200" />
+              
+              {historyDialog.lead?.statusHistory?.length > 0 ? (
+                historyDialog.lead.statusHistory.map((log: any, i: number) => (
+                  <div key={i} className="relative pl-7 group">
+                    <div className="absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-indigo-600 ring-2 ring-indigo-50" />
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center justify-between">
+                        <Badge variant="secondary" className="text-[10px] font-bold bg-slate-100 text-slate-700 border-none">
+                          {log.toStatus}
+                        </Badge>
+                        <span className="text-[10px] text-slate-400 font-medium">
+                          {format(new Date(log.timestamp), 'MMM dd, HH:mm')}
+                        </span>
+                      </div>
+                      <div className="mt-1 text-sm text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        {log.notes || "No additional notes provided."}
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-1 pl-1 italic">
+                        Authorized by: {log.changedBy?.name || "System"}
+                      </p>
+                    </div>
                   </div>
-                ))}
-             </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-slate-400 text-sm italic">
+                  No history records found for this lead.
+                </div>
+              )}
+            </div>
           </ScrollArea>
-          <DialogFooter className="mt-6">
-            <Button variant="ghost" onClick={() => setHistoryDialog({ open: false, lead: null })} className="text-muted-foreground font-bold uppercase text-[10px]">Close</Button>
-          </DialogFooter>
+          
+          <div className="p-4 bg-slate-50 border-t flex justify-end">
+            <Button 
+              onClick={() => setHistoryDialog({ open: false, lead: null })}
+              className="bg-white border-slate-200 text-slate-700 hover:bg-slate-100"
+              variant="outline"
+            >
+              Close History
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </DashboardLayout>

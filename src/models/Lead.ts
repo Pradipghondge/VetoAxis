@@ -29,12 +29,32 @@ const leadSchema = new mongoose.Schema({
   fields: [dynamicFieldSchema], // Array of dynamic fields
   status: {
     type: String,
-    enum: [
-      "PENDING", "REJECTED", "VERIFIED", "REJECTED_BY_CLIENT", "PAID",
-      "DUPLICATE", "NOT_RESPONDING", "FELONY", "DEAD_LEAD", "WORKING",
-      "CALL_BACK", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4",
-      "CHARGEBACK", "WAITING_ID", "SENT_CLIENT", "QC", "ID_VERIFIED", "BILLABLE", "CAMPAIGN_PAUSED", "SENT_TO_LAW_FIRM"
-    ],
+   enum: [
+  "PENDING",
+  "REJECTED",
+  "VERIFIED",
+  "REJECTED_BY_CLIENT",
+  "PAID",
+  "DUPLICATE",
+  "NOT_RESPONDING",
+  "FELONY",
+  "DEAD_LEAD",
+  "WORKING",
+  "CALL_BACK",
+  "ATTEMPT_1",
+  "ATTEMPT_2",
+  "ATTEMPT_3",
+  "ATTEMPT_4",
+  "CHARGEBACK",
+  "WAITING_ID",
+  "SENT_CLIENT",
+  "QC",
+  "ID_VERIFIED",
+  "BILLABLE",
+  "CAMPAIGN_PAUSED",
+  "SENT_TO_LAW_FIRM"
+],
+
     default: "PENDING",
   },
   statusHistory: [statusHistorySchema],
