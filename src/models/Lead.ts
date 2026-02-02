@@ -59,6 +59,7 @@ const leadSchema = new mongoose.Schema({
   },
   statusHistory: [statusHistorySchema],
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  buyerCode: { type: String },
 }, { timestamps: true });
 
 export default mongoose.models.Lead || mongoose.model("Lead", leadSchema);

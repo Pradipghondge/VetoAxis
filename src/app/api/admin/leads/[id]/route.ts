@@ -76,40 +76,39 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { status, notes } = body;
+    console.log("Received request body:", body); // Added log
+    const { status, notes, buyerCode } = body;
+    console.log("Received buyerCode:", buyerCode); // Added log
 
-    // Check if the lead exists
-    const lead = await Lead.findById(leadId);
+    const statusHistory = {
+      fromStatus: (await Lead.findById(leadId).select('status')).status,
+      toStatus: status,
+      notes: notes || "",
+      changedBy: decoded.id
+    };
 
-    if (!lead) {
+    console.log("Attempting to save buyerCode:", buyerCode); // Added log
+    const updatedLead = await Lead.findByIdAndUpdate(
+      leadId,
+      {
+        $set: { status, buyerCode },
+        $push: { statusHistory },
+      },
+      { new: true }
+    );
+
+    if (!updatedLead) {
       return NextResponse.json(
         { message: 'Lead not found' },
         { status: 404 }
       );
     }
 
-    // Add to status history
-    const statusHistory = {
-      fromStatus: lead.status,
-      toStatus: status,
-      notes: notes || "",
-      changedBy: decoded.id
-    };
-
-    // Update the lead
-    lead.status = status;
-    lead.statusHistory.push(statusHistory);
-
-    await lead.save();
+    console.log("Lead after update:", updatedLead); // Added log
 
     return NextResponse.json({
       message: 'Lead updated successfully',
-      lead: {
-        id: lead._id,
-        firstName: lead.firstName,
-        lastName: lead.lastName,
-        status: lead.status
-      }
+      lead: updatedLead,
     });
   } catch (error) {
     console.error('Error updating lead:', error);
