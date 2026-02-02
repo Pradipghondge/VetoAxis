@@ -47,7 +47,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
               <Link href="/dashboard" className="flex items-center gap-3">
                 <Box className="size-5 text-foreground shrink-0" />
-                <span className="text-sm font-semibold truncate group-data-[collapsible=icon]:hidden">Velocity CRM</span>
+                <span className="text-sm font-semibold truncate group-data-[collapsible=icon]:hidden">VetoAxis</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

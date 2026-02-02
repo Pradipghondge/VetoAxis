@@ -3,7 +3,7 @@ import { Zap } from 'lucide-react';
 import LoginClient from '@/components/loginClient';
 
 export const metadata = { 
-  title: 'Sign In | Velocity CRM',
+  title: 'Sign In | VetoAxis',
   description: 'Access your high-performance sales dashboard.' 
 };
 
