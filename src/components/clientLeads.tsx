@@ -17,7 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import {
   Loader2, Search, History, ChevronRight, ChevronLeft, 
   Mail, PhoneCall, UserPlus, ExternalLink, RefreshCw,
-  ShieldCheck, Filter, X
+  ShieldCheck, Filter, X, Briefcase
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -141,6 +141,7 @@ export default function ClientLeads() {
                 <TableRow className="border-slate-100">
                   <TableHead className="font-semibold text-slate-600 px-6 py-4">Client Identity</TableHead>
                   <TableHead className="font-semibold text-slate-600">Communication</TableHead>
+                  <TableHead className="font-semibold text-slate-600">Case Type</TableHead>
                   <TableHead className="font-semibold text-slate-600">Status</TableHead>
                   <TableHead className="font-semibold text-slate-600">Buyer Code</TableHead>
                   <TableHead className="font-semibold text-slate-600">Entry Date</TableHead>
@@ -150,14 +151,14 @@ export default function ClientLeads() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-64 text-center">
+                    <TableCell colSpan={7} className="h-64 text-center">
                       <Loader2 className="animate-spin mx-auto h-8 w-8 text-indigo-600" />
                       <p className="text-sm text-slate-500 mt-2">Fetching records...</p>
                     </TableCell>
                   </TableRow>
                 ) : leads.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-32 text-center text-slate-500">
+                    <TableCell colSpan={7} className="h-32 text-center text-slate-500">
                       No leads found matching your criteria.
                     </TableCell>
                   </TableRow>
@@ -183,6 +184,9 @@ export default function ClientLeads() {
                           <PhoneCall className="h-3 w-3 text-slate-400" /> {lead.phone}
                         </div>
                       </div>
+                    </TableCell>
+                    <TableCell className="text-sm font-medium text-slate-600">
+                      {lead.applicationType || "N/A"}
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className={`font-medium rounded-md px-2.5 py-0.5 border ${getStatusStyle(lead.status)}`}>
