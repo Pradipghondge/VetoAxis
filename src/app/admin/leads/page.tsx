@@ -66,6 +66,7 @@ import {
   XCircle,
   Eye,
   ShieldCheck,
+  Trash2, // Added Trash icon
 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -73,7 +74,6 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useRouter } from 'next/navigation';
-// ADDED: Import format from date-fns
 import { format } from 'date-fns';
 
 const LEAD_STATUSES = [
@@ -145,7 +145,6 @@ export default function LeadManagement() {
 
   const onUpdateLead = async (values: UpdateLeadFormValues) => {
     if (!selectedLead) return;
-    console.log("Updating lead with values:", values); // Added log
     setSubmitting(true);
     try {
       await axios.put(`/api/admin/leads/${selectedLead._id}`, values);
@@ -155,6 +154,23 @@ export default function LeadManagement() {
     } catch (error: any) {
       toast({ title: "Error", description: error.response?.data?.message || "Update failed", variant: "destructive" });
     } finally { setSubmitting(false); }
+  };
+
+  // ADDED: Delete Lead function
+  const onDeleteLead = async (leadId: string) => {
+    if (!confirm("Are you sure you want to delete this lead? This action cannot be undone.")) return;
+    
+    try {
+      await axios.delete(`/api/admin/leads/${leadId}`);
+      toast({ title: "Success", description: "Lead deleted successfully" });
+      fetchLeads();
+    } catch (error: any) {
+      toast({ 
+        title: "Error", 
+        description: error.response?.data?.message || "Delete failed", 
+        variant: "destructive" 
+      });
+    }
   };
 
   const handleUpdateLeadClick = (lead: Lead) => {
@@ -221,7 +237,6 @@ export default function LeadManagement() {
         {/* Main Content Area */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          {/* Table Card */}
           <Card className="lg:col-span-12 border-none shadow-md bg-white">
             <CardHeader className="px-6 py-5">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -286,7 +301,6 @@ export default function LeadManagement() {
                       </TableCell>
                       <TableCell className="text-sm font-medium text-slate-600">{lead.buyerCode || "N/A"}</TableCell>
                       <TableCell className="text-sm text-slate-500 whitespace-nowrap">
-                        {/* FIXED: Using date-fns format for 12-hour AM/PM */}
                         {lead.createdAt ? format(new Date(lead.createdAt), 'MMM dd, yyyy hh:mm a') : '-'}
                       </TableCell>
                       <TableCell className="text-right px-6">
@@ -300,6 +314,15 @@ export default function LeadManagement() {
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => router.push(`/admin/leads/${lead._id}`)} className="cursor-pointer">
                               <Eye className="mr-2 h-4 w-4" /> View Details
+                            </DropdownMenuItem>
+                            
+                            {/* ADDED: Delete Option with Separator */}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => onDeleteLead(lead._id)} 
+                              className="cursor-pointer text-rose-600 focus:text-rose-600 focus:bg-rose-50"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete Lead
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

@@ -118,3 +118,33 @@ export async function PUT(
     );
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: leadId } = await params;
+    await dbConnect();
+
+    // Verify authentication and role
+    const decoded = getAuthToken(request);
+    if (!decoded || typeof decoded !== 'object' || decoded.role !== 'super_admin') {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 403 });
+    }
+
+    const deletedLead = await Lead.findByIdAndDelete(leadId);
+
+    if (!deletedLead) {
+      return NextResponse.json({ message: 'Lead not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ message: 'Lead deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting lead:', error);
+    return NextResponse.json(
+      { message: 'Server error', error: (error as Error).message },
+      { status: 500 }
+    );
+  }
+}
