@@ -8,17 +8,7 @@ export const DYNAMIC_FIELDS: Record<
   Array<{ key: string; label: string; type: 'text' | 'date' | 'radio' | 'checkbox' }>
 > = {
   /* ───────────────────────── CA WILDFIRE ───────────────────────── */
-  'CA Wildfire': [
-    { key: 'city', label: 'City', type: 'text' },
-    { key: 'state', label: 'State', type: 'text' },
-    { key: 'zip', label: 'ZIP Code', type: 'text' },
-    { key: 'dateOfIncident', label: 'Date of Incident', type: 'date' },
-    { key: 'descriptionOfIncident', label: 'Description of Incident', type: 'text' },
-    { key: 'wildfireName', label: 'Wildfire Name', type: 'text' },
-    { key: 'homeownerOrRenter', label: 'Homeowner or Renter?', type: 'radio' },
-    { key: 'maritalStatus', label: 'Marital Status', type: 'text' },
-    { key: 'alreadySignedAttorney', label: 'Already signed with an attorney?', type: 'radio' }
-  ],
+
 
   /* ───────────────────────── HAIR RELAXER ──────────────────────── */
   'Hair Relaxer': [
@@ -70,15 +60,7 @@ export const DYNAMIC_FIELDS: Record<
   ],
 
   /* ───────────────────────── PFAS ──────────────────────────────── */
-  'PFAS': [
-    { key: 'diagnosis', label: 'Diagnosis (Kidney / Testicular / etc.)', type: 'text' },
-    { key: 'dateDiagnosed', label: 'Date Diagnosed', type: 'date' },
-    { key: 'symptomsStage', label: 'Symptoms / Stage', type: 'text' },
-    { key: 'treatment', label: 'Treatment received', type: 'text' },
-    { key: 'prior1970', label: 'Only exposed prior to 1970?', type: 'radio' },
-    { key: 'attorney', label: 'Currently have an attorney?', type: 'radio' }
-  ],
-
+ 
   /* ───────────────────────── NEC ───────────────────────────────── */
   'NEC': [
     { key: 'qualifyingInjury', label: 'Qualifying Injury', type: 'text' },
@@ -91,13 +73,20 @@ export const DYNAMIC_FIELDS: Record<
   ],
 
   /* ───────────────────────── LUNG CANCER ───────────────────────── */
-  'Lung Cancer': [
-    { key: 'asbestosExposure', label: 'Diagnosed lung cancer w/ asbestos exposure?', type: 'radio' },
-    { key: 'whoDiagnosed', label: 'Who diagnosed you?', type: 'text' },
-    { key: 'occupation', label: 'Occupation / Trade (dropdown)', type: 'text' },
-    { key: 'company', label: 'Company worked for', type: 'text' },
-    { key: 'employmentProof', label: 'Can prove employment in that field?', type: 'radio' }
-  ],
+'ROBLOX': [
+  { key: 'incidentDate', label: 'Date of Incident', type: 'date' },
+  { key: 'username', label: 'ROBLOX Username', type: 'text' },
+  { key: 'userId', label: 'ROBLOX User ID', type: 'text' },
+  { key: 'gameName', label: 'Game Name Where Incident Occurred', type: 'text' },
+  { key: 'gameLink', label: 'Game Link (URL)', type: 'text' },
+  { key: 'incidentType', label: 'Type of Issue (Scam / Hacking / Exploitation / Injury)', type: 'text' },
+  { key: 'description', label: 'Detailed Description of Incident', type: 'textarea' },
+  { key: 'reportedToRoblox', label: 'Was this reported to ROBLOX?', type: 'radio' },
+  { key: 'reportDate', label: 'Date Reported to ROBLOX', type: 'date' },
+  { key: 'evidence', label: 'Evidence (Screenshots / Videos / Links)', type: 'text' },
+  { key: 'lossAmount', label: 'Robux or Monetary Loss (if any)', type: 'text' }
+]
+,
 
   /* ───────────────────────── PARAQUAT ──────────────────────────── */
   'Paraquat': [
@@ -112,14 +101,7 @@ export const DYNAMIC_FIELDS: Record<
   ],
 
   /* ───────────────────────── LDS ───────────────────────────────── */
-  'LDS': [
-    { key: 'drugPrescribed', label: 'Drug Prescribed', type: 'text' },
-    { key: 'treatedFor', label: 'Condition Treated', type: 'text' },
-    { key: 'reactionType', label: 'Reaction Type', type: 'text' },
-    { key: 'reactionDate', label: 'Date of Reaction', type: 'date' },
-    { key: 'hospitalization', label: 'Hospitalization Duration', type: 'text' },
-    { key: 'stillOnMedication', label: 'Still on Medication?', type: 'radio' }
-  ],
+ 
 
   /* ───────────────────────── TALCUM ────────────────────────────── */
   'Talcum': [
