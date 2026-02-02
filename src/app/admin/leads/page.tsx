@@ -87,6 +87,7 @@ const LEAD_STATUSES = [
 const updateLeadSchema = z.object({
   status: z.enum(LEAD_STATUSES as [string, ...string[]]),
   notes: z.string().optional(),
+  buyerCode: z.string().optional(),
 });
 
 type UpdateLeadFormValues = z.infer<typeof updateLeadSchema>;
@@ -101,6 +102,7 @@ interface Lead {
   applicationType: string;
   createdAt: string;
   createdBy: { name: string; email: string; };
+  buyerCode?: string;
 }
 
 export default function LeadManagement() {
@@ -116,7 +118,7 @@ export default function LeadManagement() {
 
   const updateForm = useForm<UpdateLeadFormValues>({
     resolver: zodResolver(updateLeadSchema),
-    defaultValues: { status: 'PENDING', notes: '' },
+    defaultValues: { status: 'PENDING', notes: '', buyerCode: '' },
   });
 
   useEffect(() => { fetchLeads(); }, [statusFilter]);
@@ -143,6 +145,7 @@ export default function LeadManagement() {
 
   const onUpdateLead = async (values: UpdateLeadFormValues) => {
     if (!selectedLead) return;
+    console.log("Updating lead with values:", values); // Added log
     setSubmitting(true);
     try {
       await axios.put(`/api/admin/leads/${selectedLead._id}`, values);
@@ -158,6 +161,7 @@ export default function LeadManagement() {
     setSelectedLead(lead);
     updateForm.setValue('status', lead.status as any);
     updateForm.setValue('notes', '');
+    updateForm.setValue('buyerCode', lead.buyerCode || '');
     setUpdateDialogOpen(true);
   };
 
@@ -256,13 +260,14 @@ export default function LeadManagement() {
                     <TableHead className="font-semibold text-slate-600">Contact Details</TableHead>
                     <TableHead className="font-semibold text-slate-600">Application</TableHead>
                     <TableHead className="font-semibold text-slate-600">Status</TableHead>
+                    <TableHead className="font-semibold text-slate-600">Buyer Code</TableHead>
                     <TableHead className="font-semibold text-slate-600">Entry Date</TableHead>
                     <TableHead className="text-right px-6">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loading ? (
-                    <TableRow><TableCell colSpan={6} className="h-64 text-center"><Loader2 className="animate-spin mx-auto h-8 w-8 text-indigo-600" /></TableCell></TableRow>
+                    <TableRow><TableCell colSpan={7} className="h-64 text-center"><Loader2 className="animate-spin mx-auto h-8 w-8 text-indigo-600" /></TableCell></TableRow>
                   ) : filteredLeads.map((lead) => (
                     <TableRow key={lead._id} className="hover:bg-slate-50/50 transition-colors border-slate-100">
                       <TableCell className="px-6">
@@ -279,6 +284,7 @@ export default function LeadManagement() {
                           {lead.status.replace(/_/g, ' ')}
                         </Badge>
                       </TableCell>
+                      <TableCell className="text-sm font-medium text-slate-600">{lead.buyerCode || "N/A"}</TableCell>
                       <TableCell className="text-sm text-slate-500 whitespace-nowrap">
                         {/* FIXED: Using date-fns format for 12-hour AM/PM */}
                         {lead.createdAt ? format(new Date(lead.createdAt), 'MMM dd, yyyy hh:mm a') : '-'}
@@ -334,6 +340,12 @@ export default function LeadManagement() {
                   <FormItem>
                     <FormLabel className="text-slate-700">Internal Notes</FormLabel>
                     <FormControl><Textarea placeholder="Add context for this change..." className="resize-none border-slate-200" {...field} /></FormControl>
+                  </FormItem>
+                )} />
+                <FormField control={updateForm.control} name="buyerCode" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-700">Buyer Code</FormLabel>
+                    <FormControl><Textarea placeholder="Add buyer code..." className="resize-none border-slate-200" {...field} /></FormControl>
                   </FormItem>
                 )} />
                 <DialogFooter>

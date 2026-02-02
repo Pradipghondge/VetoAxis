@@ -142,6 +142,7 @@ export default function ClientLeads() {
                   <TableHead className="font-semibold text-slate-600 px-6 py-4">Client Identity</TableHead>
                   <TableHead className="font-semibold text-slate-600">Communication</TableHead>
                   <TableHead className="font-semibold text-slate-600">Status</TableHead>
+                  <TableHead className="font-semibold text-slate-600">Buyer Code</TableHead>
                   <TableHead className="font-semibold text-slate-600">Entry Date</TableHead>
                   <TableHead className="text-right px-6">Actions</TableHead>
                 </TableRow>
@@ -149,14 +150,14 @@ export default function ClientLeads() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-64 text-center">
+                    <TableCell colSpan={6} className="h-64 text-center">
                       <Loader2 className="animate-spin mx-auto h-8 w-8 text-indigo-600" />
                       <p className="text-sm text-slate-500 mt-2">Fetching records...</p>
                     </TableCell>
                   </TableRow>
                 ) : leads.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-32 text-center text-slate-500">
+                    <TableCell colSpan={6} className="h-32 text-center text-slate-500">
                       No leads found matching your criteria.
                     </TableCell>
                   </TableRow>
@@ -188,6 +189,7 @@ export default function ClientLeads() {
                         {lead.status.replace(/_/g, ' ')}
                       </Badge>
                     </TableCell>
+                    <TableCell className="text-sm font-medium text-slate-600">{lead.buyerCode || "N/A"}</TableCell>
                     <TableCell className="text-sm text-slate-500">
                       {format(new Date(lead.createdAt), 'MMM dd, yyyy hh:mm a')}
                     </TableCell>

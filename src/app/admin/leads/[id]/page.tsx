@@ -90,6 +90,7 @@ const LEAD_STATUSES = [
 const updateLeadSchema = z.object({
   status: z.enum(LEAD_STATUSES as [string, ...string[]]),
   notes: z.string().optional(),
+  buyerCode: z.string().optional(),
 });
 
 type UpdateLeadFormValues = z.infer<typeof updateLeadSchema>;
@@ -107,6 +108,7 @@ interface Lead {
   lawsuit: string;
   notes: string;
   status: string;
+  buyerCode?: string;
   fields: { key: string; value: string }[];
   statusHistory: {
     _id: string;
@@ -143,6 +145,7 @@ export default function LeadDetailsPage() {
     defaultValues: {
       status: 'PENDING',
       notes: '',
+      buyerCode: '',
     },
   });
 
@@ -158,6 +161,7 @@ export default function LeadDetailsPage() {
       const { data } = await axios.get(`/api/admin/leads/${id}`);
       setLead(data.lead);
       updateForm.setValue('status', data.lead.status);
+      updateForm.setValue('buyerCode', data.lead.buyerCode || '');
     } catch (error: any) {
       console.error('Error fetching lead details:', error);
       setError(error.response?.data?.message || 'Failed to load lead details');
@@ -452,6 +456,13 @@ export default function LeadDetailsPage() {
                       <span>{lead.lawsuit}</span>
                     </div>
                   )}
+
+                  {lead.buyerCode && (
+                    <div className="grid grid-cols-1 gap-1">
+                      <span className="text-sm font-medium text-muted-foreground">Buyer Code</span>
+                      <span>{lead.buyerCode}</span>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -620,6 +631,23 @@ export default function LeadDetailsPage() {
                       <FormControl>
                         <Textarea
                           placeholder="Add notes about this status change (optional)"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={updateForm.control}
+                  name="buyerCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Buyer Code</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Add buyer code (optional)"
                           {...field}
                         />
                       </FormControl>
