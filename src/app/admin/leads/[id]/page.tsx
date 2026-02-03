@@ -69,7 +69,8 @@ import {
   X,
   Clock,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  ArrowRight
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '@/components/ui/use-toast';
@@ -80,7 +81,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 
 // Define Lead status options from your model
 const LEAD_STATUSES = [
-  "PENDING", "REJECTED", "VERIFIED", "REJECTED_BY_CLIENT", "PAID",
+  "PENDING", "REJECTED", "VERIFIED", "REJECTED_BY_CLIENT", "PAID","SIGNED","VM","TRANSFERRED","SEND TO ANOTHER BUYER",
   "DUPLICATE", "NOT_RESPONDING", "FELONY", "DEAD_LEAD", "WORKING",
   "CALL_BACK", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4",
   "CHARGEBACK", "WAITING_ID", "SENT_CLIENT", "QC", "ID_VERIFIED"
@@ -351,12 +352,12 @@ export default function LeadDetailsPage() {
 
             <div className="flex flex-col">
               <span className="text-sm font-medium text-muted-foreground">Created</span>
-              <span className="text-sm">{format(new Date(lead.createdAt), 'MMM dd, yyyy hh:mm a')}</span>
+              <span className="text-sm">{format(new Date(lead.createdAt), 'MM/dd/yy')}</span>
             </div>
 
             <div className="flex flex-col">
               <span className="text-sm font-medium text-muted-foreground">Last Updated</span>
-              <span className="text-sm">{format(new Date(lead.updatedAt), 'MMM dd, yyyy hh:mm a')}</span>
+              <span className="text-sm">{format(new Date(lead.updatedAt), 'MM/dd/yy')}</span>
             </div>
 
             <div className="flex flex-col">
@@ -395,7 +396,7 @@ export default function LeadDetailsPage() {
                       <span className="text-sm font-medium text-muted-foreground">Date of Birth</span>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span>{format(new Date(lead.dateOfBirth), 'MMM dd, yyyy')}</span>
+                        <span>{format(new Date(lead.dateOfBirth), 'MM/dd/yy')}</span>
                       </div>
                     </div>
                   )}
@@ -503,7 +504,7 @@ export default function LeadDetailsPage() {
                         <div className="grid gap-1">
                           <div className="text-sm font-medium flex gap-2">
                             <Clock className="h-4 w-4 text-muted-foreground" />
-                            {format(new Date(entry.timestamp), 'MMM dd, yyyy hh:mm a')}
+                            {format(new Date(entry.timestamp), 'MM/dd/yy')}
                           </div>
 
                           <div className="flex items-center gap-3 mt-1">
@@ -677,25 +678,5 @@ export default function LeadDetailsPage() {
         </Dialog>
       </div>
     </DashboardLayout>
-  );
-}
-
-function ArrowRight(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
-      <path d="M5 12h14" />
-      <path d="m12 5 7 7-7 7" />
-    </svg>
   );
 }
