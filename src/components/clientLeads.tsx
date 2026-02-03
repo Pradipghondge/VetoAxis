@@ -8,7 +8,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -16,8 +16,8 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import {
   Loader2, Search, History, ChevronRight, ChevronLeft, 
-  Mail, PhoneCall, UserPlus, ExternalLink, RefreshCw,
-  ShieldCheck, Filter, X, Briefcase
+  Mail, PhoneCall, UserPlus, ExternalLink, ShieldCheck, 
+  Filter, X, UserCircle // Added UserCircle icon
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -141,6 +141,7 @@ export default function ClientLeads() {
                 <TableRow className="border-slate-100">
                   <TableHead className="font-semibold text-slate-600 px-6 py-4">Client Identity</TableHead>
                   <TableHead className="font-semibold text-slate-600">Communication</TableHead>
+                  <TableHead className="font-semibold text-slate-600">Created By</TableHead> {/* NEW COLUMN */}
                   <TableHead className="font-semibold text-slate-600">Case Type</TableHead>
                   <TableHead className="font-semibold text-slate-600">Status</TableHead>
                   <TableHead className="font-semibold text-slate-600">Buyer Code</TableHead>
@@ -151,14 +152,14 @@ export default function ClientLeads() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-64 text-center">
+                    <TableCell colSpan={8} className="h-64 text-center">
                       <Loader2 className="animate-spin mx-auto h-8 w-8 text-indigo-600" />
                       <p className="text-sm text-slate-500 mt-2">Fetching records...</p>
                     </TableCell>
                   </TableRow>
                 ) : leads.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-32 text-center text-slate-500">
+                    <TableCell colSpan={8} className="h-32 text-center text-slate-500">
                       No leads found matching your criteria.
                     </TableCell>
                   </TableRow>
@@ -185,6 +186,20 @@ export default function ClientLeads() {
                         </div>
                       </div>
                     </TableCell>
+
+                    {/* NEW Created By Cell */}
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <UserCircle className="h-4 w-4 text-slate-400" />
+                        <div>
+                          <div className="text-sm font-medium text-slate-700 whitespace-nowrap">
+                            {lead.createdBy?.name || "System"}
+                          </div>
+                         
+                        </div>
+                      </div>
+                    </TableCell>
+
                     <TableCell className="text-sm font-medium text-slate-600">
                       {lead.applicationType || "N/A"}
                     </TableCell>
@@ -195,26 +210,24 @@ export default function ClientLeads() {
                     </TableCell>
                     <TableCell className="text-sm font-medium text-slate-600">{lead.buyerCode || "N/A"}</TableCell>
                     <TableCell className="text-sm text-slate-500">
-                      {format(new Date(lead.createdAt), 'MMM dd, yyyy hh:mm a')}
+                      {format(new Date(lead.createdAt), 'MMM dd, yyyy')}
                     </TableCell>
                     <TableCell className="text-right px-6">
                       <div className="flex justify-end gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
+                        <button 
+                          title="History"
+                          className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                           onClick={() => setHistoryDialog({ open: true, lead })}
                         >
                           <History className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 text-slate-400 hover:text-slate-900 hover:bg-slate-100"
+                        </button>
+                        <button 
+                          title="View Details"
+                          className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
                           onClick={() => router.push(`/leads/${lead._id}`)}
                         >
                           <ExternalLink className="h-4 w-4" />
-                        </Button>
+                        </button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -255,7 +268,7 @@ export default function ClientLeads() {
         </Card>
       </div>
 
-      {/* History Dialog */}
+      {/* History Dialog remains unchanged but ensured it's included for the full code */}
       <Dialog open={historyDialog.open} onOpenChange={(open) => !open && setHistoryDialog({ open: false, lead: null })}>
         <DialogContent className="max-w-lg p-0 overflow-hidden border-none shadow-2xl">
           <DialogHeader className="p-6 bg-slate-900 text-white">
@@ -271,7 +284,6 @@ export default function ClientLeads() {
           <ScrollArea className="max-h-[400px] p-6 bg-white">
             <div className="space-y-6 relative">
               <div className="absolute left-[7px] top-2 bottom-2 w-[1px] bg-slate-200" />
-              
               {historyDialog.lead?.statusHistory?.length > 0 ? (
                 historyDialog.lead.statusHistory.map((log: any, i: number) => (
                   <div key={i} className="relative pl-7 group">
