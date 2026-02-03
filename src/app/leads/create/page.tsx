@@ -70,7 +70,7 @@ export default function CreateLeadPage() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [selectedType, setSelectedType] = useState<string>('');
-  const [dynamicFields, setDynamicFields] = useState<Record<string, string>>({});
+  const [dynamicFields, setDynamicFields] = useState<Record<string, any>>({});
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -109,7 +109,7 @@ export default function CreateLeadPage() {
     }
   };
 
-  const handleDynamicFieldChange = (key: string, value: string) => {
+  const handleDynamicFieldChange = (key: string, value: any) => {
     setDynamicFields(prev => ({ ...prev, [key]: value }));
   };
 
@@ -119,30 +119,53 @@ export default function CreateLeadPage() {
       <FormItem key={field.key}>
         <FormLabel>{field.label}</FormLabel>
         <FormControl>
-          {field.type === 'text' || field.type === 'date' ? (
-            <Input
-              type={field.type}
-              value={dynamicFields[field.key] || ''}
-              onChange={e => handleDynamicFieldChange(field.key, e.target.value)}
-              placeholder={`Enter ${field.label.toLowerCase()}`}
-            />
-          ) : (
-            <Select
-              value={dynamicFields[field.key] || ''}
-              onValueChange={val => handleDynamicFieldChange(field.key, val)}
-            >
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="Yes">Yes</SelectItem>
-                <SelectItem value="No">No</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
+          {(() => {
+            if (field.type === 'text' || field.type === 'date') {
+              return (
+                <Input
+                  type={field.type}
+                  value={dynamicFields[field.key] || ''}
+                  onChange={e => handleDynamicFieldChange(field.key, e.target.value)}
+                  placeholder={`Enter ${field.label.toLowerCase()}`}
+                />
+              );
+            }
+            if (field.type === 'textarea') {
+              return (
+                <Textarea
+                  value={dynamicFields[field.key] || ''}
+                  onChange={e => handleDynamicFieldChange(field.key, e.target.value)}
+                  placeholder={`Enter ${field.label.toLowerCase()}`}
+                />
+              );
+            }
+            // Default to Select (Radio)
+            const options = field.options || [
+              { label: 'Yes', value: 'Yes' },
+              { label: 'No', value: 'No' }
+            ];
+            return (
+              <Select
+                value={dynamicFields[field.key] || ''}
+                onValueChange={val => handleDynamicFieldChange(field.key, val)}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {options.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            );
+          })()}
         </FormControl>
+        <FormMessage />
       </FormItem>
     ));
   };
