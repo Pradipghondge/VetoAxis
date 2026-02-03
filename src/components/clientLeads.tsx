@@ -141,10 +141,10 @@ export default function ClientLeads() {
                 <TableRow className="border-slate-100">
                   <TableHead className="font-semibold text-slate-600 px-6 py-4">Client Identity</TableHead>
                   <TableHead className="font-semibold text-slate-600">Communication</TableHead>
-                  <TableHead className="font-semibold text-slate-600">Created By</TableHead> {/* NEW COLUMN */}
                   <TableHead className="font-semibold text-slate-600">Case Type</TableHead>
                   <TableHead className="font-semibold text-slate-600">Status</TableHead>
                   <TableHead className="font-semibold text-slate-600">Buyer Code</TableHead>
+                  <TableHead className="font-semibold text-slate-600">Created By</TableHead>
                   <TableHead className="font-semibold text-slate-600">Entry Date</TableHead>
                   <TableHead className="text-right px-6">Actions</TableHead>
                 </TableRow>
@@ -187,7 +187,15 @@ export default function ClientLeads() {
                       </div>
                     </TableCell>
 
-                    {/* NEW Created By Cell */}
+                    <TableCell className="text-sm font-medium text-slate-600">
+                      {lead.applicationType || "N/A"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={`font-medium rounded-md px-2.5 py-0.5 border ${getStatusStyle(lead.status)}`}>
+                        {lead.status.replace(/_/g, ' ')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm font-medium text-slate-600">{lead.buyerCode || "N/A"}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <UserCircle className="h-4 w-4 text-slate-400" />
@@ -199,18 +207,8 @@ export default function ClientLeads() {
                         </div>
                       </div>
                     </TableCell>
-
-                    <TableCell className="text-sm font-medium text-slate-600">
-                      {lead.applicationType || "N/A"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={`font-medium rounded-md px-2.5 py-0.5 border ${getStatusStyle(lead.status)}`}>
-                        {lead.status.replace(/_/g, ' ')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm font-medium text-slate-600">{lead.buyerCode || "N/A"}</TableCell>
                     <TableCell className="text-sm text-slate-500">
-                      {format(new Date(lead.createdAt), 'MMM dd, yyyy')}
+                      {format(new Date(lead.createdAt), 'MM/dd/yy')}
                     </TableCell>
                     <TableCell className="text-right px-6">
                       <div className="flex justify-end gap-2">
@@ -294,7 +292,7 @@ export default function ClientLeads() {
                           {log.toStatus}
                         </Badge>
                         <span className="text-[10px] text-slate-400 font-medium">
-                          {format(new Date(log.timestamp), 'MMM dd, HH:mm')}
+                          {format(new Date(log.timestamp), 'MM/dd/yy, HH:mm')}
                         </span>
                       </div>
                       <div className="mt-1 text-sm text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">

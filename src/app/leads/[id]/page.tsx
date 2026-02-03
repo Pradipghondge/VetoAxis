@@ -39,7 +39,7 @@ const STATUS_CONFIG: Record<string, { color: string, icon: React.ReactNode }> = 
 };
 
 const LEAD_STATUSES = [
-  "PENDING", "REJECTED", "VERIFIED", "REJECTED_BY_CLIENT", "PAID",
+  "PENDING", "REJECTED", "VERIFIED", "REJECTED_BY_CLIENT", "PAID","SIGNED","VM","TRANSFERRED","SEND TO ANOTHER BUYER",
   "DUPLICATE", "NOT_RESPONDING", "FELONY", "DEAD_LEAD", "WORKING",
   "CALL_BACK", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4",
   "CHARGEBACK", "WAITING_ID", "SENT_CLIENT", "QC", "ID_VERIFIED", "BILLABLE","CAMPAIGN_PAUSED", "SENT_TO_LAW_FIRM"
@@ -194,7 +194,7 @@ export default function LeadDetailPage() {
                       <div>
                         <label className="text-[9px] uppercase font-bold text-muted-foreground/60 block mb-0.5">Date of Birth</label>
                         <p className="text-sm font-medium">
-                          {lead.dateOfBirth ? format(new Date(lead.dateOfBirth), 'MMM dd, yyyy') : '—'}
+                          {lead.dateOfBirth ? format(new Date(lead.dateOfBirth), 'MM/dd/yy') : '—'}
                         </p>
                       </div>
                     </CardContent>
@@ -251,7 +251,7 @@ export default function LeadDetailPage() {
                         <div className="space-y-2">
                           <div className="flex justify-between items-center gap-2">
                             <Badge variant="outline" className="text-[10px] font-bold px-2 py-0">{log.toStatus}</Badge>
-                            <span className="text-[10px] text-muted-foreground font-medium">{format(new Date(log.timestamp), 'MMM dd, HH:mm')}</span>
+                            <span className="text-[10px] text-muted-foreground font-medium">{format(new Date(log.timestamp), 'MM/dd/yy, HH:mm')}</span>
                           </div>
                           <p className="text-xs text-muted-foreground font-medium italic">{log.notes || "System update."}</p>
                           <p className="text-[9px] font-bold text-muted-foreground/60 uppercase">Agent: {log.changedBy?.name || "System"}</p>

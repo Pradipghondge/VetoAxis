@@ -641,7 +641,7 @@ export default function AdminPage() {
 const formatDate = (dateString: string | Date) => {
   const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
   // Use the date-fns format function for Date + AM/PM Time
-  return format(date, 'MMM dd, yyyy hh:mm a');
+  return format(date, 'MM/dd/yy');
 };
 
   return (
