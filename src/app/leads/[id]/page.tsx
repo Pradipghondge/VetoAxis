@@ -20,7 +20,7 @@ import {
   Loader2, ArrowLeft, History, Clock, Edit, Mail, Phone, Calendar, 
   MapPin, FileText, BookOpen, User, CheckCircle, Activity, 
   ChevronRight, Layers, ShieldCheck, Zap, 
-  XCircle
+  XCircle, UserCircle2, Info, Briefcase
 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -29,14 +29,21 @@ import { z } from 'zod';
 import { LeadStatus } from '@/types';
 import { motion } from 'framer-motion';
 
-// Premium Status Colors from Dashboard
+// Lead Status Configuration
 const STATUS_CONFIG: Record<string, { color: string, icon: React.ReactNode }> = {
   PENDING: { color: '#f59e0b', icon: <Clock className="h-4 w-4" /> },
   REJECTED: { color: '#ef4444', icon: <XCircle className="h-4 w-4" /> },
   VERIFIED: { color: '#10b981', icon: <CheckCircle className="h-4 w-4" /> },
-  PAID: { color: '#8b5cf6', icon: <Zap className="h-4 w-4" /> },
-  WORKING: { color: '#3b82f6', icon: <Activity className="h-4 w-4" /> },
+  PAID: { color: '#3b82f6', icon: <Zap className="h-4 w-4" /> },
+  WORKING: { color: '#6366f1', icon: <Activity className="h-4 w-4" /> },
 };
+
+const LEAD_STATUSES = [
+  "PENDING", "REJECTED", "VERIFIED", "REJECTED_BY_CLIENT", "PAID",
+  "DUPLICATE", "NOT_RESPONDING", "FELONY", "DEAD_LEAD", "WORKING",
+  "CALL_BACK", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4",
+  "CHARGEBACK", "WAITING_ID", "SENT_CLIENT", "QC", "ID_VERIFIED", "BILLABLE","CAMPAIGN_PAUSED", "SENT_TO_LAW_FIRM"
+];
 
 const statusUpdateSchema = z.object({
   status: z.string().min(1, 'Status is required'),
@@ -68,7 +75,7 @@ export default function LeadDetailPage() {
       setLead(data.lead);
       form.setValue('status', data.lead.status);
     } catch (error) {
-      toast({ title: "Error", description: "Terminal failed to locate record.", variant: "destructive" });
+      toast({ title: "Error", description: "Record not found.", variant: "destructive" });
     } finally { setLoading(false); }
   };
 
@@ -76,18 +83,17 @@ export default function LeadDetailPage() {
     try {
       const { data } = await axios.put(`/api/leads/${id}`, { status: values.status, statusNote: values.notes });
       setLead(data.lead);
-      toast({ title: "Success", description: "Protocol updated successfully" });
+      toast({ title: "Success", description: "Status updated." });
       setStatusDialogOpen(false);
     } catch (err) {
-      toast({ title: "Error", description: "Status override failed", variant: "destructive" });
+      toast({ title: "Error", description: "Update failed.", variant: "destructive" });
     }
   };
 
   if (loading) return (
     <DashboardLayout>
-      <div className="flex h-[80vh] w-full flex-col items-center justify-center bg-background">
-        <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
-        <p className="text-sm font-medium text-muted-foreground">Loading Lead Details...</p>
+      <div className="flex h-[80vh] w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     </DashboardLayout>
   );
@@ -96,115 +102,163 @@ export default function LeadDetailPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-[1600px] mx-auto space-y-8 pb-20">
+      <div className="max-w-[1400px] mx-auto space-y-6 pb-12">
         
-        {/* HEADER SECTION */}
-        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
-          <div className="space-y-1">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" onClick={() => router.back()} className="h-8 w-8 p-0 rounded-lg hover:bg-accent text-muted-foreground">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <div className="flex items-center gap-2 px-2 py-1 bg-primary/10 border border-primary/20 rounded-md">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-primary">ID: {lead._id.slice(-6).toUpperCase()}</span>
-              </div>
+        {/* TOP NAVIGATION & ACTION BAR */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-background p-4 border rounded-xl shadow-sm">
+          <div className="flex items-center gap-4">
+            <Button variant="outline" size="icon" onClick={() => router.back()} className="rounded-full">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-xl font-bold flex items-center gap-2">
+                {lead.firstName} {lead.lastName}
+                <Badge variant="secondary" className="text-[10px] font-mono">ID: {lead._id.slice(-6).toUpperCase()}</Badge>
+              </h1>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-tight">Lead Detail Profile</p>
             </div>
-            <h1 className="text-3xl font-bold text-foreground tracking-tight">
-              {lead.firstName} <span className="text-muted-foreground">{lead.lastName}</span>
-            </h1>
           </div>
 
           <div className="flex items-center gap-3">
-            <Badge className="bg-card border-border text-foreground font-bold text-[10px] py-2 px-4 rounded-xl flex items-center gap-2 shadow-sm">
+            <div className="px-3 py-1.5 border rounded-lg flex items-center gap-2 bg-muted/30">
               <span style={{ color: currentStatus.color }}>{currentStatus.icon}</span>
-              {lead.status.replace(/_/g, ' ')}
-            </Badge>
-            <Button onClick={() => setStatusDialogOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-6 h-12 font-bold shadow-sm">
-              <Edit className="mr-2 h-4 w-4" /> Update Status
+              <span className="text-[11px] font-bold uppercase">{lead.status}</span>
+            </div>
+            <Button onClick={() => setStatusDialogOpen(true)} size="sm" className="font-bold">
+              <Edit className="mr-2 h-4 w-4" /> Update
             </Button>
           </div>
         </div>
 
-        {/* MAIN CONTENT GRID */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* MAIN MODULES */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
-          {/* LEFT: DATA TERMINAL */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-8 space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="bg-muted/50 border border-border h-14 p-1 rounded-2xl w-full justify-start">
-                <TabsTrigger value="overview" className="flex-1 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest text-muted-foreground">Overview</TabsTrigger>
-                <TabsTrigger value="fields" className="flex-1 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm font-bold text-xs uppercase tracking-widest text-muted-foreground">Details</TabsTrigger>
+              <TabsList className="bg-muted/50 p-1 rounded-lg">
+                <TabsTrigger value="overview" className="px-6 py-2 text-xs font-bold uppercase">Overview</TabsTrigger>
+                <TabsTrigger value="fields" className="px-6 py-2 text-xs font-bold uppercase">Raw Data</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="overview" className="mt-6">
-                <Card className="bg-card border-border shadow-sm overflow-hidden">
-                  <div className="grid grid-cols-1 md:grid-cols-2">
-                    {[
-                      { label: "Email", val: lead.email, icon: <Mail /> },
-                      { label: "Phone", val: lead.phone, icon: <Phone /> },
-                      { label: "Type", val: lead.applicationType, icon: <Zap /> },
-                      { label: "Case Info", val: lead.lawsuit, icon: <BookOpen /> },
-                      { label: "Address", val: lead.address, icon: <MapPin /> },
-                      { label: "DOB", val: lead.dateOfBirth ? format(new Date(lead.dateOfBirth), 'MMM dd, yyyy') : 'N/A', icon: <Calendar /> },
-                    ].map((item, i) => (
-                      <div key={i} className="p-6 border-b border-border odd:border-r group hover:bg-muted/50 transition-colors">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-2">
-                          {React.cloneElement(item.icon as any, { className: "h-3.5 w-3.5" })}
-                          {item.label}
-                        </p>
-                        <p className="text-sm font-medium text-foreground tracking-tight">{item.val || 'N/A'}</p>
+              <TabsContent value="overview" className="mt-4 space-y-6">
+                
+                {/* INFO CARDS GRID */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <Card className="shadow-none border border-slate-200">
+                    <CardHeader className="pb-3 border-b bg-muted/20">
+                      <CardTitle className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-2">
+                        <Phone className="h-3 w-3" /> Contact Details
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-4 space-y-4">
+                      <div>
+                        <label className="text-[9px] uppercase font-bold text-muted-foreground/60 block mb-0.5">Email</label>
+                        <p className="text-sm font-medium truncate">{lead.email || '—'}</p>
                       </div>
-                    ))}
-                  </div>
-                  <div className="p-8">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Notes</p>
-                    <div className="p-4 rounded-xl bg-muted/30 border border-border text-sm text-muted-foreground leading-relaxed">
-                      {lead.notes || 'No notes available.'}
+                      <div>
+                        <label className="text-[9px] uppercase font-bold text-muted-foreground/60 block mb-0.5">Phone</label>
+                        <p className="text-sm font-medium">{lead.phone || '—'}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="shadow-none border border-slate-200">
+                    <CardHeader className="pb-3 border-b bg-muted/20">
+                      <CardTitle className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-2">
+                        <Briefcase className="h-3 w-3" /> Application info
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-4 space-y-4">
+                      <div>
+                        <label className="text-[9px] uppercase font-bold text-muted-foreground/60 block mb-0.5">Type</label>
+                        <p className="text-sm font-medium uppercase">{lead.applicationType || '—'}</p>
+                      </div>
+                      <div>
+                        <label className="text-[9px] uppercase font-bold text-muted-foreground/60 block mb-0.5">Lawsuit</label>
+                        <p className="text-sm font-medium uppercase">{lead.lawsuit || '—'}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="shadow-none border border-slate-200">
+                    <CardHeader className="pb-3 border-b bg-muted/20">
+                      <CardTitle className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-2">
+                        <UserCircle2 className="h-3 w-3" /> Identity
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-4 space-y-4">
+                      <div>
+                        <label className="text-[9px] uppercase font-bold text-muted-foreground/60 block mb-0.5">Address</label>
+                        <p className="text-sm font-medium truncate uppercase">{lead.address || '—'}</p>
+                      </div>
+                      <div>
+                        <label className="text-[9px] uppercase font-bold text-muted-foreground/60 block mb-0.5">Date of Birth</label>
+                        <p className="text-sm font-medium">
+                          {lead.dateOfBirth ? format(new Date(lead.dateOfBirth), 'MMM dd, yyyy') : '—'}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* INTERNAL DOCUMENTATION */}
+                <Card className="shadow-none border border-slate-200">
+                  <CardHeader className="pb-3 border-b bg-muted/20">
+                    <CardTitle className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-2">
+                      <FileText className="h-3 w-3" /> Internal Documentation
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <div className="p-4 rounded-lg bg-muted/30 border text-sm text-muted-foreground leading-relaxed italic">
+                      {lead.notes || 'No protocol notes available for this record.'}
                     </div>
-                  </div>
+                  </CardContent>
                 </Card>
               </TabsContent>
 
-              <TabsContent value="fields" className="mt-6">
-                 <Card className="bg-card border-border p-8 grid grid-cols-1 md:grid-cols-3 gap-6 shadow-sm">
+              <TabsContent value="fields" className="mt-4">
+                <Card className="shadow-none border border-slate-200 p-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {lead.fields?.length > 0 ? lead.fields.map((f: any, i: number) => (
-                      <div key={i} className="p-4 rounded-xl bg-muted/30 border border-border">
-                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{f.key}</p>
-                        <p className="text-xs font-medium text-foreground mt-1">{f.value}</p>
+                      <div key={i} className="p-3 border rounded-lg bg-muted/10">
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase mb-1">{f.key}</p>
+                        <p className="text-xs font-semibold">{f.value}</p>
                       </div>
                     )) : (
-                      <div className="col-span-3 py-10 text-center text-muted-foreground font-bold uppercase text-[10px] tracking-widest">No Additional Fields</div>
+                      <p className="col-span-full text-center py-12 text-muted-foreground text-xs uppercase font-bold">No metadata found</p>
                     )}
-                 </Card>
+                  </div>
+                </Card>
               </TabsContent>
             </Tabs>
           </div>
 
-          {/* RIGHT: PROTOCOL HISTORY LOG */}
-          <div className="space-y-8">
-            <Card className="bg-card border-border flex flex-col h-[600px] shadow-sm">
-              <CardHeader className="p-6 border-b border-border">
-                <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                  <History className="h-4 w-4 text-primary" />
-                  Activity History
+          {/* SIDEBAR TIMELINE */}
+          <div className="lg:col-span-4">
+            <Card className="shadow-none border border-slate-200 h-[650px] flex flex-col">
+              <CardHeader className="border-b bg-muted/20">
+                <CardTitle className="text-xs uppercase font-bold flex items-center gap-2">
+                  <History className="h-4 w-4 text-primary" /> Activity History
                 </CardTitle>
               </CardHeader>
               <ScrollArea className="flex-1">
-                <div className="p-6 space-y-8 relative">
-                   <div className="absolute left-[31px] top-8 bottom-8 w-[1px] bg-border" />
-                   {lead.statusHistory?.slice().reverse().map((log: any, i: number) => (
-                     <div key={i} className="relative pl-10">
-                        <div className="absolute left-0 top-0 h-2 w-2 rounded-full bg-primary shadow-sm border-4 border-card z-10" />
+                <div className="p-6 relative">
+                  <div className="absolute left-[31px] top-6 bottom-6 w-0.5 bg-border" />
+                  <div className="space-y-8">
+                    {lead.statusHistory?.slice().reverse().map((log: any, i: number) => (
+                      <div key={i} className="relative pl-10">
+                        <div className="absolute left-0 top-1 h-2 w-2 rounded-full bg-primary ring-4 ring-background z-10" />
                         <div className="space-y-2">
-                           <div className="flex justify-between items-center">
-                              <Badge variant="outline" className="bg-muted/50 text-[9px] font-bold text-foreground border-border">{log.toStatus}</Badge>
-                              <span className="text-[9px] font-bold text-muted-foreground uppercase tabular-nums">{format(new Date(log.timestamp), 'MMM dd HH:mm')}</span>
-                           </div>
-                           <p className="text-xs text-muted-foreground leading-snug">{log.notes || "Status updated."}</p>
-                           <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-tighter">By: {log.changedBy?.name || "System"}</p>
+                          <div className="flex justify-between items-center gap-2">
+                            <Badge variant="outline" className="text-[10px] font-bold px-2 py-0">{log.toStatus}</Badge>
+                            <span className="text-[10px] text-muted-foreground font-medium">{format(new Date(log.timestamp), 'MMM dd, HH:mm')}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground font-medium italic">{log.notes || "System update."}</p>
+                          <p className="text-[9px] font-bold text-muted-foreground/60 uppercase">Agent: {log.changedBy?.name || "System"}</p>
                         </div>
-                     </div>
-                   ))}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </ScrollArea>
             </Card>
@@ -212,35 +266,40 @@ export default function LeadDetailPage() {
         </div>
       </div>
 
-      {/* UPDATE DIALOG */}
+      {/* UPDATE STATUS DIALOG */}
       <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
-        <DialogContent className="bg-card border-border text-foreground rounded-2xl max-w-md shadow-xl">
+        <DialogContent className="max-w-md rounded-xl">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold tracking-tight">Update Status</DialogTitle>
-            <DialogDescription className="text-muted-foreground">Change status for {lead.firstName} {lead.lastName}</DialogDescription>
+            <DialogTitle className="text-lg font-bold">Update Lead Status</DialogTitle>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onUpdateStatus)} className="space-y-6 mt-4">
+            <form onSubmit={form.handleSubmit(onUpdateStatus)} className="space-y-6 pt-4">
               <FormField control={form.control} name="status" render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">New Status</FormLabel>
+                  <FormLabel className="text-xs font-bold uppercase text-muted-foreground">Select Pipeline Stage</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl><SelectTrigger>
-                      <SelectValue placeholder="Select Status" />
-                    </SelectTrigger></FormControl>
+                    <FormControl>
+                      <SelectTrigger className="rounded-lg h-11">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                    </FormControl>
                     <SelectContent>
-                      {['PENDING', 'WORKING', 'VERIFIED', 'PAID', 'REJECTED'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                      {LEAD_STATUSES.map(s => (
+                        <SelectItem key={s} value={s} className="text-xs font-bold">{s}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </FormItem>
               )} />
               <FormField control={form.control} name="notes" render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Notes</FormLabel>
-                  <FormControl><Textarea {...field} className="bg-background border-input rounded-xl min-h-[100px] focus:border-primary/50" placeholder="Add a note..." /></FormControl>
+                  <FormLabel className="text-xs font-bold uppercase text-muted-foreground">Log Note</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} className="rounded-lg min-h-[100px] text-sm" placeholder="Reason for status change..." />
+                  </FormControl>
                 </FormItem>
               )} />
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground h-12 font-bold rounded-xl shadow-sm">Save Changes</Button>
+              <Button type="submit" className="w-full h-11 font-bold rounded-lg shadow-md">Confirm Update</Button>
             </form>
           </Form>
         </DialogContent>

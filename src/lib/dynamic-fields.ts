@@ -5,7 +5,7 @@
  */
 export const DYNAMIC_FIELDS: Record<
   string,
-  Array<{ key: string; label: string; type: 'text' | 'date' | 'radio' | 'checkbox' }>
+  Array<{ key: string; label: string; type: 'text' | 'date' | 'radio' | 'checkbox' | 'textarea'; options?: { label: string; value: string }[] }>
 > = {
   /* ───────────────────────── CA WILDFIRE ───────────────────────── */
 
@@ -38,7 +38,21 @@ export const DYNAMIC_FIELDS: Record<
     { key: 'incidentDate', label: 'Date of Incident', type: 'date' },
     { key: 'role', label: 'Role (Driver / Passenger)', type: 'text' },
     { key: 'company', label: 'Rideshare Company', type: 'text' },
-    { key: 'physicallyAssaulted', label: 'Physically / sexually assaulted?', type: 'radio' },
+    {
+      key: 'physicallyAssaulted',
+      label: 'Physically / sexually assaulted?',
+      type: 'radio',
+      options: [
+        { label: 'Exposure of genitals', value: 'Exposure of genitals' },
+        { label: 'Fondling', value: 'Fondling' },
+        { label: 'Inappropriate Touching', value: 'Inappropriate Touching' },
+        { label: 'Kissing', value: 'Kissing' },
+        { label: 'Masturbation', value: 'Masturbation' },
+        { label: 'Oral Sex', value: 'Oral Sex' },
+        { label: 'Penetration', value: 'Penetration' },
+        { label: 'Sexual Intercourse', value: 'Sexual Intercourse' }
+      ]
+    },
     { key: 'proofOfRide', label: 'Proof of ride when assaulted?', type: 'radio' },
     { key: 'reportDetails', label: 'Report filed (police / company / etc.)', type: 'text' },
     { key: 'attorney', label: 'Attorney retained for this matter?', type: 'radio' }
