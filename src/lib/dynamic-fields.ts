@@ -100,7 +100,7 @@ export const DYNAMIC_FIELDS: Record<
     { key: 'abuserRobloxId', label: 'Abuser’s Roblox ID', type: 'text', required: true },
     { key: 'typeOfIssue', label: 'Type of Issue', type: 'text', required: true },
     { key: 'otherAppsInvolved', label: 'Were there any other apps involved in the abuse?', type: 'text', required: true },
-    { key: 'otherAppId', label: 'ID of other app (if any)', type: 'text', required: true },
+    { key: 'otherAppId', label: 'ID of other app (if any)', type: 'text', required: false },
     { key: 'attorney', label: 'Attorney retained?', type: 'radio', required: true, options: [
         { label: 'Yes', value: 'yes' },
         { label: 'No', value: 'no' }
