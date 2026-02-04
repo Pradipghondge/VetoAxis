@@ -17,6 +17,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription
 } from '@/components/ui/form';
 import {
   Select,
@@ -40,25 +41,20 @@ import {
   User,
   ClipboardList,
   Save,
-  Check,
-  Calendar as CalendarIcon
+  Check
 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { motion } from 'framer-motion';
 import { DYNAMIC_FIELDS } from '@/lib/dynamic-fields';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const APPLICATION_TYPES = Object.keys(DYNAMIC_FIELDS);
 
 const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Invalid email address').optional().or(z.literal('')),
+  email: z.string().email('Invalid email address').optional(),
   phone: z.string().optional(),
-  dateOfBirth: z.date().optional(),
+  dateOfBirth: z.string().optional(),
   address: z.string().optional(),
   applicationType: z.string().min(1, 'Application type is required'),
   lawsuit: z.string().optional(),
@@ -81,7 +77,7 @@ export default function CreateLeadPage() {
       lastName: '',
       email: '',
       phone: '',
-      dateOfBirth: undefined,
+      dateOfBirth: '',
       address: '',
       applicationType: '',
       lawsuit: '',
@@ -104,14 +100,11 @@ export default function CreateLeadPage() {
 
     setLoading(true);
     try {
-      const formattedValues = {
+      await axios.post('/api/leads', {
         ...values,
-        dateOfBirth: values.dateOfBirth ? format(values.dateOfBirth, "MM/dd/yyyy") : undefined,
         fields: dynamicFields,
         status: 'PENDING',
-      };
-
-      await axios.post('/api/leads', formattedValues);
+      });
 
       setSubmitted(true);
       toast({ title: 'Success', description: 'Lead created successfully' });
@@ -141,35 +134,16 @@ export default function CreateLeadPage() {
             value={dynamicFields[field.key] || ''}
             onChange={e => handleDynamicFieldChange(field.key, e.target.value)}
             placeholder={`Enter ${field.label.toLowerCase()}`}
-            className="bg-background"
           />
         );
       } else if (field.type === 'date') {
         inputComponent = (
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-full justify-start text-left font-normal bg-background",
-                  !dynamicFields[field.key] && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dynamicFields[field.key] ? format(new Date(dynamicFields[field.key]), "MM/dd/yyyy") : <span>Pick a date</span>}
-              </Button>
-            </PopoverTrigger>
-            {/* Added solid background and z-index to PopoverContent */}
-            <PopoverContent className="w-auto p-0 bg-white dark:bg-slate-950 border shadow-xl z-50 opacity-100" align="start">
-              <Calendar
-                mode="single"
-                selected={dynamicFields[field.key] ? new Date(dynamicFields[field.key]) : undefined}
-                onSelect={(date) => handleDynamicFieldChange(field.key, date ? format(date, "MM/dd/yyyy") : '')}
-                initialFocus
-                className="bg-white dark:bg-slate-950"
-              />
-            </PopoverContent>
-          </Popover>
+          <Input
+            type="text"
+            value={dynamicFields[field.key] || ''}
+            onChange={e => handleDynamicFieldChange(field.key, e.target.value)}
+            placeholder="MM/DD/YYYY"
+          />
         );
       } else if (field.type === 'textarea') {
         inputComponent = (
@@ -177,7 +151,6 @@ export default function CreateLeadPage() {
             value={dynamicFields[field.key] || ''}
             onChange={e => handleDynamicFieldChange(field.key, e.target.value)}
             placeholder={`Enter ${field.label.toLowerCase()}`}
-            className="bg-background"
           />
         );
       } else {
@@ -191,12 +164,11 @@ export default function CreateLeadPage() {
             onValueChange={val => handleDynamicFieldChange(field.key, val)}
           >
             <FormControl>
-              <SelectTrigger className="bg-background">
+              <SelectTrigger>
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
             </FormControl>
-            {/* Added solid background and z-index to SelectContent */}
-            <SelectContent className="bg-white dark:bg-slate-950 z-50 shadow-xl border opacity-100">
+            <SelectContent>
               {options.map(opt => (
                 <SelectItem key={opt.value} value={opt.value}>
                   {opt.label}
@@ -209,7 +181,7 @@ export default function CreateLeadPage() {
 
       return (
         <FormItem key={field.key}>
-          <FormLabel className="text-sm">{field.label}{field.required && '*'}</FormLabel>
+          <FormLabel>{field.label}{field.required && '*'}</FormLabel>
           <FormControl>
             {inputComponent}
           </FormControl>
@@ -242,20 +214,23 @@ export default function CreateLeadPage() {
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6 md:space-y-8 pb-20">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="icon" onClick={() => router.back()} className="h-9 w-9 shrink-0">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-xl md:text-2xl font-semibold tracking-tight">New Lead Profile</h1>
-            <p className="text-xs md:text-sm text-muted-foreground">Capture new client details and case information.</p>
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="icon" onClick={() => router.back()} className="h-9 w-9 shrink-0">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-xl md:text-2xl font-semibold tracking-tight">New Lead Profile</h1>
+              <p className="text-xs md:text-sm text-muted-foreground">Capture new client details and case information.</p>
+            </div>
           </div>
         </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Client Details Card */}
-            <Card className="rounded-xl border shadow-sm bg-card/40 overflow-hidden">
+            {/* Base Details */}
+            <Card className="rounded-xl md:rounded-2xl border shadow-sm bg-card/40 overflow-hidden">
               <CardHeader className="p-4 md:p-6">
                 <div className="flex items-center space-x-2">
                   <User className="h-5 w-5 text-muted-foreground" />
@@ -264,7 +239,7 @@ export default function CreateLeadPage() {
               </CardHeader>
               <Separator />
               <CardContent className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                {['firstName', 'lastName', 'email', 'phone', 'dateOfBirth', 'address'].map(fieldName => (
+                {['first Name', 'last Name', 'email', 'phone', 'dateOfBirth', 'address'].map(fieldName => (
                   <FormField 
                     key={fieldName} 
                     control={form.control} 
@@ -273,44 +248,16 @@ export default function CreateLeadPage() {
                       <FormItem className={fieldName === 'address' ? 'md:col-span-2' : ''}>
                         <FormLabel className="text-sm">
                           {fieldName === 'dateOfBirth' ? 'Date of Birth' :
-                          fieldName === 'firstName' ? 'First Name' :
-                          fieldName === 'lastName' ? 'Last Name' :
                           fieldName.charAt(0).toUpperCase() + fieldName.slice(1)}
                           {(fieldName === 'firstName' || fieldName === 'lastName') && '*'}
                         </FormLabel>
                         <FormControl>
-                          {fieldName === 'dateOfBirth' ? (
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant={"outline"}
-                                  className={cn(
-                                    "w-full justify-start text-left font-normal h-10 bg-background",
-                                    !field.value && "text-muted-foreground"
-                                  )}
-                                >
-                                  <CalendarIcon className="mr-2 h-4 w-4" />
-                                  {field.value ? format(field.value as Date, "MM/dd/yyyy") : <span>Pick a date</span>}
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 bg-white dark:bg-slate-950 border shadow-xl z-50" align="start">
-                                <Calendar
-                                  mode="single"
-                                  selected={field.value as Date}
-                                  onSelect={field.onChange}
-                                  initialFocus
-                                  className="bg-white dark:bg-slate-950"
-                                />
-                              </PopoverContent>
-                            </Popover>
-                          ) : (
-                            <Input 
-                              type='text'
-                              placeholder={fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} 
-                              {...field} 
-                              className="h-10 bg-background"
-                            />
-                          )}
+                          <Input 
+                            type='text'
+                            placeholder={fieldName === 'dateOfBirth' ? 'MM/DD/YYYY' : fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} 
+                            {...field} 
+                            className="h-10"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -320,8 +267,8 @@ export default function CreateLeadPage() {
               </CardContent>
             </Card>
 
-            {/* Case Information Card */}
-            <Card className="rounded-xl border shadow-sm bg-card/40 overflow-hidden">
+            {/* Case Information */}
+            <Card className="rounded-xl md:rounded-2xl border shadow-sm bg-card/40 overflow-hidden">
               <CardHeader className="p-4 md:p-6">
                 <div className="flex items-center space-x-2">
                   <ClipboardList className="h-5 w-5 text-muted-foreground" />
@@ -342,11 +289,11 @@ export default function CreateLeadPage() {
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger className="h-10 bg-background">
+                        <SelectTrigger className="h-10">
                           <SelectValue placeholder="Select application type" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-white dark:bg-slate-950 z-50 shadow-xl border opacity-100">
+                      <SelectContent>
                         {APPLICATION_TYPES.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
                       </SelectContent>
                     </Select>
@@ -356,11 +303,16 @@ export default function CreateLeadPage() {
 
                 <div>
                   <FormLabel className="text-sm">Status</FormLabel>
-                  <div className="flex items-center h-10 px-3 py-2 rounded-md border border-input bg-muted/50 text-sm">
+                  <div className="flex items-center h-10 px-3 py-2 rounded-md border border-input bg-background text-sm">
                     <span className="text-muted-foreground mr-2">Default:</span>
-                    <span className="font-semibold text-foreground">PENDING</span>
+                    <span className="font-semibold text-foreground text-xs md:text-sm">PENDING</span>
                   </div>
+                  <p className="text-[10px] md:text-[11px] text-muted-foreground mt-2">
+                    Status is set automatically.
+                  </p>
                 </div>
+
+                
 
                 <FormField control={form.control} name="notes" render={({ field }) => (
                   <FormItem className="col-span-1 md:col-span-2">
@@ -369,7 +321,7 @@ export default function CreateLeadPage() {
                       <Textarea
                         placeholder="Add any additional notes about this lead"
                         {...field}
-                        className="min-h-[100px] resize-none bg-background"
+                        className="min-h-[100px] resize-none"
                       />
                     </FormControl>
                     <FormMessage />
@@ -378,9 +330,9 @@ export default function CreateLeadPage() {
               </CardContent>
             </Card>
 
-            {/* Dynamic Case-Specific Card */}
+            {/* Dynamic Fields */}
             {selectedType && DYNAMIC_FIELDS[selectedType] && (
-              <Card className="rounded-xl border shadow-sm bg-card/40 overflow-hidden">
+              <Card className="rounded-xl md:rounded-2xl border shadow-sm bg-card/40 overflow-hidden">
                 <CardHeader className="p-4 md:p-6">
                   <CardTitle className="text-lg md:text-xl">Case-Specific Information</CardTitle>
                   <CardDescription className="text-xs">
@@ -394,12 +346,26 @@ export default function CreateLeadPage() {
               </Card>
             )}
 
+            {/* Form Actions */}
             <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
-              <Button type="button" variant="ghost" onClick={() => router.back()} className="w-full sm:w-auto">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => router.back()} 
+                className="w-full sm:w-auto"
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading} className="w-full sm:min-w-[150px] gap-2 h-11 sm:h-10">
-                {loading ? <><Loader2 className="h-4 w-4 animate-spin" />Creating...</> : <><Save className="h-4 w-4" />Save Lead</>}
+              <Button 
+                type="submit" 
+                disabled={loading} 
+                className="w-full sm:min-w-[150px] gap-2 h-11 sm:h-10"
+              >
+                {loading ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" />Creating...</>
+                ) : (
+                  <><Save className="h-4 w-4" />Save Lead</>
+                )}
               </Button>
             </div>
           </form>
