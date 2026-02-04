@@ -194,7 +194,7 @@ export default function LeadDetailPage() {
                       <div>
                         <label className="text-[9px] uppercase font-bold text-muted-foreground/60 block mb-0.5">Date of Birth</label>
                         <p className="text-sm font-medium">
-                          {lead.dateOfBirth ? format(new Date(lead.dateOfBirth), 'MM/dd/yy') : '—'}
+                          {lead.dateOfBirth ? format(new Date(lead.dateOfBirth), 'MM/dd/yyyy') : '—'}
                         </p>
                       </div>
                     </CardContent>
@@ -222,7 +222,13 @@ export default function LeadDetailPage() {
                     {lead.fields?.length > 0 ? lead.fields.map((f: any, i: number) => (
                       <div key={i} className="p-3 border rounded-lg bg-muted/10">
                         <p className="text-[9px] font-bold text-muted-foreground uppercase mb-1">{f.key}</p>
-                        <p className="text-xs font-semibold">{f.value}</p>
+                        {!/^\d+$/.test(f.value) && !isNaN(new Date(f.value).getTime()) ? (
+                          <div>
+                            <p className="text-xs font-semibold">{format(new Date(f.value), 'MM/dd/yyyy')}</p> 
+                          </div>
+                        ) : (
+                          <p className="text-xs font-semibold">{f.value}</p>
+                        )}
                       </div>
                     )) : (
                       <p className="col-span-full text-center py-12 text-muted-foreground text-xs uppercase font-bold">No metadata found</p>
@@ -251,7 +257,10 @@ export default function LeadDetailPage() {
                         <div className="space-y-2">
                           <div className="flex justify-between items-center gap-2">
                             <Badge variant="outline" className="text-[10px] font-bold px-2 py-0">{log.toStatus}</Badge>
-                            <span className="text-[10px] text-muted-foreground font-medium">{format(new Date(log.timestamp), 'MM/dd/yy, HH:mm')}</span>
+                            <div className="text-[10px] text-muted-foreground font-medium text-right">
+                              <div>{format(new Date(log.timestamp), 'MM/dd/yyyy')}</div>
+                              <div>{format(new Date(log.timestamp), 'hh:mm a')}</div>
+                            </div>
                           </div>
                           <p className="text-xs text-muted-foreground font-medium italic">{log.notes || "System update."}</p>
                           <p className="text-[9px] font-bold text-muted-foreground/60 uppercase">Agent: {log.changedBy?.name || "System"}</p>

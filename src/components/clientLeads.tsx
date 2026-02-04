@@ -36,7 +36,11 @@ export default function ClientLeads() {
   const fetchLeads = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get(`/api/leads?page=${pagination.page}&limit=10&status=${statusFilter}&search=${searchInput}&t=${Date.now()}`);
+      let url = `/api/leads?page=${pagination.page}&limit=10&search=${searchInput}&t=${Date.now()}`;
+      if (statusFilter && statusFilter !== 'All') {
+        url += `&status=${statusFilter}`;
+      }
+      const { data } = await axios.get(url);
       setLeads(data.leads);
       setPagination(data.pagination);
     } catch (err) {
@@ -59,6 +63,13 @@ export default function ClientLeads() {
       default: return 'bg-slate-50 text-slate-700 border-slate-200';
     }
   };
+
+  const LEAD_STATUSES = [
+    "PENDING", "REJECTED", "VERIFIED", "REJECTED_BY_CLIENT", "PAID", "SIGNED", "VM", "TRANSFERRED", "SEND TO ANOTHER BUYER",
+    "DUPLICATE", "NOT_RESPONDING", "FELONY", "DEAD_LEAD", "WORKING",
+    "CALL_BACK", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4",
+    "CHARGEBACK", "WAITING_ID", "SENT_CLIENT", "QC", "ID_VERIFIED"
+  ];
 
   return (
     <DashboardLayout>
@@ -112,11 +123,11 @@ export default function ClientLeads() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="All">All Statuses</SelectItem>
-                    <SelectItem value="PENDING">Pending</SelectItem>
-                    <SelectItem value="VERIFIED">Verified</SelectItem>
-                    <SelectItem value="PAID">Paid</SelectItem>
-                    <SelectItem value="WORKING">Working</SelectItem>
-                    <SelectItem value="REJECTED">Rejected</SelectItem>
+                    {LEAD_STATUSES.map(status => (
+                      <SelectItem key={status} value={status}>
+                        {status.replace(/_/g, ' ')}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
 
@@ -208,7 +219,10 @@ export default function ClientLeads() {
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-slate-500">
-                      {format(new Date(lead.createdAt), 'MM/dd/yy')}
+                      {format(new Date(lead.createdAt), 'MM/dd/yyyy')}
+                      <div className="text-xs text-muted-foreground">
+                        {format(new Date(lead.createdAt), 'hh:mm a')}
+                      </div>
                     </TableCell>
                     <TableCell className="text-right px-6">
                       <div className="flex justify-end gap-2">
@@ -291,9 +305,10 @@ export default function ClientLeads() {
                         <Badge variant="secondary" className="text-[10px] font-bold bg-slate-100 text-slate-700 border-none">
                           {log.toStatus}
                         </Badge>
-                        <span className="text-[10px] text-slate-400 font-medium">
-                          {format(new Date(log.timestamp), 'MM/dd/yy, HH:mm')}
-                        </span>
+                        <div className="text-[10px] text-slate-400 font-medium text-right">
+                          <div>{format(new Date(log.timestamp), 'MM/dd/yyyy')}</div>
+                          <div>{format(new Date(log.timestamp), 'hh:mm a')}</div>
+                        </div>
                       </div>
                       <div className="mt-1 text-sm text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">
                         {log.notes || "No additional notes provided."}
