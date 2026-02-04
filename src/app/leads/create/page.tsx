@@ -52,11 +52,9 @@ const APPLICATION_TYPES = Object.keys(DYNAMIC_FIELDS);
 const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Invalid email address'),
-  phone: z.string().min(10, 'Phone number must be at least 10 digits'),
-  dateOfBirth: z.string().refine(val => !val || !isNaN(Date.parse(val)), {
-    message: 'Invalid date format',
-  }),
+  email: z.string().email('Invalid email address').optional(),
+  phone: z.string().optional(),
+  dateOfBirth: z.string().optional(),
   address: z.string().optional(),
   applicationType: z.string().min(1, 'Application type is required'),
   lawsuit: z.string().optional(),
@@ -88,6 +86,18 @@ export default function CreateLeadPage() {
   });
 
   const onSubmit = async (values: FormValues) => {
+    const requiredDynamicFields = (DYNAMIC_FIELDS[selectedType] || []).filter(field => field.required);
+    const missingFields = requiredDynamicFields.filter(field => !dynamicFields[field.key]);
+
+    if (missingFields.length > 0) {
+      toast({
+        title: 'Error',
+        description: `Please fill out all required fields: ${missingFields.map(f => f.label).join(', ')}`,
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       await axios.post('/api/leads', {
@@ -117,10 +127,10 @@ export default function CreateLeadPage() {
     const fields = DYNAMIC_FIELDS[selectedType] || [];
     return fields.map(field => (
       <FormItem key={field.key}>
-        <FormLabel>{field.label}</FormLabel>
+        <FormLabel>{field.label}{field.required && '*'}</FormLabel>
         <FormControl>
           {(() => {
-            if (field.type === 'text' || field.type === 'date') {
+            if (field.type === 'text' || field.type === 'date' || field.type === 'email' || field.type === 'phone') {
               return (
                 <Input
                   type={field.type}
@@ -228,6 +238,7 @@ export default function CreateLeadPage() {
                         <FormLabel className="text-sm">
                           {fieldName === 'dateOfBirth' ? 'Date of Birth' :
                           fieldName.charAt(0).toUpperCase() + fieldName.slice(1)}
+                          {(fieldName === 'firstName' || fieldName === 'lastName') && '*'}
                         </FormLabel>
                         <FormControl>
                           <Input 

@@ -1,5 +1,6 @@
 'use client';
 
+import { format } from 'date-fns';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -184,7 +185,7 @@ Login Details                  </CardTitle>
                   Last active session identified:
                 </p>
                 <code className="block mt-2 p-2 bg-slate-100 dark:bg-slate-800 rounded text-[10px] text-slate-600 dark:text-slate-400">
-                  {new Date().toLocaleDateString()} — {new Date().toLocaleTimeString()} (Current Device)
+                  {format(new Date(), 'MM/dd/yyyy')} — {new Date().toLocaleTimeString()} (Current Device)
                 </code>
               </div>
             </div>

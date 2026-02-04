@@ -77,7 +77,7 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 
 const LEAD_STATUSES = [
-  "PENDING", "REJECTED", "VERIFIED", "REJECTED_BY_CLIENT", "PAID", 
+  "PENDING", "REJECTED", "VERIFIED", "REJECTED_BY_CLIENT", "PAID","VM","TRANSFERRED","SEND TO ANOTHER BUYER",
   "DUPLICATE", "NOT_RESPONDING", "FELONY", "DEAD_LEAD", "WORKING", 
   "CALL_BACK", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4", 
   "CHARGEBACK", "WAITING_ID", "SENT_CLIENT", "QC", "ID_VERIFIED", 
@@ -325,7 +325,7 @@ export default function LeadManagement() {
 
                     {/* 7. Entry Date */}
                     <TableCell className="text-sm text-slate-500 whitespace-nowrap">
-                      {lead.createdAt ? format(new Date(lead.createdAt), 'MMM dd, yyyy') : '-'}
+                      {lead.createdAt ? format(new Date(lead.createdAt), 'MM/dd/yyyy') : '-'}
                       <div className="text-[10px] text-slate-400">{lead.createdAt ? format(new Date(lead.createdAt), 'hh:mm a') : ''}</div>
                     </TableCell>
 

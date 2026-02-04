@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Lead from '@/models/Lead';
 import { verifyToken, getAuthToken } from '@/lib/auth';
 import { dbConnect } from '@/lib/dbConnect';
+import { DYNAMIC_FIELDS } from '@/lib/dynamic-fields';
 import User from '@/models/User';
 
 export async function GET(request: NextRequest) {
@@ -96,6 +97,28 @@ export async function POST(request: NextRequest) {
     const user = await User.findById(decoded.id).select('organizationId');
 
     const body = await request.json();
+
+    // Server-side validation for required fields
+    const { applicationType, fields, ...rest } = body;
+    if (!applicationType) {
+      return NextResponse.json({ message: 'Application type is required' }, { status: 400 });
+    }
+
+    const dynamicFieldsConfig = DYNAMIC_FIELDS[applicationType] || [];
+    const requiredFields = dynamicFieldsConfig.filter(f => f.required);
+    const missingFields = [];
+
+    for (const field of requiredFields) {
+      if (!fields[field.key]) {
+        missingFields.push(field.label);
+      }
+    }
+
+    if (missingFields.length > 0) {
+      return NextResponse.json({
+        message: `Missing required fields: ${missingFields.join(', ')}`,
+      }, { status: 400 });
+    }
 
     // Check for duplicate email or phone
     let isDuplicate = false;

@@ -5,7 +5,13 @@
  */
 export const DYNAMIC_FIELDS: Record<
   string,
-  Array<{ key: string; label: string; type: 'text' | 'date' | 'radio' | 'checkbox' | 'textarea'; options?: { label: string; value: string }[] }>
+  Array<{
+    key: string;
+    label: string;
+    type: 'text' | 'date' | 'radio' | 'checkbox' | 'textarea' | 'email' | 'phone';
+    options?: { label: string; value: string }[];
+    required?: boolean;
+  }>
 > = {
   /* ───────────────────────── CA WILDFIRE ───────────────────────── */
 
@@ -33,29 +39,25 @@ export const DYNAMIC_FIELDS: Record<
     { key: 'diagnosingDoctor', label: 'Doctor who diagnosed you', type: 'text' }
   ],
 
-  /* ───────────────────────── RIDE SHARE ────────────────────────── */
-  'Ride Share': [
-    { key: 'incidentDate', label: 'Date of Incident', type: 'date' },
-    { key: 'role', label: 'Role (Driver / Passenger)', type: 'text' },
-    { key: 'company', label: 'Rideshare Company', type: 'text' },
-    {
-      key: 'physicallyAssaulted',
-      label: 'Physically / sexually assaulted?',
-      type: 'radio',
-      options: [
-        { label: 'Exposure of genitals', value: 'Exposure of genitals' },
-        { label: 'Fondling', value: 'Fondling' },
-        { label: 'Inappropriate Touching', value: 'Inappropriate Touching' },
-        { label: 'Kissing', value: 'Kissing' },
-        { label: 'Masturbation', value: 'Masturbation' },
-        { label: 'Oral Sex', value: 'Oral Sex' },
-        { label: 'Penetration', value: 'Penetration' },
-        { label: 'Sexual Intercourse', value: 'Sexual Intercourse' }
+  /* ───────────────────────── RIDESHARE ────────────────────────── */
+  'Rideshare': [
+    { key: 'name', label: 'Name', type: 'text', required: true },
+    { key: 'email', label: 'Email', type: 'email', required: true },
+    { key: 'phone', label: 'Phone', type: 'phone', required: true },
+    { key: 'dob', label: 'Date of Birth', type: 'date', required: true },
+    { key: 'address', label: 'Address', type: 'text', required: true },
+    { key: 'incidentDate', label: 'Date of Incident', type: 'date', required: true },
+    { key: 'typeOfAssault', label: 'Type of Assault', type: 'text', required: true },
+    { key: 'proofOfRide', label: 'Proof of Ride?', type: 'radio', required: true, options: [
+        { label: 'Yes', value: 'yes' },
+        { label: 'No', value: 'no' }
       ]
     },
-    { key: 'proofOfRide', label: 'Proof of ride when assaulted?', type: 'radio' },
-    { key: 'reportDetails', label: 'Report filed (police / company / etc.)', type: 'text' },
-    { key: 'attorney', label: 'Attorney retained for this matter?', type: 'radio' }
+    { key: 'attorney', label: 'Attorney retained?', type: 'radio', required: true, options: [
+        { label: 'Yes', value: 'yes' },
+        { label: 'No', value: 'no' }
+      ]
+    }
   ],
 
   /* ───────────────────────── ROUNDUP ───────────────────────────── */
@@ -87,20 +89,40 @@ export const DYNAMIC_FIELDS: Record<
   ],
 
   /* ───────────────────────── LUNG CANCER ───────────────────────── */
-'ROBLOX': [
-  { key: 'incidentDate', label: 'Date of Incident', type: 'date' },
-  { key: 'username', label: 'ROBLOX Username', type: 'text' },
-  { key: 'userId', label: 'ROBLOX User ID', type: 'text' },
-  { key: 'gameName', label: 'Game Name Where Incident Occurred', type: 'text' },
-  { key: 'gameLink', label: 'Game Link (URL)', type: 'text' },
-  { key: 'incidentType', label: 'Type of Issue (Scam / Hacking / Exploitation / Injury)', type: 'text' },
-  { key: 'description', label: 'Detailed Description of Incident', type: 'textarea' },
-  { key: 'reportedToRoblox', label: 'Was this reported to ROBLOX?', type: 'radio' },
-  { key: 'reportDate', label: 'Date Reported to ROBLOX', type: 'date' },
-  { key: 'evidence', label: 'Evidence (Screenshots / Videos / Links)', type: 'text' },
-  { key: 'lossAmount', label: 'Robux or Monetary Loss (if any)', type: 'text' }
-]
-,
+  'Roblox': [
+    { key: 'name', label: 'Name', type: 'text', required: true },
+    { key: 'email', label: 'Email', type: 'email', required: true },
+    { key: 'phone', label: 'Phone', type: 'phone', required: true },
+    { key: 'dob', label: 'Date of Birth', type: 'date', required: true },
+    { key: 'address', label: 'Address', type: 'text', required: true },
+    { key: 'incidentDate', label: 'Date of Incident', type: 'date', required: true },
+    { key: 'robloxIdAndUser', label: 'Roblox ID and User Name', type: 'text', required: true },
+    { key: 'abuserRobloxId', label: 'Abuser’s Roblox ID', type: 'text', required: true },
+    { key: 'typeOfIssue', label: 'Type of Issue', type: 'text', required: true },
+    { key: 'otherAppsInvolved', label: 'Were there any other apps involved in the abuse?', type: 'text', required: true },
+    { key: 'otherAppId', label: 'ID of other app (if any)', type: 'text', required: true },
+    { key: 'attorney', label: 'Attorney retained?', type: 'radio', required: true, options: [
+        { label: 'Yes', value: 'yes' },
+        { label: 'No', value: 'no' }
+      ]
+    }
+  ],
+  'Illinois Abuse': [
+    { key: 'name', label: 'Name', type: 'text', required: true },
+    { key: 'email', label: 'Email', type: 'email', required: true },
+    { key: 'phone', label: 'Phone', type: 'phone', required: true },
+    { key: 'dob', label: 'Date of Birth', type: 'date', required: true },
+    { key: 'address', label: 'Address', type: 'text', required: true },
+    { key: 'incidentDate', label: 'Date of Incident', type: 'date', required: true },
+    { key: 'typeOfAbuse', label: 'Type of Abuse', type: 'text', required: true },
+    { key: 'locationOfIncident', label: 'Location / Facility Name', type: 'text', required: true },
+    { key: 'otherDetails', label: 'Additional Incident Details', type: 'textarea', required: true },
+    { key: 'attorney', label: 'Attorney retained?', type: 'radio', required: true, options: [
+        { label: 'Yes', value: 'yes' },
+        { label: 'No', value: 'no' }
+      ]
+    }
+  ],
 
   /* ───────────────────────── PARAQUAT ──────────────────────────── */
   'Paraquat': [
