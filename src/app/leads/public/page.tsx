@@ -6,7 +6,7 @@ import axios from 'axios';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-
+import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -62,7 +62,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function CreateLeadClient() {
+export default function PublicLeadPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -197,141 +197,145 @@ export default function CreateLeadClient() {
 
   if (submitted) {
     return (
-      <div className="flex justify-center items-center min-h-[70vh] px-4">
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center max-w-md w-full">
-          <div className="bg-green-100 dark:bg-green-900/20 p-3 rounded-full w-16 h-16 mx-auto mb-6 flex items-center justify-center">
-            <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
-          </div>
-          <h2 className="text-xl md:text-2xl font-semibold mb-2">Lead Profile Created</h2>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
-            <Button variant="outline" onClick={() => router.push('/leads')}>View All Leads</Button>
-            <Button onClick={() => { form.reset(); setSubmitted(false); setSelectedType(''); setDynamicFields({}); }}>Add Another</Button>
-          </div>
-        </motion.div>
-      </div>
+      <DashboardLayout hideSidebar>
+        <div className="flex justify-center items-center min-h-[70vh] px-4">
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center max-w-md w-full">
+            <div className="bg-green-100 dark:bg-green-900/20 p-3 rounded-full w-16 h-16 mx-auto mb-6 flex items-center justify-center">
+              <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
+            </div>
+            <h2 className="text-xl md:text-2xl font-semibold mb-2">Lead Profile Created</h2>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
+              <Button variant="outline" onClick={() => router.push('/leads')}>View All Leads</Button>
+              <Button onClick={() => { form.reset(); setSubmitted(false); setSelectedType(''); setDynamicFields({}); }}>Add Another</Button>
+            </div>
+          </motion.div>
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 space-y-6 md:space-y-8 pb-20">
-      <div className="flex items-center gap-3">
-        <Button variant="outline" size="icon" onClick={() => router.back()} className="h-9 w-9 shrink-0">
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-xl md:text-2xl font-semibold tracking-tight">New Lead Profile</h1>
+    <DashboardLayout hideSidebar>
+      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6 md:space-y-8 pb-20">
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="icon" onClick={() => router.back()} className="h-9 w-9 shrink-0">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-xl md:text-2xl font-semibold tracking-tight">New Lead Profile</h1>
+          </div>
         </div>
-      </div>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <Card className="rounded-xl border shadow-sm bg-card/40 overflow-hidden">
-            <CardHeader className="p-4 md:p-6">
-              <div className="flex items-center space-x-2">
-                <User className="h-5 w-5 text-muted-foreground" />
-                <CardTitle className="text-lg md:text-xl">Client Details</CardTitle>
-              </div>
-            </CardHeader>
-            <Separator />
-            <CardContent className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-              {['firstName', 'lastName', 'email', 'phone', 'dateOfBirth', 'address'].map(fieldName => (
-                <FormField
-                  key={fieldName}
-                  control={form.control}
-                  name={fieldName as keyof FormValues}
-                  render={({ field }) => (
-                    <FormItem className={fieldName === 'address' ? 'md:col-span-2' : ''}>
-                      <FormLabel className="text-sm capitalize">
-                        {fieldName.replace(/([A-Z])/g, ' $1')}
-                        {(fieldName === 'firstName' || fieldName === 'lastName') && '*'}
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type={fieldName === 'dateOfBirth' ? 'date' : 'text'}
-                          {...field}
-                          className="h-10 bg-background"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-xl border shadow-sm bg-card/40 overflow-hidden">
-            <CardHeader className="p-4 md:p-6">
-              <div className="flex items-center space-x-2">
-                <ClipboardList className="h-5 w-5 text-muted-foreground" />
-                <CardTitle className="text-lg md:text-xl">Case Information</CardTitle>
-              </div>
-            </CardHeader>
-            <Separator />
-            <CardContent className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-              <FormField control={form.control} name="applicationType" render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm">Application Type*</FormLabel>
-                  <Select
-                    onValueChange={(val) => {
-                      field.onChange(val);
-                      setSelectedType(val);
-                      setDynamicFields({});
-                    }}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="h-10 bg-background">
-                        <SelectValue placeholder="Select application type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-white dark:bg-slate-950 z-50 border">
-                      {APPLICATION_TYPES.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )} />
-
-              <FormField control={form.control} name="notes" render={({ field }) => (
-                <FormItem className="col-span-1 md:col-span-2">
-                  <FormLabel className="text-sm">Notes</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Add any additional notes about this lead"
-                      {...field}
-                      className="min-h-[100px] resize-none bg-background"
-                    />
-                  </FormControl>
-                </FormItem>
-              )} />
-            </CardContent>
-          </Card>
-
-          {selectedType && (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card className="rounded-xl border shadow-sm bg-card/40 overflow-hidden">
               <CardHeader className="p-4 md:p-6">
-                <CardTitle className="text-lg md:text-xl">Case-Specific Information</CardTitle>
-                <CardDescription className="text-xs">Details for: {selectedType}</CardDescription>
+                <div className="flex items-center space-x-2">
+                  <User className="h-5 w-5 text-muted-foreground" />
+                  <CardTitle className="text-lg md:text-xl">Client Details</CardTitle>
+                </div>
               </CardHeader>
               <Separator />
               <CardContent className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                {renderDynamicFields()}
+                {['firstName', 'lastName', 'email', 'phone', 'dateOfBirth', 'address'].map(fieldName => (
+                  <FormField 
+                    key={fieldName} 
+                    control={form.control} 
+                    name={fieldName as keyof FormValues} 
+                    render={({ field }) => (
+                      <FormItem className={fieldName === 'address' ? 'md:col-span-2' : ''}>
+                        <FormLabel className="text-sm capitalize">
+                          {fieldName.replace(/([A-Z])/g, ' $1')}
+                          {(fieldName === 'firstName' || fieldName === 'lastName') && '*'}
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            type={fieldName === 'dateOfBirth' ? 'date' : 'text'}
+                            {...field} 
+                            className="h-10 bg-background"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} 
+                  />
+                ))}
               </CardContent>
             </Card>
-          )}
 
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
-            <Button type="button" variant="ghost" onClick={() => router.back()} className="w-full sm:w-auto">
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading} className="w-full sm:min-w-[150px] gap-2 h-11 sm:h-10">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              Save Lead
-            </Button>
-          </div>
-        </form>
-      </Form>
-    </div>
+            <Card className="rounded-xl border shadow-sm bg-card/40 overflow-hidden">
+              <CardHeader className="p-4 md:p-6">
+                <div className="flex items-center space-x-2">
+                  <ClipboardList className="h-5 w-5 text-muted-foreground" />
+                  <CardTitle className="text-lg md:text-xl">Case Information</CardTitle>
+                </div>
+              </CardHeader>
+              <Separator />
+              <CardContent className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                <FormField control={form.control} name="applicationType" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm">Application Type*</FormLabel>
+                    <Select
+                      onValueChange={(val) => {
+                        field.onChange(val);
+                        setSelectedType(val);
+                        setDynamicFields({});
+                      }}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="h-10 bg-background">
+                          <SelectValue placeholder="Select application type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-white dark:bg-slate-950 z-50 border">
+                        {APPLICATION_TYPES.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="notes" render={({ field }) => (
+                  <FormItem className="col-span-1 md:col-span-2">
+                    <FormLabel className="text-sm">Notes</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Add any additional notes about this lead"
+                        {...field}
+                        className="min-h-[100px] resize-none bg-background"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )} />
+              </CardContent>
+            </Card>
+
+            {selectedType && (
+              <Card className="rounded-xl border shadow-sm bg-card/40 overflow-hidden">
+                <CardHeader className="p-4 md:p-6">
+                  <CardTitle className="text-lg md:text-xl">Case-Specific Information</CardTitle>
+                  <CardDescription className="text-xs">Details for: {selectedType}</CardDescription>
+                </header>
+                <Separator />
+                <CardContent className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                  {renderDynamicFields()}
+                </CardContent>
+              </Card>
+            )}
+
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
+              <Button type="button" variant="ghost" onClick={() => router.back()} className="w-full sm:w-auto">
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading} className="w-full sm:min-w-[150px] gap-2 h-11 sm:h-10">
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                Save Lead
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </div>
+    </DashboardLayout>
   );
 }

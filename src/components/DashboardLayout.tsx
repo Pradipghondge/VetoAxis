@@ -7,7 +7,7 @@ import { SiteHeader } from "@/components/site-header";
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 
-export default function DashboardLayout({ children }: { children: ReactNode }) {
+export default function DashboardLayout({ children, hideSidebar }: { children: ReactNode, hideSidebar?: boolean }) {
   const { loading: authLoading } = useAuth();
 
   if (authLoading) {
@@ -23,7 +23,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
         {/* This is your new shadcn sidebar replacing the old one */}
-        <AppSidebar />
+        {!hideSidebar && <AppSidebar />}
 
         <SidebarInset className="flex flex-col bg-background overflow-x-hidden">
           {/* SiteHeader handles the Top Bar and Breadcrumbs */}
