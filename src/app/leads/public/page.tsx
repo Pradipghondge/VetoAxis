@@ -23,14 +23,14 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from '@/components/ui/select';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -47,11 +47,10 @@ import { DYNAMIC_FIELDS } from '@/lib/dynamic-fields';
 
 const APPLICATION_TYPES = Object.keys(DYNAMIC_FIELDS);
 
-// Schema updated to accept strings for dates
 const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Invalid email address').optional().or(z.literal('')),
+  email: z.string().email('Invalid email').optional().or(z.literal('')),
   phone: z.string().optional(),
   dateOfBirth: z.string().optional(),
   address: z.string().optional(),
@@ -66,7 +65,7 @@ export default function PublicLeadPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [selectedType, setSelectedType] = useState<string>('');
+  const [selectedType, setSelectedType] = useState('');
   const [dynamicFields, setDynamicFields] = useState<Record<string, any>>({});
 
   const form = useForm<FormValues>({
@@ -84,7 +83,6 @@ export default function PublicLeadPage() {
     },
   });
 
-  // Helper to convert HTML5 date (YYYY-MM-DD) to (MM/DD/YYYY)
   const formatToMMDDYYYY = (dateStr: string) => {
     if (!dateStr) return '';
     const [year, month, day] = dateStr.split('-');
@@ -92,41 +90,45 @@ export default function PublicLeadPage() {
   };
 
   const onSubmit = async (values: FormValues) => {
-    const requiredDynamicFields = (DYNAMIC_FIELDS[selectedType] || []).filter(field => field.required);
-    const missingFields = requiredDynamicFields.filter(field => !dynamicFields[field.key]);
+    const requiredDynamicFields =
+      (DYNAMIC_FIELDS[selectedType] || []).filter(f => f.required);
+
+    const missingFields = requiredDynamicFields.filter(
+      f => !dynamicFields[f.key]
+    );
 
     if (missingFields.length > 0) {
       toast({
         title: 'Error',
-        description: `Please fill out: ${missingFields.map(f => f.label).join(', ')}`,
-        variant: 'destructive'
+        description: `Please fill out: ${missingFields
+          .map(f => f.label)
+          .join(', ')}`,
+        variant: 'destructive',
       });
       return;
     }
 
     setLoading(true);
     try {
-      // 1. Format main date of birth
-      const formattedDOB = values.dateOfBirth ? formatToMMDDYYYY(values.dateOfBirth) : undefined;
+      const formattedDOB = values.dateOfBirth
+        ? formatToMMDDYYYY(values.dateOfBirth)
+        : undefined;
 
-      // 2. Format any dates within the dynamic fields
       const formattedDynamicFields = { ...dynamicFields };
-      const fieldConfigs = DYNAMIC_FIELDS[selectedType] || [];
-      
-      fieldConfigs.forEach(field => {
+      (DYNAMIC_FIELDS[selectedType] || []).forEach(field => {
         if (field.type === 'date' && formattedDynamicFields[field.key]) {
-          formattedDynamicFields[field.key] = formatToMMDDYYYY(formattedDynamicFields[field.key]);
+          formattedDynamicFields[field.key] = formatToMMDDYYYY(
+            formattedDynamicFields[field.key]
+          );
         }
       });
 
-      const payload = {
+      await axios.post('/api/leads', {
         ...values,
         dateOfBirth: formattedDOB,
         fields: formattedDynamicFields,
         status: 'PENDING',
-      };
-
-      await axios.post('/api/leads', payload);
+      });
 
       setSubmitted(true);
       toast({ title: 'Success', description: 'Lead created successfully' });
@@ -134,80 +136,64 @@ export default function PublicLeadPage() {
     } catch (error: any) {
       toast({
         title: 'Error',
-        description: error.response?.data?.message || 'Failed to create Lead',
-        variant: 'destructive'
+        description:
+          error.response?.data?.message || 'Failed to create Lead',
+        variant: 'destructive',
       });
       setLoading(false);
     }
   };
 
-  const renderDynamicFields = () => {
-    const fields = DYNAMIC_FIELDS[selectedType] || [];
-    return fields.map(field => {
-      let inputComponent;
-      if (field.type === 'text' || field.type === 'email' || field.type === 'phone' || field.type === 'date') {
-        inputComponent = (
-          <Input
-            type={field.type} // Uses 'date' type for native picker
-            value={dynamicFields[field.key] || ''}
-            onChange={e => setDynamicFields(prev => ({ ...prev, [field.key]: e.target.value }))}
-            placeholder={`Enter ${field.label.toLowerCase()}`}
-            className="bg-background"
-          />
-        );
-      } else if (field.type === 'textarea') {
-        inputComponent = (
-          <Textarea
-            value={dynamicFields[field.key] || ''}
-            onChange={e => setDynamicFields(prev => ({ ...prev, [field.key]: e.target.value }))}
-            placeholder={`Enter ${field.label.toLowerCase()}`}
-            className="bg-background"
-          />
-        );
-      } else {
-        const options = field.options || [{ label: 'Yes', value: 'Yes' }, { label: 'No', value: 'No' }];
-        inputComponent = (
-          <Select
-            value={dynamicFields[field.key] || ''}
-            onValueChange={val => setDynamicFields(prev => ({ ...prev, [field.key]: val }))}
-          >
-            <FormControl>
-              <SelectTrigger className="bg-background">
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent className="bg-white dark:bg-slate-950 z-50 shadow-xl border">
-              {options.map(opt => (
-                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        );
-      }
-
-      return (
-        <FormItem key={field.key}>
-          <FormLabel className="text-sm">{field.label}{field.required && '*'}</FormLabel>
-          <FormControl>{inputComponent}</FormControl>
-          <FormMessage />
-        </FormItem>
-      );
-    });
-  };
+  const renderDynamicFields = () =>
+    (DYNAMIC_FIELDS[selectedType] || []).map(field => (
+      <FormItem key={field.key}>
+        <FormLabel className="text-sm">
+          {field.label}
+          {field.required && '*'}
+        </FormLabel>
+        <FormControl>
+          {field.type === 'textarea' ? (
+            <Textarea
+              value={dynamicFields[field.key] || ''}
+              onChange={e =>
+                setDynamicFields(p => ({
+                  ...p,
+                  [field.key]: e.target.value,
+                }))
+              }
+            />
+          ) : (
+            <Input
+              type={field.type}
+              value={dynamicFields[field.key] || ''}
+              onChange={e =>
+                setDynamicFields(p => ({
+                  ...p,
+                  [field.key]: e.target.value,
+                }))
+              }
+            />
+          )}
+        </FormControl>
+      </FormItem>
+    ));
 
   if (submitted) {
     return (
       <DashboardLayout hideSidebar>
-        <div className="flex justify-center items-center min-h-[70vh] px-4">
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center max-w-md w-full">
-            <div className="bg-green-100 dark:bg-green-900/20 p-3 rounded-full w-16 h-16 mx-auto mb-6 flex items-center justify-center">
-              <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
-            </div>
-            <h2 className="text-xl md:text-2xl font-semibold mb-2">Lead Profile Created</h2>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
-              <Button variant="outline" onClick={() => router.push('/leads')}>View All Leads</Button>
-              <Button onClick={() => { form.reset(); setSubmitted(false); setSelectedType(''); setDynamicFields({}); }}>Add Another</Button>
-            </div>
+        <div className="flex justify-center items-center min-h-[70vh]">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center"
+          >
+            <Check className="mx-auto h-10 w-10 text-green-500" />
+            <h2 className="text-xl font-semibold mt-4">
+              Lead Profile Created
+            </h2>
+            <Button className="mt-6" onClick={() => router.push('/leads')}>
+              View All Leads
+            </Button>
           </motion.div>
         </div>
       </DashboardLayout>
@@ -216,123 +202,116 @@ export default function PublicLeadPage() {
 
   return (
     <DashboardLayout hideSidebar>
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6 md:space-y-8 pb-20">
+      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="icon" onClick={() => router.back()} className="h-9 w-9 shrink-0">
+          <Button variant="outline" size="icon" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div>
-            <h1 className="text-xl md:text-2xl font-semibold tracking-tight">New Lead Profile</h1>
-          </div>
+          <h1 className="text-xl font-semibold">New Lead Profile</h1>
         </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <Card className="rounded-xl border shadow-sm bg-card/40 overflow-hidden">
-              <CardHeader className="p-4 md:p-6">
-                <div className="flex items-center space-x-2">
-                  <User className="h-5 w-5 text-muted-foreground" />
-                  <CardTitle className="text-lg md:text-xl">Client Details</CardTitle>
+
+            {/* Client Details */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  <CardTitle>Client Details</CardTitle>
                 </div>
               </CardHeader>
               <Separator />
-              <CardContent className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                {['firstName', 'lastName', 'email', 'phone', 'dateOfBirth', 'address'].map(fieldName => (
-                  <FormField 
-                    key={fieldName} 
-                    control={form.control} 
-                    name={fieldName as keyof FormValues} 
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {['firstName', 'lastName', 'email', 'phone', 'dateOfBirth', 'address'].map(name => (
+                  <FormField
+                    key={name}
+                    control={form.control}
+                    name={name as keyof FormValues}
                     render={({ field }) => (
-                      <FormItem className={fieldName === 'address' ? 'md:col-span-2' : ''}>
-                        <FormLabel className="text-sm capitalize">
-                          {fieldName.replace(/([A-Z])/g, ' $1')}
-                          {(fieldName === 'firstName' || fieldName === 'lastName') && '*'}
+                      <FormItem className={name === 'address' ? 'md:col-span-2' : ''}>
+                        <FormLabel>
+                          {name.replace(/([A-Z])/g, ' $1')}
+                          {(name === 'firstName' || name === 'lastName') && '*'}
                         </FormLabel>
                         <FormControl>
-                          <Input 
-                            type={fieldName === 'dateOfBirth' ? 'date' : 'text'}
-                            {...field} 
-                            className="h-10 bg-background"
+                          <Input
+                            type={name === 'dateOfBirth' ? 'date' : 'text'}
+                            {...field}
                           />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
-                    )} 
+                    )}
                   />
                 ))}
               </CardContent>
             </Card>
 
-            <Card className="rounded-xl border shadow-sm bg-card/40 overflow-hidden">
-              <CardHeader className="p-4 md:p-6">
-                <div className="flex items-center space-x-2">
-                  <ClipboardList className="h-5 w-5 text-muted-foreground" />
-                  <CardTitle className="text-lg md:text-xl">Case Information</CardTitle>
+            {/* Case Info */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <ClipboardList className="h-5 w-5" />
+                  <CardTitle>Case Information</CardTitle>
                 </div>
               </CardHeader>
               <Separator />
-              <CardContent className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                <FormField control={form.control} name="applicationType" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm">Application Type*</FormLabel>
-                    <Select
-                      onValueChange={(val) => {
-                        field.onChange(val);
-                        setSelectedType(val);
-                        setDynamicFields({});
-                      }}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-10 bg-background">
-                          <SelectValue placeholder="Select application type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-white dark:bg-slate-950 z-50 border">
-                        {APPLICATION_TYPES.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="notes" render={({ field }) => (
-                  <FormItem className="col-span-1 md:col-span-2">
-                    <FormLabel className="text-sm">Notes</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Add any additional notes about this lead"
-                        {...field}
-                        className="min-h-[100px] resize-none bg-background"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )} />
+              <CardContent>
+                <FormField
+                  control={form.control}
+                  name="applicationType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Application Type*</FormLabel>
+                      <Select
+                        onValueChange={val => {
+                          field.onChange(val);
+                          setSelectedType(val);
+                          setDynamicFields({});
+                        }}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select application type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {APPLICATION_TYPES.map(type => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
               </CardContent>
             </Card>
 
+            {/* Case Specific */}
             {selectedType && (
-              <Card className="rounded-xl border shadow-sm bg-card/40 overflow-hidden">
-                <CardHeader className="p-4 md:p-6">
-                  <CardTitle className="text-lg md:text-xl">Case-Specific Information</CardTitle>
-                  <CardDescription className="text-xs">Details for: {selectedType}</CardDescription>
-                </header>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Case-Specific Information</CardTitle>
+                  <CardDescription>
+                    Details for: {selectedType}
+                  </CardDescription>
+                </CardHeader>
                 <Separator />
-                <CardContent className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {renderDynamicFields()}
                 </CardContent>
               </Card>
             )}
 
-            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
-              <Button type="button" variant="ghost" onClick={() => router.back()} className="w-full sm:w-auto">
-                Cancel
-              </Button>
-              <Button type="submit" disabled={loading} className="w-full sm:min-w-[150px] gap-2 h-11 sm:h-10">
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                Save Lead
-              </Button>
-            </div>
+            <Button type="submit" disabled={loading}>
+              {loading ? <Loader2 className="animate-spin" /> : <Save />}
+              Save Lead
+            </Button>
+
           </form>
         </Form>
       </div>
