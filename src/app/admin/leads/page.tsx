@@ -325,7 +325,7 @@ export default function LeadManagement() {
 
                     {/* 7. Entry Date */}
                     <TableCell className="text-sm text-slate-500 whitespace-nowrap">
-                      {lead.createdAt ? format(new Date(lead.createdAt), 'MMM dd, yyyy') : '-'}
+                      {lead.createdAt ? format(new Date(lead.createdAt), 'MM/dd/yyyy') : '-'}
                       <div className="text-[10px] text-slate-400">{lead.createdAt ? format(new Date(lead.createdAt), 'hh:mm a') : ''}</div>
                     </TableCell>
 

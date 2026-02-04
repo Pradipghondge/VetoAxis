@@ -208,7 +208,10 @@ export default function ClientLeads() {
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-slate-500">
-                      {format(new Date(lead.createdAt), 'MM/dd/yy')}
+                      {format(new Date(lead.createdAt), 'MM/dd/yyyy')}
+                      <div className="text-xs text-muted-foreground">
+                        {format(new Date(lead.createdAt), 'hh:mm a')}
+                      </div>
                     </TableCell>
                     <TableCell className="text-right px-6">
                       <div className="flex justify-end gap-2">
@@ -291,9 +294,10 @@ export default function ClientLeads() {
                         <Badge variant="secondary" className="text-[10px] font-bold bg-slate-100 text-slate-700 border-none">
                           {log.toStatus}
                         </Badge>
-                        <span className="text-[10px] text-slate-400 font-medium">
-                          {format(new Date(log.timestamp), 'MM/dd/yy, HH:mm')}
-                        </span>
+                        <div className="text-[10px] text-slate-400 font-medium text-right">
+                          <div>{format(new Date(log.timestamp), 'MM/dd/yyyy')}</div>
+                          <div>{format(new Date(log.timestamp), 'hh:mm a')}</div>
+                        </div>
                       </div>
                       <div className="mt-1 text-sm text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">
                         {log.notes || "No additional notes provided."}
