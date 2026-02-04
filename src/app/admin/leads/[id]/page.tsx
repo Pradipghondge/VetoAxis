@@ -352,12 +352,22 @@ export default function LeadDetailsPage() {
 
             <div className="flex flex-col">
               <span className="text-sm font-medium text-muted-foreground">Created</span>
-              <span className="text-sm">{format(new Date(lead.createdAt), 'MM/dd/yy')}</span>
+              <span className="text-sm">
+                {format(new Date(lead.createdAt), 'MM/dd/yyyy')}
+                <div className="text-xs text-muted-foreground">
+                  {format(new Date(lead.createdAt), 'hh:mm a')}
+                </div>
+              </span>
             </div>
 
             <div className="flex flex-col">
               <span className="text-sm font-medium text-muted-foreground">Last Updated</span>
-              <span className="text-sm">{format(new Date(lead.updatedAt), 'MM/dd/yy')}</span>
+              <span className="text-sm">
+                {format(new Date(lead.updatedAt), 'MM/dd/yyyy')}
+                <div className="text-xs text-muted-foreground">
+                  {format(new Date(lead.updatedAt), 'hh:mm a')}
+                </div>
+              </span>
             </div>
 
             <div className="flex flex-col">
@@ -396,7 +406,7 @@ export default function LeadDetailsPage() {
                       <span className="text-sm font-medium text-muted-foreground">Date of Birth</span>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span>{format(new Date(lead.dateOfBirth), 'MM/dd/yy')}</span>
+                        <span>{format(new Date(lead.dateOfBirth), 'MM/dd/yyyy')}</span>
                       </div>
                     </div>
                   )}
@@ -504,7 +514,12 @@ export default function LeadDetailsPage() {
                         <div className="grid gap-1">
                           <div className="text-sm font-medium flex gap-2">
                             <Clock className="h-4 w-4 text-muted-foreground" />
-                            {format(new Date(entry.timestamp), 'MM/dd/yy')}
+                            <div>
+                              {format(new Date(entry.timestamp), 'MM/dd/yyyy')}
+                              <div className="text-xs text-muted-foreground">
+                                {format(new Date(entry.timestamp), 'hh:mm a')}
+                              </div>
+                            </div>
                           </div>
 
                           <div className="flex items-center gap-3 mt-1">
