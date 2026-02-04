@@ -17,7 +17,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription
 } from '@/components/ui/form';
 import {
   Select,
@@ -30,7 +29,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
@@ -41,7 +39,7 @@ import {
   User,
   ClipboardList,
   Save,
-  Check
+  Check,
 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { motion } from 'framer-motion';
@@ -49,10 +47,11 @@ import { DYNAMIC_FIELDS } from '@/lib/dynamic-fields';
 
 const APPLICATION_TYPES = Object.keys(DYNAMIC_FIELDS);
 
+// Schema updated to accept strings for dates
 const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Invalid email address').optional(),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
   phone: z.string().optional(),
   dateOfBirth: z.string().optional(),
   address: z.string().optional(),
@@ -85,6 +84,13 @@ export default function CreateLeadPage() {
     },
   });
 
+  // Helper to convert HTML5 date (YYYY-MM-DD) to (MM/DD/YYYY)
+  const formatToMMDDYYYY = (dateStr: string) => {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-');
+    return `${month}/${day}/${year}`;
+  };
+
   const onSubmit = async (values: FormValues) => {
     const requiredDynamicFields = (DYNAMIC_FIELDS[selectedType] || []).filter(field => field.required);
     const missingFields = requiredDynamicFields.filter(field => !dynamicFields[field.key]);
@@ -92,7 +98,7 @@ export default function CreateLeadPage() {
     if (missingFields.length > 0) {
       toast({
         title: 'Error',
-        description: `Please fill out all required fields: ${missingFields.map(f => f.label).join(', ')}`,
+        description: `Please fill out: ${missingFields.map(f => f.label).join(', ')}`,
         variant: 'destructive'
       });
       return;
@@ -100,11 +106,27 @@ export default function CreateLeadPage() {
 
     setLoading(true);
     try {
-      await axios.post('/api/leads', {
-        ...values,
-        fields: dynamicFields,
-        status: 'PENDING',
+      // 1. Format main date of birth
+      const formattedDOB = values.dateOfBirth ? formatToMMDDYYYY(values.dateOfBirth) : undefined;
+
+      // 2. Format any dates within the dynamic fields
+      const formattedDynamicFields = { ...dynamicFields };
+      const fieldConfigs = DYNAMIC_FIELDS[selectedType] || [];
+      
+      fieldConfigs.forEach(field => {
+        if (field.type === 'date' && formattedDynamicFields[field.key]) {
+          formattedDynamicFields[field.key] = formatToMMDDYYYY(formattedDynamicFields[field.key]);
+        }
       });
+
+      const payload = {
+        ...values,
+        dateOfBirth: formattedDOB,
+        fields: formattedDynamicFields,
+        status: 'PENDING',
+      };
+
+      await axios.post('/api/leads', payload);
 
       setSubmitted(true);
       toast({ title: 'Success', description: 'Lead created successfully' });
@@ -119,60 +141,44 @@ export default function CreateLeadPage() {
     }
   };
 
-  const handleDynamicFieldChange = (key: string, value: any) => {
-    setDynamicFields(prev => ({ ...prev, [key]: value }));
-  };
-
   const renderDynamicFields = () => {
     const fields = DYNAMIC_FIELDS[selectedType] || [];
     return fields.map(field => {
       let inputComponent;
-      if (field.type === 'text' || field.type === 'email' || field.type === 'phone') {
+      if (field.type === 'text' || field.type === 'email' || field.type === 'phone' || field.type === 'date') {
         inputComponent = (
           <Input
-            type={field.type}
+            type={field.type} // Uses 'date' type for native picker
             value={dynamicFields[field.key] || ''}
-            onChange={e => handleDynamicFieldChange(field.key, e.target.value)}
+            onChange={e => setDynamicFields(prev => ({ ...prev, [field.key]: e.target.value }))}
             placeholder={`Enter ${field.label.toLowerCase()}`}
-          />
-        );
-      } else if (field.type === 'date') {
-        inputComponent = (
-          <Input
-            type="text"
-            value={dynamicFields[field.key] || ''}
-            onChange={e => handleDynamicFieldChange(field.key, e.target.value)}
-            placeholder="MM/DD/YYYY"
+            className="bg-background"
           />
         );
       } else if (field.type === 'textarea') {
         inputComponent = (
           <Textarea
             value={dynamicFields[field.key] || ''}
-            onChange={e => handleDynamicFieldChange(field.key, e.target.value)}
+            onChange={e => setDynamicFields(prev => ({ ...prev, [field.key]: e.target.value }))}
             placeholder={`Enter ${field.label.toLowerCase()}`}
+            className="bg-background"
           />
         );
       } else {
-        const options = field.options || [
-          { label: 'Yes', value: 'Yes' },
-          { label: 'No', value: 'No' }
-        ];
+        const options = field.options || [{ label: 'Yes', value: 'Yes' }, { label: 'No', value: 'No' }];
         inputComponent = (
           <Select
             value={dynamicFields[field.key] || ''}
-            onValueChange={val => handleDynamicFieldChange(field.key, val)}
+            onValueChange={val => setDynamicFields(prev => ({ ...prev, [field.key]: val }))}
           >
             <FormControl>
-              <SelectTrigger>
+              <SelectTrigger className="bg-background">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
             </FormControl>
-            <SelectContent>
+            <SelectContent className="bg-white dark:bg-slate-950 z-50 shadow-xl border">
               {options.map(opt => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -181,10 +187,8 @@ export default function CreateLeadPage() {
 
       return (
         <FormItem key={field.key}>
-          <FormLabel>{field.label}{field.required && '*'}</FormLabel>
-          <FormControl>
-            {inputComponent}
-          </FormControl>
+          <FormLabel className="text-sm">{field.label}{field.required && '*'}</FormLabel>
+          <FormControl>{inputComponent}</FormControl>
           <FormMessage />
         </FormItem>
       );
@@ -200,10 +204,9 @@ export default function CreateLeadPage() {
               <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
             </div>
             <h2 className="text-xl md:text-2xl font-semibold mb-2">Lead Profile Created</h2>
-            <p className="text-sm md:text-base text-muted-foreground mb-6">The new lead has been successfully added to your pipeline.</p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button variant="outline" onClick={() => router.push('/leads')} className="w-full sm:w-auto">View All Leads</Button>
-              <Button onClick={() => { form.reset(); setSubmitted(false); setSelectedType(''); setDynamicFields({}); }} className="w-full sm:w-auto">Add Another</Button>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
+              <Button variant="outline" onClick={() => router.push('/leads')}>View All Leads</Button>
+              <Button onClick={() => { form.reset(); setSubmitted(false); setSelectedType(''); setDynamicFields({}); }}>Add Another</Button>
             </div>
           </motion.div>
         </div>
@@ -214,23 +217,18 @@ export default function CreateLeadPage() {
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6 md:space-y-8 pb-20">
-        {/* Header Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="icon" onClick={() => router.back()} className="h-9 w-9 shrink-0">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-xl md:text-2xl font-semibold tracking-tight">New Lead Profile</h1>
-              <p className="text-xs md:text-sm text-muted-foreground">Capture new client details and case information.</p>
-            </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="icon" onClick={() => router.back()} className="h-9 w-9 shrink-0">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-xl md:text-2xl font-semibold tracking-tight">New Lead Profile</h1>
           </div>
         </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Base Details */}
-            <Card className="rounded-xl md:rounded-2xl border shadow-sm bg-card/40 overflow-hidden">
+            <Card className="rounded-xl border shadow-sm bg-card/40 overflow-hidden">
               <CardHeader className="p-4 md:p-6">
                 <div className="flex items-center space-x-2">
                   <User className="h-5 w-5 text-muted-foreground" />
@@ -239,24 +237,22 @@ export default function CreateLeadPage() {
               </CardHeader>
               <Separator />
               <CardContent className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                {['first Name', 'last Name', 'email', 'phone', 'dateOfBirth', 'address'].map(fieldName => (
+                {['firstName', 'lastName', 'email', 'phone', 'dateOfBirth', 'address'].map(fieldName => (
                   <FormField 
                     key={fieldName} 
                     control={form.control} 
                     name={fieldName as keyof FormValues} 
                     render={({ field }) => (
                       <FormItem className={fieldName === 'address' ? 'md:col-span-2' : ''}>
-                        <FormLabel className="text-sm">
-                          {fieldName === 'dateOfBirth' ? 'Date of Birth' :
-                          fieldName.charAt(0).toUpperCase() + fieldName.slice(1)}
+                        <FormLabel className="text-sm capitalize">
+                          {fieldName.replace(/([A-Z])/g, ' $1')}
                           {(fieldName === 'firstName' || fieldName === 'lastName') && '*'}
                         </FormLabel>
                         <FormControl>
                           <Input 
-                            type='text'
-                            placeholder={fieldName === 'dateOfBirth' ? 'MM/DD/YYYY' : fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} 
+                            type={fieldName === 'dateOfBirth' ? 'date' : 'text'}
                             {...field} 
-                            className="h-10"
+                            className="h-10 bg-background"
                           />
                         </FormControl>
                         <FormMessage />
@@ -267,8 +263,7 @@ export default function CreateLeadPage() {
               </CardContent>
             </Card>
 
-            {/* Case Information */}
-            <Card className="rounded-xl md:rounded-2xl border shadow-sm bg-card/40 overflow-hidden">
+            <Card className="rounded-xl border shadow-sm bg-card/40 overflow-hidden">
               <CardHeader className="p-4 md:p-6">
                 <div className="flex items-center space-x-2">
                   <ClipboardList className="h-5 w-5 text-muted-foreground" />
@@ -289,30 +284,17 @@ export default function CreateLeadPage() {
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger className="h-10">
+                        <SelectTrigger className="h-10 bg-background">
                           <SelectValue placeholder="Select application type" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="bg-white dark:bg-slate-950 z-50 border">
                         {APPLICATION_TYPES.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
                       </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>
                 )} />
-
-                <div>
-                  <FormLabel className="text-sm">Status</FormLabel>
-                  <div className="flex items-center h-10 px-3 py-2 rounded-md border border-input bg-background text-sm">
-                    <span className="text-muted-foreground mr-2">Default:</span>
-                    <span className="font-semibold text-foreground text-xs md:text-sm">PENDING</span>
-                  </div>
-                  <p className="text-[10px] md:text-[11px] text-muted-foreground mt-2">
-                    Status is set automatically.
-                  </p>
-                </div>
-
-                
 
                 <FormField control={form.control} name="notes" render={({ field }) => (
                   <FormItem className="col-span-1 md:col-span-2">
@@ -321,23 +303,19 @@ export default function CreateLeadPage() {
                       <Textarea
                         placeholder="Add any additional notes about this lead"
                         {...field}
-                        className="min-h-[100px] resize-none"
+                        className="min-h-[100px] resize-none bg-background"
                       />
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )} />
               </CardContent>
             </Card>
 
-            {/* Dynamic Fields */}
-            {selectedType && DYNAMIC_FIELDS[selectedType] && (
-              <Card className="rounded-xl md:rounded-2xl border shadow-sm bg-card/40 overflow-hidden">
+            {selectedType && (
+              <Card className="rounded-xl border shadow-sm bg-card/40 overflow-hidden">
                 <CardHeader className="p-4 md:p-6">
                   <CardTitle className="text-lg md:text-xl">Case-Specific Information</CardTitle>
-                  <CardDescription className="text-xs">
-                    Details for: <span className="font-semibold text-foreground">{selectedType}</span>
-                  </CardDescription>
+                  <CardDescription className="text-xs">Details for: {selectedType}</CardDescription>
                 </CardHeader>
                 <Separator />
                 <CardContent className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
@@ -346,26 +324,13 @@ export default function CreateLeadPage() {
               </Card>
             )}
 
-            {/* Form Actions */}
             <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
-              <Button 
-                type="button" 
-                variant="ghost" 
-                onClick={() => router.back()} 
-                className="w-full sm:w-auto"
-              >
+              <Button type="button" variant="ghost" onClick={() => router.back()} className="w-full sm:w-auto">
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
-                disabled={loading} 
-                className="w-full sm:min-w-[150px] gap-2 h-11 sm:h-10"
-              >
-                {loading ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" />Creating...</>
-                ) : (
-                  <><Save className="h-4 w-4" />Save Lead</>
-                )}
+              <Button type="submit" disabled={loading} className="w-full sm:min-w-[150px] gap-2 h-11 sm:h-10">
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                Save Lead
               </Button>
             </div>
           </form>
