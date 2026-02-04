@@ -224,8 +224,7 @@ export default function LeadDetailPage() {
                         <p className="text-[9px] font-bold text-muted-foreground uppercase mb-1">{f.key}</p>
                         {!/^\d+$/.test(f.value) && !isNaN(new Date(f.value).getTime()) ? (
                           <div>
-                            <p className="text-xs font-semibold">{format(new Date(f.value), 'MM/dd/yyyy')}</p>
-                        
+                            <p className="text-xs font-semibold">{format(new Date(f.value), 'MM/dd/yyyy')}</p> 
                           </div>
                         ) : (
                           <p className="text-xs font-semibold">{f.value}</p>
