@@ -17,7 +17,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription
 } from '@/components/ui/form';
 import {
   Select,
@@ -41,20 +40,25 @@ import {
   User,
   ClipboardList,
   Save,
-  Check
+  Check,
+  Calendar as CalendarIcon
 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { motion } from 'framer-motion';
 import { DYNAMIC_FIELDS } from '@/lib/dynamic-fields';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const APPLICATION_TYPES = Object.keys(DYNAMIC_FIELDS);
 
 const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Invalid email address').optional(),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
   phone: z.string().optional(),
-  dateOfBirth: z.string().optional(),
+  dateOfBirth: z.date().optional(),
   address: z.string().optional(),
   applicationType: z.string().min(1, 'Application type is required'),
   lawsuit: z.string().optional(),
@@ -77,7 +81,7 @@ export default function CreateLeadPage() {
       lastName: '',
       email: '',
       phone: '',
-      dateOfBirth: '',
+      dateOfBirth: undefined,
       address: '',
       applicationType: '',
       lawsuit: '',
@@ -100,11 +104,14 @@ export default function CreateLeadPage() {
 
     setLoading(true);
     try {
-      await axios.post('/api/leads', {
+      const formattedValues = {
         ...values,
+        dateOfBirth: values.dateOfBirth ? format(values.dateOfBirth, "MM/dd/yyyy") : undefined,
         fields: dynamicFields,
         status: 'PENDING',
-      });
+      };
+
+      await axios.post('/api/leads', formattedValues);
 
       setSubmitted(true);
       toast({ title: 'Success', description: 'Lead created successfully' });
@@ -125,59 +132,91 @@ export default function CreateLeadPage() {
 
   const renderDynamicFields = () => {
     const fields = DYNAMIC_FIELDS[selectedType] || [];
-    return fields.map(field => (
-      <FormItem key={field.key}>
-        <FormLabel>{field.label}{field.required && '*'}</FormLabel>
-        <FormControl>
-          {(() => {
-            if (field.type === 'text' || field.type === 'date' || field.type === 'email' || field.type === 'phone') {
-              return (
-                <Input
-                  type={field.type}
-                  value={dynamicFields[field.key] || ''}
-                  onChange={e => handleDynamicFieldChange(field.key, e.target.value)}
-                  placeholder={`Enter ${field.label.toLowerCase()}`}
-                />
-              );
-            }
-            if (field.type === 'textarea') {
-              return (
-                <Textarea
-                  value={dynamicFields[field.key] || ''}
-                  onChange={e => handleDynamicFieldChange(field.key, e.target.value)}
-                  placeholder={`Enter ${field.label.toLowerCase()}`}
-                />
-              );
-            }
-            // Default to Select (Radio)
-            const options = field.options || [
-              { label: 'Yes', value: 'Yes' },
-              { label: 'No', value: 'No' }
-            ];
-            return (
-              <Select
-                value={dynamicFields[field.key] || ''}
-                onValueChange={val => handleDynamicFieldChange(field.key, val)}
+    return fields.map(field => {
+      let inputComponent;
+      if (field.type === 'text' || field.type === 'email' || field.type === 'phone') {
+        inputComponent = (
+          <Input
+            type={field.type}
+            value={dynamicFields[field.key] || ''}
+            onChange={e => handleDynamicFieldChange(field.key, e.target.value)}
+            placeholder={`Enter ${field.label.toLowerCase()}`}
+            className="bg-background"
+          />
+        );
+      } else if (field.type === 'date') {
+        inputComponent = (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal bg-background",
+                  !dynamicFields[field.key] && "text-muted-foreground"
+                )}
               >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {options.map(opt => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            );
-          })()}
-        </FormControl>
-        <FormMessage />
-      </FormItem>
-    ));
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dynamicFields[field.key] ? format(new Date(dynamicFields[field.key]), "MM/dd/yyyy") : <span>Pick a date</span>}
+              </Button>
+            </PopoverTrigger>
+            {/* Added solid background and z-index to PopoverContent */}
+            <PopoverContent className="w-auto p-0 bg-white dark:bg-slate-950 border shadow-xl z-50 opacity-100" align="start">
+              <Calendar
+                mode="single"
+                selected={dynamicFields[field.key] ? new Date(dynamicFields[field.key]) : undefined}
+                onSelect={(date) => handleDynamicFieldChange(field.key, date ? format(date, "MM/dd/yyyy") : '')}
+                initialFocus
+                className="bg-white dark:bg-slate-950"
+              />
+            </PopoverContent>
+          </Popover>
+        );
+      } else if (field.type === 'textarea') {
+        inputComponent = (
+          <Textarea
+            value={dynamicFields[field.key] || ''}
+            onChange={e => handleDynamicFieldChange(field.key, e.target.value)}
+            placeholder={`Enter ${field.label.toLowerCase()}`}
+            className="bg-background"
+          />
+        );
+      } else {
+        const options = field.options || [
+          { label: 'Yes', value: 'Yes' },
+          { label: 'No', value: 'No' }
+        ];
+        inputComponent = (
+          <Select
+            value={dynamicFields[field.key] || ''}
+            onValueChange={val => handleDynamicFieldChange(field.key, val)}
+          >
+            <FormControl>
+              <SelectTrigger className="bg-background">
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+            </FormControl>
+            {/* Added solid background and z-index to SelectContent */}
+            <SelectContent className="bg-white dark:bg-slate-950 z-50 shadow-xl border opacity-100">
+              {options.map(opt => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      }
+
+      return (
+        <FormItem key={field.key}>
+          <FormLabel className="text-sm">{field.label}{field.required && '*'}</FormLabel>
+          <FormControl>
+            {inputComponent}
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      );
+    });
   };
 
   if (submitted) {
@@ -203,23 +242,20 @@ export default function CreateLeadPage() {
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6 md:space-y-8 pb-20">
-        {/* Header Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="icon" onClick={() => router.back()} className="h-9 w-9 shrink-0">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-xl md:text-2xl font-semibold tracking-tight">New Lead Profile</h1>
-              <p className="text-xs md:text-sm text-muted-foreground">Capture new client details and case information.</p>
-            </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="icon" onClick={() => router.back()} className="h-9 w-9 shrink-0">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-xl md:text-2xl font-semibold tracking-tight">New Lead Profile</h1>
+            <p className="text-xs md:text-sm text-muted-foreground">Capture new client details and case information.</p>
           </div>
         </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Base Details */}
-            <Card className="rounded-xl md:rounded-2xl border shadow-sm bg-card/40 overflow-hidden">
+            {/* Client Details Card */}
+            <Card className="rounded-xl border shadow-sm bg-card/40 overflow-hidden">
               <CardHeader className="p-4 md:p-6">
                 <div className="flex items-center space-x-2">
                   <User className="h-5 w-5 text-muted-foreground" />
@@ -237,15 +273,44 @@ export default function CreateLeadPage() {
                       <FormItem className={fieldName === 'address' ? 'md:col-span-2' : ''}>
                         <FormLabel className="text-sm">
                           {fieldName === 'dateOfBirth' ? 'Date of Birth' :
+                          fieldName === 'firstName' ? 'First Name' :
+                          fieldName === 'lastName' ? 'Last Name' :
                           fieldName.charAt(0).toUpperCase() + fieldName.slice(1)}
                           {(fieldName === 'firstName' || fieldName === 'lastName') && '*'}
                         </FormLabel>
                         <FormControl>
-                          <Input 
-                            type={fieldName === 'email' ? 'email' : fieldName === 'dateOfBirth' ? 'date' : 'text'} 
-                            {...field} 
-                            className="h-10"
-                          />
+                          {fieldName === 'dateOfBirth' ? (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant={"outline"}
+                                  className={cn(
+                                    "w-full justify-start text-left font-normal h-10 bg-background",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  {field.value ? format(field.value as Date, "MM/dd/yyyy") : <span>Pick a date</span>}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 bg-white dark:bg-slate-950 border shadow-xl z-50" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value as Date}
+                                  onSelect={field.onChange}
+                                  initialFocus
+                                  className="bg-white dark:bg-slate-950"
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          ) : (
+                            <Input 
+                              type='text'
+                              placeholder={fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} 
+                              {...field} 
+                              className="h-10 bg-background"
+                            />
+                          )}
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -255,8 +320,8 @@ export default function CreateLeadPage() {
               </CardContent>
             </Card>
 
-            {/* Case Information */}
-            <Card className="rounded-xl md:rounded-2xl border shadow-sm bg-card/40 overflow-hidden">
+            {/* Case Information Card */}
+            <Card className="rounded-xl border shadow-sm bg-card/40 overflow-hidden">
               <CardHeader className="p-4 md:p-6">
                 <div className="flex items-center space-x-2">
                   <ClipboardList className="h-5 w-5 text-muted-foreground" />
@@ -277,11 +342,11 @@ export default function CreateLeadPage() {
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger className="h-10">
+                        <SelectTrigger className="h-10 bg-background">
                           <SelectValue placeholder="Select application type" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="bg-white dark:bg-slate-950 z-50 shadow-xl border opacity-100">
                         {APPLICATION_TYPES.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
                       </SelectContent>
                     </Select>
@@ -291,16 +356,11 @@ export default function CreateLeadPage() {
 
                 <div>
                   <FormLabel className="text-sm">Status</FormLabel>
-                  <div className="flex items-center h-10 px-3 py-2 rounded-md border border-input bg-background text-sm">
+                  <div className="flex items-center h-10 px-3 py-2 rounded-md border border-input bg-muted/50 text-sm">
                     <span className="text-muted-foreground mr-2">Default:</span>
-                    <span className="font-semibold text-foreground text-xs md:text-sm">PENDING</span>
+                    <span className="font-semibold text-foreground">PENDING</span>
                   </div>
-                  <p className="text-[10px] md:text-[11px] text-muted-foreground mt-2">
-                    Status is set automatically.
-                  </p>
                 </div>
-
-                
 
                 <FormField control={form.control} name="notes" render={({ field }) => (
                   <FormItem className="col-span-1 md:col-span-2">
@@ -309,7 +369,7 @@ export default function CreateLeadPage() {
                       <Textarea
                         placeholder="Add any additional notes about this lead"
                         {...field}
-                        className="min-h-[100px] resize-none"
+                        className="min-h-[100px] resize-none bg-background"
                       />
                     </FormControl>
                     <FormMessage />
@@ -318,9 +378,9 @@ export default function CreateLeadPage() {
               </CardContent>
             </Card>
 
-            {/* Dynamic Fields */}
+            {/* Dynamic Case-Specific Card */}
             {selectedType && DYNAMIC_FIELDS[selectedType] && (
-              <Card className="rounded-xl md:rounded-2xl border shadow-sm bg-card/40 overflow-hidden">
+              <Card className="rounded-xl border shadow-sm bg-card/40 overflow-hidden">
                 <CardHeader className="p-4 md:p-6">
                   <CardTitle className="text-lg md:text-xl">Case-Specific Information</CardTitle>
                   <CardDescription className="text-xs">
@@ -334,26 +394,12 @@ export default function CreateLeadPage() {
               </Card>
             )}
 
-            {/* Form Actions */}
             <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4">
-              <Button 
-                type="button" 
-                variant="ghost" 
-                onClick={() => router.back()} 
-                className="w-full sm:w-auto"
-              >
+              <Button type="button" variant="ghost" onClick={() => router.back()} className="w-full sm:w-auto">
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
-                disabled={loading} 
-                className="w-full sm:min-w-[150px] gap-2 h-11 sm:h-10"
-              >
-                {loading ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" />Creating...</>
-                ) : (
-                  <><Save className="h-4 w-4" />Save Lead</>
-                )}
+              <Button type="submit" disabled={loading} className="w-full sm:min-w-[150px] gap-2 h-11 sm:h-10">
+                {loading ? <><Loader2 className="h-4 w-4 animate-spin" />Creating...</> : <><Save className="h-4 w-4" />Save Lead</>}
               </Button>
             </div>
           </form>
