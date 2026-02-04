@@ -36,7 +36,11 @@ export default function ClientLeads() {
   const fetchLeads = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get(`/api/leads?page=${pagination.page}&limit=10&status=${statusFilter}&search=${searchInput}&t=${Date.now()}`);
+      let url = `/api/leads?page=${pagination.page}&limit=10&search=${searchInput}&t=${Date.now()}`;
+      if (statusFilter && statusFilter !== 'All') {
+        url += `&status=${statusFilter}`;
+      }
+      const { data } = await axios.get(url);
       setLeads(data.leads);
       setPagination(data.pagination);
     } catch (err) {
@@ -59,6 +63,13 @@ export default function ClientLeads() {
       default: return 'bg-slate-50 text-slate-700 border-slate-200';
     }
   };
+
+  const LEAD_STATUSES = [
+    "PENDING", "REJECTED", "VERIFIED", "REJECTED_BY_CLIENT", "PAID", "SIGNED", "VM", "TRANSFERRED", "SEND TO ANOTHER BUYER",
+    "DUPLICATE", "NOT_RESPONDING", "FELONY", "DEAD_LEAD", "WORKING",
+    "CALL_BACK", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4",
+    "CHARGEBACK", "WAITING_ID", "SENT_CLIENT", "QC", "ID_VERIFIED"
+  ];
 
   return (
     <DashboardLayout>
@@ -112,11 +123,11 @@ export default function ClientLeads() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="All">All Statuses</SelectItem>
-                    <SelectItem value="PENDING">Pending</SelectItem>
-                    <SelectItem value="VERIFIED">Verified</SelectItem>
-                    <SelectItem value="PAID">Paid</SelectItem>
-                    <SelectItem value="WORKING">Working</SelectItem>
-                    <SelectItem value="REJECTED">Rejected</SelectItem>
+                    {LEAD_STATUSES.map(status => (
+                      <SelectItem key={status} value={status}>
+                        {status.replace(/_/g, ' ')}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
 
