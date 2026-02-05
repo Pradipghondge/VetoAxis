@@ -100,37 +100,64 @@ export default function DashboardPage() {
                 {/* Chart and Feed Section */}
                 <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
                     {/* Status Chart */}
-                    <Card className="lg:col-span-2 shadow-none bg-card/40 dark:bg-[#0a0a0a] border-border dark:border-zinc-800">
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle className="text-sm font-bold uppercase tracking-wider text-foreground">Status Distribution</CardTitle>
-                            <Badge variant="outline" className="text-[10px] font-bold dark:border-zinc-700">LIVE</Badge>
-                        </CardHeader>
-                        <CardContent className="h-[250px] md:h-[300px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart
-                                    layout="vertical"
-                                    data={Object.keys(STATUS_CONFIG).map(status => ({
-                                        name: status.replace(/_/g, ' '),
-                                        value: stats?.statusCounts.find((s: any) => s._id === status)?.count || 0,
-                                        color: STATUS_CONFIG[status].color
-                                    })).sort((a, b) => b.value - a.value)}
-                                    margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
-                                >
-                                    <XAxis type="number" hide />
-                                    <YAxis dataKey="name" type="category" fontSize={10} width={80} tickLine={false} axisLine={false} tick={{fill: 'currentColor'}} className="text-muted-foreground" />
-                                    <Tooltip 
-                                        cursor={{ fill: 'rgba(255,255,255,0.05)' }} 
-                                        contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', fontSize: '12px' }}
-                                    />
-                                    <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={10}>
-                                        {Object.keys(STATUS_CONFIG).map((entry, idx) => (
-                                            <Cell key={idx} fill={STATUS_CONFIG[entry]?.color || 'var(--primary)'} />
-                                        ))}
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </CardContent>
-                    </Card>
+                   <Card className="lg:col-span-2 shadow-none bg-card/40 dark:bg-[#0a0a0a] border-border dark:border-zinc-800">
+    <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-sm font-bold uppercase tracking-wider text-foreground">Status Distribution</CardTitle>
+        <Badge variant="outline" className="text-[10px] font-bold dark:border-zinc-700">LIVE</Badge>
+    </CardHeader>
+    <CardContent className="h-[500px]"> {/* Height increased to fit all 23 statuses */}
+        <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+                layout="vertical"
+                data={Object.keys(STATUS_CONFIG).map(status => ({
+                    statusKey: status,
+                    name: status.replace(/_/g, ' '),
+                    value: stats?.statusCounts.find((s: any) => s._id === status)?.count || 0,
+                })).sort((a, b) => b.value - a.value)}
+                margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
+            >
+                <XAxis type="number" hide />
+                <YAxis 
+                    dataKey="name" 
+                    type="category" 
+                    fontSize={10} 
+                    width={110} 
+                    tickLine={false} 
+                    axisLine={false} 
+                    tick={{fill: 'currentColor'}} 
+                    className="text-muted-foreground" 
+                />
+                <Tooltip 
+                    cursor={{ fill: 'rgba(255,255,255,0.05)' }} 
+                    contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))', 
+                        borderColor: 'hsl(var(--border))', 
+                        fontSize: '12px',
+                        borderRadius: '6px'
+                    }}
+                />
+                <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={12}>
+                    {/* Crucial fix: We sort the keys exactly like the data above 
+                        so that the Cell color matches the Bar name.
+                    */}
+                    {Object.keys(STATUS_CONFIG)
+                        .map(status => ({
+                            statusKey: status,
+                            value: stats?.statusCounts.find((s: any) => s._id === status)?.count || 0,
+                        }))
+                        .sort((a, b) => b.value - a.value)
+                        .map((entry, idx) => (
+                            <Cell 
+                                key={`cell-${idx}`} 
+                                fill={STATUS_CONFIG[entry.statusKey].color} 
+                            />
+                        ))
+                    }
+                </Bar>
+            </BarChart>
+        </ResponsiveContainer>
+    </CardContent>
+</Card>
 
                     {/* Pulse Feed */}
                    {/* Pulse Feed */}

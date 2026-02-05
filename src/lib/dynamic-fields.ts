@@ -15,7 +15,7 @@ export const DYNAMIC_FIELDS: Record<
 > = {
   /* ───────────────────────── HAIR RELAXER ──────────────────────── */
   'Hair Relaxer': [
-    { key: 'Attorney', label: 'Attorney Retained?', type: 'radio' },
+    { key: 'Attorney', label: 'Are You Currently Represented By An  Attorney?', type: 'radio' },
     { key: 'Brand Used', label: 'Brand Of Hair Relaxer Used', type: 'text' },
     { key: 'Start Date', label: 'Hair Relaxer Used Start Date', type: 'date' },
     { key: 'Stop Date', label: 'Hair Relaxer Used Stop Date', type: 'date' },
@@ -60,7 +60,7 @@ export const DYNAMIC_FIELDS: Record<
         { label: 'No', value: 'No' }
       ]
     },
-    { key: 'Attorney', label: 'Attorney Retained?', type: 'radio', required: true, options: [
+    { key: 'Attorney', label: 'Are You Currently Represented By An  Attorney?', type: 'radio', required: true, options: [
         { label: 'Yes', value: 'Yes' },
         { label: 'No', value: 'No' }
       ]
@@ -90,7 +90,7 @@ export const DYNAMIC_FIELDS: Record<
     { key: 'Diagnose Date', label: 'NEC Diagnose Date', type: 'date' },
     { key: 'Weeks At Birth', label: 'Weeks Of Pregnancy When Gave Birth', type: 'text' },
     { key: 'Cow Milk Formula', label: 'Infant Given Cow-Milk Formula/Fortifier?', type: 'radio' },
-    { key: 'Attorney', label: 'Attorney Retained?', type: 'radio' }
+    { key: 'Attorney', label: 'Are You Currently Represented By An  Attorney?', type: 'radio' }
   ],
 
   /* ───────────────────────── ROBLOX ────────────────────────────── */
@@ -106,7 +106,7 @@ export const DYNAMIC_FIELDS: Record<
     { key: 'Type Of Issue', label: 'Type Of Issue', type: 'text', required: true },
     { key: 'Other Apps Involved', label: 'Were There Any Other Apps Involved In The Abuse?', type: 'text', required: true },
     { key: 'Other App Id', label: 'ID Of Other App (If Any)', type: 'text', required: false },
-    { key: 'Attorney', label: 'Attorney Retained?', type: 'radio', required: true, options: [
+    { key: 'Attorney', label: 'Are You Currently Represented By An  Attorney?', type: 'radio', required: true, options: [
         { label: 'Yes', value: 'Yes' },
         { label: 'No', value: 'No' }
       ]
@@ -124,7 +124,7 @@ export const DYNAMIC_FIELDS: Record<
     { key: 'Type Of Abuse', label: 'Type Of Abuse', type: 'text', required: true },
     { key: 'Location Of Incident', label: 'Location / Facility Name', type: 'text', required: true },
     { key: 'Other Details', label: 'Additional Incident Details', type: 'textarea', required: true },
-    { key: 'Attorney', label: 'Attorney Retained?', type: 'radio', required: true, options: [
+    { key: 'Attorney', label: 'Are You Currently Represented By An  Attorney?', type: 'radio', required: true, options: [
         { label: 'Yes', value: 'Yes' },
         { label: 'No', value: 'No' }
       ]
@@ -149,7 +149,7 @@ export const DYNAMIC_FIELDS: Record<
     { key: 'Diagnosis', label: 'Diagnosis', type: 'text' },
     { key: 'Year Dx', label: 'Year Of Dx', type: 'text' },
     { key: 'Treatment', label: 'Treatment', type: 'text' },
-    { key: 'Attorney', label: 'Attorney Retained?', type: 'radio' },
+    { key: 'Attorney', label: 'Are You Currently Represented By An  Attorney?', type: 'radio' },
     { key: 'Hospital Name', label: 'Hospital Name', type: 'text' }
   ],
 
