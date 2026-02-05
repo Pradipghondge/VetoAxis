@@ -1,16 +1,26 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function DashboardLayout({ children, hideSidebar }: { children: ReactNode, hideSidebar?: boolean }) {
-  const { loading: authLoading } = useAuth();
+  const { user, loading: authLoading, authChecked } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
 
-  if (authLoading) {
+  useEffect(() => {
+    if (!authLoading && authChecked && !user) {
+      const target = `/login?from=${encodeURIComponent(pathname)}`;
+      router.replace(target);
+    }
+  }, [authLoading, authChecked, user, pathname, router]);
+
+  if (authLoading || (authChecked && !user)) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
