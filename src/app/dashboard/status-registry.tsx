@@ -9,154 +9,154 @@ import {
   FileText, Timer 
 } from 'lucide-react';
 
-// Centralized status configuration for the entire CRM
+/**
+ * 1. STATUS CONFIGURATION
+ * Maps status keys to their visual identity (Icon, Color, and Label)
+ */
 export const STATUS_CONFIG: Record<
   string,
   { icon: React.ReactNode; color: string; description: string }
 > = {
-  PENDING: {
-    icon: <Clock />,
-    color: '#facc15', // amber – waiting
-    description: 'Awaiting initial system review',
-  },
-
-  REJECTED: {
-    icon: <XCircle />,
-    color: '#dc2626', // strong red – failure
-    description: 'Disqualified lead parameters',
-  },
-
-  VERIFIED: {
-    icon: <CheckCircle />,
-    color: '#22c55e', // green – success
-    description: 'Data points fully validated',
-  },
-
-  REJECTED_BY_CLIENT: {
-    icon: <AlertTriangle />,
-    color: '#fb7185', // rose – external rejection
-    description: 'External client rejection',
-  },
-
+  // --- SUCCESS & REVENUE ---
   PAID: {
     icon: <DollarSign />,
     color: '#16a34a', // money green
     description: 'Revenue transaction complete',
   },
-
-  DUPLICATE: {
-    icon: <Copy />,
-    color: '#a78bfa', // violet – duplicate/reference
-    description: 'Redundant entry detected',
-  },
-
-  NOT_RESPONDING: {
-    icon: <PhoneOff />,
-    color: '#64748b', // slate – inactive
-    description: 'Communication attempts failed',
-  },
-
-  FELONY: {
-    icon: <ShieldAlert />,
-    color: '#7f1d1d', // dark red – legal risk
-    description: 'Legal eligibility restriction',
-  },
-
-  DEAD_LEAD: {
-    icon: <TimerOff />,
-    color: '#1f2937', // charcoal – closed
-    description: 'Lead non-conversion state',
-  },
-
-  WORKING: {
-    icon: <FastForward />,
-    color: '#2563eb', // blue – in progress
-    description: 'Active pipeline progression',
-  },
-
-  CALL_BACK: {
-    icon: <PhoneCall />,
-    color: '#0ea5e9', // sky blue – follow up
-    description: 'Scheduled follow-up sequence',
-  },
-
-  ATTEMPT_1: {
-    icon: <Clock1 />,
-    color: '#c7d2fe', // light indigo – early
-    description: 'Initial outreach attempt',
-  },
-
-  ATTEMPT_2: {
-    icon: <Clock2 />,
-    color: '#818cf8', // medium indigo
-    description: 'Secondary contact phase',
-  },
-
-  ATTEMPT_3: {
-    icon: <Clock3 />,
-    color: '#6366f1', // deeper indigo
-    description: 'Tertiary contact phase',
-  },
-
-  ATTEMPT_4: {
-    icon: <Clock4 />,
-    color: '#4338ca', // darkest indigo – final
-    description: 'Final outreach protocol',
-  },
-
-  CHARGEBACK: {
-    icon: <CreditCard />,
-    color: '#be185d', // magenta – financial alert
-    description: 'Financial reversal alert',
-  },
-
-  WAITING_ID: {
-    icon: <FileQuestion />,
-    color: '#eab308', // yellow – pending docs
-    description: 'Pending identity documents',
-  },
-
-  SENT_CLIENT: {
-    icon: <ArrowUpRight />,
-    color: '#059669', // emerald – sent forward
-    description: 'Transferred to client portal',
-  },
-
-  QC: {
-    icon: <Search />,
-    color: '#9333ea', // purple – review
-    description: 'Quality assurance evaluation',
-  },
-
-  ID_VERIFIED: {
-    icon: <BadgeCheck />,
-    color: '#15803d', // dark green – confirmed
-    description: 'Confirmed identity status',
-  },
-
   BILLABLE: {
     icon: <Zap />,
-    color: '#14b8a6', // teal – ready to bill
+    color: '#14b8a6', // teal
     description: 'Validated for invoicing',
   },
-
-  CAMPAIGN_PAUSED: {
-    icon: <Timer />,
-    color: '#94a3b8', // gray-blue – paused
-    description: 'Active campaign on hold',
+  SENT_CLIENT: {
+    icon: <ArrowUpRight />,
+    color: '#059669', // emerald
+    description: 'Transferred to client portal',
   },
-
   SENT_TO_LAW_FIRM: {
     icon: <FileText />,
-    color: '#7c2d12', // brown – legal handoff
+    color: '#7c2d12', // brown
     description: 'Transferred to legal council',
   },
+
+   POSTED: {
+    icon: <CheckCircle />, // Or <ArrowUpRight />
+    color: '#3b82f6', // Bright Blue (Success/Active)
+    description: 'Lead successfully posted to the destination system',
+  },
+  ID_VERIFIED: {
+    icon: <BadgeCheck />,
+    color: '#15803d', // dark green
+    description: 'Confirmed identity status',
+  },
+  VERIFIED: {
+    icon: <CheckCircle />,
+    color: '#22c55e', // green
+    description: 'Data points fully validated',
+  },
+
+  // --- ACTIVE PIPELINE ---
+  WORKING: {
+    icon: <FastForward />,
+    color: '#2563eb', // blue
+    description: 'Active pipeline progression',
+  },
+  QC: {
+    icon: <Search />,
+    color: '#9333ea', // purple
+    description: 'Quality assurance evaluation',
+  },
+  CALL_BACK: {
+    icon: <PhoneCall />,
+    color: '#0ea5e9', // sky blue
+    description: 'Scheduled follow-up sequence',
+  },
+  WAITING_ID: {
+    icon: <FileQuestion />,
+    color: '#eab308', // yellow
+    description: 'Pending identity documents',
+  },
+  ATTEMPT_1: { icon: <Clock1 />, color: '#c7d2fe', description: 'Initial outreach' },
+  ATTEMPT_2: { icon: <Clock2 />, color: '#818cf8', description: 'Secondary contact' },
+  ATTEMPT_3: { icon: <Clock3 />, color: '#6366f1', description: 'Tertiary contact' },
+  ATTEMPT_4: { icon: <Clock4 />, color: '#4338ca', description: 'Final outreach' },
+  PENDING: {
+    icon: <Clock />,
+    color: '#facc15', // amber
+    description: 'Awaiting initial system review',
+  },
+
+  // --- RISKS & INACTIVE ---
+  CAMPAIGN_PAUSED: {
+    icon: <Timer />,
+    color: '#94a3b8', // gray-blue
+    description: 'Active campaign on hold',
+  },
+  NOT_RESPONDING: {
+    icon: <PhoneOff />,
+    color: '#64748b', // slate
+    description: 'Communication attempts failed',
+  },
+  REJECTED: {
+    icon: <XCircle />,
+    color: '#dc2626', // red
+    description: 'Disqualified lead parameters',
+  },
+  REJECTED_BY_CLIENT: {
+    icon: <AlertTriangle />,
+    color: '#fb7185', // rose
+    description: 'External client rejection',
+  },
+  DUPLICATE: {
+    icon: <Copy />,
+    color: '#a78bfa', // violet
+    description: 'Redundant entry detected',
+  },
+  FELONY: {
+    icon: <ShieldAlert />,
+    color: '#7f1d1d', // dark red
+    description: 'Legal eligibility restriction',
+  },
+  CHARGEBACK: {
+    icon: <CreditCard />,
+    color: '#be185d', // magenta
+    description: 'Financial reversal alert',
+  },
+  DEAD_LEAD: {
+    icon: <TimerOff />,
+    color: '#1f2937', // charcoal
+    description: 'Lead non-conversion state',
+  },
+  
 };
 
+/**
+ * 2. SORTING SEQUENCE
+ * Use this array to sort your charts and lists.
+ * Order: Money -> Pipeline -> Outreach -> Rejection
+ */
+export const STATUS_SEQUENCE = [
+  "PAID", "BILLABLE", "SENT_CLIENT", "SENT_TO_LAW_FIRM", "ID_VERIFIED", "VERIFIED",
+  "WORKING", "QC", "CALL_BACK", "WAITING_ID", "PENDING",
+  "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4",
+  "CAMPAIGN_PAUSED", "NOT_RESPONDING", "REJECTED", "REJECTED_BY_CLIENT", "DUPLICATE", "FELONY", "CHARGEBACK", "DEAD_LEAD"
+];
 
-// Logical buckets for high-level metrics
+/**
+ * 3. LOGICAL BUCKETS
+ */
 export const BUCKETS = {
   PIPELINE: ["WORKING", "QC", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4", "CALL_BACK"],
   CONVERSION: ["VERIFIED", "ID_VERIFIED", "SENT_CLIENT", "PAID", "BILLABLE", "SENT_TO_LAW_FIRM"],
   RISK: ["REJECTED", "REJECTED_BY_CLIENT", "DUPLICATE", "NOT_RESPONDING", "FELONY", "DEAD_LEAD", "CHARGEBACK"]
+};
+
+/**
+ * 4. HELPER FUNCTION
+ * Use this to sort your raw data before rendering the chart
+ */
+export const sortDataByStatus = (data: any[]) => {
+  return [...data].sort((a, b) => {
+    return STATUS_SEQUENCE.indexOf(a.status) - STATUS_SEQUENCE.indexOf(b.status);
+  });
 };
