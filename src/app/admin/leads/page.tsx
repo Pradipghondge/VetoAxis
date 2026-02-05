@@ -66,7 +66,7 @@ import {
   ShieldCheck,
   Trash2,
   UserCircle,
-  Briefcase // Icon for Case Type
+  Briefcase 
 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -100,7 +100,7 @@ interface Lead {
   email: string;
   phone: string;
   status: string;
-  applicationType: string; // Used for Case Type
+  applicationType: string; 
   createdAt: string;
   createdBy: { name: string; email: string; }; 
   buyerCode?: string;
@@ -184,24 +184,28 @@ export default function LeadManagement() {
 
   const getStatusStyle = (status: string) => {
     switch (status) {
-      case 'VERIFIED': case 'ID_VERIFIED': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      case 'REJECTED': case 'REJECTED_BY_CLIENT': return 'bg-rose-50 text-rose-700 border-rose-200';
-      case 'PENDING': return 'bg-amber-50 text-amber-700 border-amber-200';
-      default: return 'bg-slate-50 text-slate-700 border-slate-200';
+      case 'VERIFIED': case 'ID_VERIFIED': 
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20';
+      case 'REJECTED': case 'REJECTED_BY_CLIENT': 
+        return 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20';
+      case 'PENDING': 
+        return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20';
+      default: 
+        return 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700';
     }
   };
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col space-y-8 max-w-[1400px] mx-auto px-6 py-8">
+      <div className="flex flex-col space-y-8 max-w-[1400px] mx-auto px-6 py-8 transition-colors duration-300">
         
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Lead Management</h1>
-            <p className="text-slate-500 mt-1">Full pipeline visibility and control</p>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Lead Management</h1>
+            <p className="text-slate-500 dark:text-zinc-400 mt-1">Full pipeline visibility and control</p>
           </div>
-          <Badge className="bg-emerald-50 text-emerald-600 border border-emerald-100 px-4 py-1.5 rounded-full flex gap-2 items-center">
+          <Badge className="bg-emerald-50 text-emerald-600 border border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-500 dark:border-emerald-500/20 px-4 py-1.5 rounded-full flex gap-2 items-center">
             <ShieldCheck className="h-4 w-4" /> Pipeline Protected
           </Badge>
         </div>
@@ -209,17 +213,17 @@ export default function LeadManagement() {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { label: 'Total Leads', val: stats.total, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
-            { label: 'Pending', val: stats.pending, icon: BarChart3, color: 'text-amber-600', bg: 'bg-amber-50' },
-            { label: 'Verified', val: stats.verified, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-            { label: 'Rejected', val: stats.rejected, icon: XCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
+            { label: 'Total Leads', val: stats.total, icon: Users, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-500/10' },
+            { label: 'Pending', val: stats.pending, icon: BarChart3, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-500/10' },
+            { label: 'Verified', val: stats.verified, icon: CheckCircle2, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-500/10' },
+            { label: 'Rejected', val: stats.rejected, icon: XCircle, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-500/10' },
           ].map((stat, i) => (
-            <Card key={i} className="border-none shadow-sm bg-white overflow-hidden">
+            <Card key={i} className="border-none shadow-sm bg-white dark:bg-[#0a0a0a] dark:border dark:border-zinc-800 overflow-hidden transition-colors">
               <CardContent className="p-6">
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="text-sm font-medium text-slate-500">{stat.label}</p>
-                    <h3 className="text-2xl font-bold mt-1 text-slate-900">{stat.val}</h3>
+                    <p className="text-sm font-medium text-slate-500 dark:text-zinc-500">{stat.label}</p>
+                    <h3 className="text-2xl font-bold mt-1 text-slate-900 dark:text-white">{stat.val}</h3>
                   </div>
                   <div className={`p-3 rounded-xl ${stat.bg}`}>
                     <stat.icon className={`h-6 w-6 ${stat.color}`} />
@@ -231,28 +235,30 @@ export default function LeadManagement() {
         </div>
 
         {/* Lead Records Card */}
-        <Card className="border-none shadow-md bg-white">
-          <CardHeader className="px-6 py-5">
+        <Card className="border-none shadow-md bg-white dark:bg-[#0a0a0a] dark:border dark:border-zinc-800 overflow-hidden transition-colors">
+          <CardHeader className="px-6 py-5 bg-white dark:bg-[#0a0a0a]">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <CardTitle className="text-xl flex items-center gap-2">
-                <span className="p-2 bg-indigo-50 rounded-lg"><Users className="h-5 w-5 text-indigo-600" /></span>
+              <CardTitle className="text-xl flex items-center gap-2 text-slate-800 dark:text-white">
+                <span className="p-2 bg-indigo-50 dark:bg-zinc-900 rounded-lg border border-indigo-100 dark:border-zinc-800">
+                  <Users className="h-5 w-5 text-indigo-600 dark:text-zinc-400" />
+                </span>
                 Lead Records
               </CardTitle>
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
                   <Input 
                     placeholder="Search name or email..." 
-                    className="pl-10 w-full md:w-[300px] border-slate-200" 
+                    className="pl-10 w-full md:w-[300px] bg-white dark:bg-[#111111] border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-600" 
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[160px] border-slate-200">
+                  <SelectTrigger className="w-[160px] bg-white dark:bg-[#111111] border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white dark:bg-[#111111] border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white">
                     <SelectItem value="All">All Statuses</SelectItem>
                     {LEAD_STATUSES.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>)}
                   </SelectContent>
@@ -260,97 +266,79 @@ export default function LeadManagement() {
               </div>
             </div>
           </CardHeader>
-          <Separator className="opacity-50" />
-          <CardContent className="p-0 overflow-x-auto">
+          <Separator className="opacity-50 dark:bg-zinc-800 dark:opacity-100" />
+          <CardContent className="p-0 overflow-x-auto bg-white dark:bg-[#0a0a0a]">
             <Table>
-              <TableHeader className="bg-slate-50/50">
-                <TableRow className="border-slate-100">
-                  <TableHead className="font-semibold text-slate-600 px-6">Name & ID</TableHead>
-                  <TableHead className="font-semibold text-slate-600">Contact Details</TableHead>
-                  <TableHead className="font-semibold text-slate-600">Case Type</TableHead>
-                  <TableHead className="font-semibold text-slate-600">Created By</TableHead>
-                  <TableHead className="font-semibold text-slate-600">Status</TableHead>
-                  <TableHead className="font-semibold text-slate-600">Buyer Code</TableHead>
-                  <TableHead className="font-semibold text-slate-600">Entry Date</TableHead>
-                  <TableHead className="text-right px-6">Actions</TableHead>
+              <TableHeader className="bg-slate-50/50 dark:bg-[#111111]/50">
+                <TableRow className="border-slate-100 dark:border-zinc-800 hover:bg-transparent">
+                  <TableHead className="font-semibold text-slate-600 dark:text-zinc-400 px-6">Name & ID</TableHead>
+                  <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Contact Details</TableHead>
+                  <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Case Type</TableHead>
+                  <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Created By</TableHead>
+                  <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Status</TableHead>
+                  <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Buyer Code</TableHead>
+                  <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Entry Date</TableHead>
+                  <TableHead className="text-right px-6 text-slate-600 dark:text-zinc-400">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow><TableCell colSpan={8} className="h-64 text-center"><Loader2 className="animate-spin mx-auto h-8 w-8 text-indigo-600" /></TableCell></TableRow>
+                  <TableRow><TableCell colSpan={8} className="h-64 text-center"><Loader2 className="animate-spin mx-auto h-8 w-8 text-indigo-600 dark:text-white" /></TableCell></TableRow>
                 ) : filteredLeads.map((lead) => (
-                  <TableRow key={lead._id} className="hover:bg-slate-50/50 transition-colors border-slate-100">
-                    {/* 1. Name & ID */}
+                  <TableRow key={lead._id} className="hover:bg-slate-50/50 dark:hover:bg-zinc-900/30 transition-colors border-slate-100 dark:border-zinc-800">
                     <TableCell className="px-6">
-                      <div className="font-semibold text-slate-900 whitespace-nowrap">{lead.firstName} {lead.lastName}</div>
-                      <div className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">#{lead._id.slice(-6)}</div>
+                      <div className="font-semibold text-slate-900 dark:text-zinc-100 whitespace-nowrap">{lead.firstName} {lead.lastName}</div>
+                      <div className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-zinc-600 font-bold">#{lead._id.slice(-6)}</div>
                     </TableCell>
-
-                    {/* 2. Contact Details */}
                     <TableCell>
-                      <div className="text-sm text-slate-600">{lead.email}</div>
-                      <div className="text-xs text-slate-400">{lead.phone}</div>
+                      <div className="text-sm text-slate-600 dark:text-zinc-300">{lead.email}</div>
+                      <div className="text-xs text-slate-400 dark:text-zinc-500">{lead.phone}</div>
                     </TableCell>
-
-                    {/* 3. Case Type */}
                     <TableCell>
-                      <div className="flex items-center gap-2 text-sm text-slate-600 font-medium">
-                        <Briefcase className="h-3.5 w-3.5 text-slate-400" />
+                      <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-zinc-400 font-medium">
+                        <Briefcase className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500" />
                         {lead.applicationType || "General"}
                       </div>
                     </TableCell>
-
-                    {/* 4. Created By (Login User Name) */}
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <UserCircle className="h-4 w-4 text-slate-400" />
-                        <div>
-                          <div className="text-sm font-medium text-slate-700">{lead.createdBy?.name || "System"}</div>
-                          
-                        </div>
+                        <UserCircle className="h-4 w-4 text-slate-400 dark:text-zinc-600" />
+                        <div className="text-sm font-medium text-slate-700 dark:text-zinc-300">{lead.createdBy?.name || "System"}</div>
                       </div>
                     </TableCell>
-
-                    {/* 5. Status */}
                     <TableCell>
                       <Badge variant="outline" className={`font-medium rounded-md px-2 py-0.5 border ${getStatusStyle(lead.status)}`}>
                         {lead.status.replace(/_/g, ' ')}
                       </Badge>
                     </TableCell>
-
-                    {/* 6. Buyer Code */}
                     <TableCell>
-                      <span className="text-sm font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">
+                      <span className="text-sm font-mono bg-slate-100 dark:bg-zinc-900 px-1.5 py-0.5 rounded text-slate-600 dark:text-zinc-400 border border-transparent dark:border-zinc-800">
                         {lead.buyerCode || "N/A"}
                       </span>
                     </TableCell>
-
-                    {/* 7. Entry Date */}
-                    <TableCell className="text-sm text-slate-500 whitespace-nowrap">
+                    <TableCell className="text-sm text-slate-500 dark:text-zinc-500 whitespace-nowrap">
                       {lead.createdAt ? format(new Date(lead.createdAt), 'MM/dd/yyyy') : '-'}
-                      <div className="text-[10px] text-slate-400">{lead.createdAt ? format(new Date(lead.createdAt), 'hh:mm a') : ''}</div>
+                      <div className="text-[10px] text-slate-400 dark:text-zinc-700">{lead.createdAt ? format(new Date(lead.createdAt), 'hh:mm a') : ''}</div>
                     </TableCell>
-
-                    {/* 8. Actions */}
                     <TableCell className="text-right px-6">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-600"><MoreHorizontal className="h-5 w-5" /></Button>
+                          <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-600 dark:hover:text-white"><MoreHorizontal className="h-5 w-5" /></Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuContent align="end" className="w-48 dark:bg-[#111111] dark:border-zinc-800 dark:text-white">
                           {user?.role === 'super_admin' && (
-                            <DropdownMenuItem onClick={() => handleUpdateLeadClick(lead)} className="cursor-pointer">
+                            <DropdownMenuItem onClick={() => handleUpdateLeadClick(lead)} className="cursor-pointer dark:focus:bg-zinc-800">
                               <FileEdit className="mr-2 h-4 w-4" /> Update Status
                             </DropdownMenuItem>
                           )}
-                          <DropdownMenuItem onClick={() => router.push(`/admin/leads/${lead._id}`)} className="cursor-pointer">
+                          <DropdownMenuItem onClick={() => router.push(`/admin/leads/${lead._id}`)} className="cursor-pointer dark:focus:bg-zinc-800">
                             <Eye className="mr-2 h-4 w-4" /> View Details
                           </DropdownMenuItem>
-                          {user?.role === 'super_admin' && <DropdownMenuSeparator />}
+                          {user?.role === 'super_admin' && <DropdownMenuSeparator className="dark:bg-zinc-800" />}
                           {user?.role === 'super_admin' && (
                             <DropdownMenuItem 
                               onClick={() => onDeleteLead(lead._id)} 
-                              className="cursor-pointer text-rose-600 focus:text-rose-600 focus:bg-rose-50"
+                              className="cursor-pointer text-rose-600 focus:text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-500/10 dark:focus:text-rose-400"
                             >
                               <Trash2 className="mr-2 h-4 w-4" /> Delete Lead
                             </DropdownMenuItem>
@@ -363,9 +351,9 @@ export default function LeadManagement() {
               </TableBody>
             </Table>
           </CardContent>
-          <CardFooter className="px-6 py-4 flex justify-between bg-slate-50/30 rounded-b-xl border-t">
-            <span className="text-sm text-slate-500 font-medium">{filteredLeads.length} leads in view</span>
-            <Button variant="outline" size="sm" onClick={fetchLeads} className="border-slate-200 text-slate-600 bg-white shadow-sm">
+          <CardFooter className="px-6 py-4 flex justify-between bg-slate-50/30 dark:bg-[#0a0a0a] rounded-b-xl border-t border-slate-100 dark:border-zinc-800 transition-colors">
+            <span className="text-sm text-slate-500 dark:text-zinc-500 font-medium">{filteredLeads.length} leads in view</span>
+            <Button variant="outline" size="sm" onClick={fetchLeads} className="border-slate-200 bg-white text-slate-600 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 shadow-sm">
               <RefreshCw className="mr-2 h-3.5 w-3.5" /> Force Refresh
             </Button>
           </CardFooter>
@@ -373,38 +361,54 @@ export default function LeadManagement() {
 
         {/* Update Status Dialog */}
         <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[425px] dark:bg-[#0a0a0a] dark:border-zinc-800">
             <DialogHeader>
-              <DialogTitle className="text-xl">Update Lead Status</DialogTitle>
-              <DialogDescription>Apply status and buyer code changes to the selected lead.</DialogDescription>
+              <DialogTitle className="text-xl dark:text-white">Update Lead Status</DialogTitle>
+              <DialogDescription className="dark:text-zinc-500">Apply status and buyer code changes to the selected lead.</DialogDescription>
             </DialogHeader>
             <Form {...updateForm}>
               <form onSubmit={updateForm.handleSubmit(onUpdateLead)} className="space-y-5">
                 <FormField control={updateForm.control} name="status" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-slate-700 font-semibold">Classification</FormLabel>
+                    <FormLabel className="text-slate-700 dark:text-zinc-300 font-semibold">Classification</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl><SelectTrigger className="border-slate-200"><SelectValue /></SelectTrigger></FormControl>
-                      <SelectContent className="max-h-60">
-                        {LEAD_STATUSES.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>)}
+                      <FormControl>
+                        <SelectTrigger className="border-slate-200 dark:bg-[#111111] dark:border-zinc-800 dark:text-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="max-h-60 dark:bg-[#111111] dark:border-zinc-800 dark:text-white">
+                        {LEAD_STATUSES.map(s => <SelectItem key={s} value={s} className="dark:focus:bg-zinc-800">{s.replace(/_/g, ' ')}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </FormItem>
                 )} />
                 <FormField control={updateForm.control} name="notes" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-slate-700 font-semibold">Change Reason / Notes</FormLabel>
-                    <FormControl><Textarea placeholder="Why is this status being changed?" className="resize-none border-slate-200" {...field} /></FormControl>
+                    <FormLabel className="text-slate-700 dark:text-zinc-300 font-semibold">Change Reason / Notes</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Why is this status being changed?" 
+                        className="resize-none border-slate-200 dark:bg-[#111111] dark:border-zinc-800 dark:text-white placeholder:text-zinc-600" 
+                        {...field} 
+                      />
+                    </FormControl>
                   </FormItem>
                 )} />
                 <FormField control={updateForm.control} name="buyerCode" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-slate-700 font-semibold">Buyer Code</FormLabel>
-                    <FormControl><Input placeholder="Assign buyer code..." className="border-slate-200" {...field} /></FormControl>
+                    <FormLabel className="text-slate-700 dark:text-zinc-300 font-semibold">Buyer Code</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Assign buyer code..." 
+                        className="border-slate-200 dark:bg-[#111111] dark:border-zinc-800 dark:text-white placeholder:text-zinc-600" 
+                        {...field} 
+                      />
+                    </FormControl>
                   </FormItem>
                 )} />
                 <DialogFooter>
-                  <Button type="submit" disabled={submitting} className="w-full bg-indigo-600 hover:bg-indigo-700 transition-all">
+                  <Button type="submit" disabled={submitting} className="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-white dark:text-black dark:hover:bg-zinc-200 transition-all font-semibold">
                     {submitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <FileEdit className="h-4 w-4 mr-2" />}
                     Confirm Status Update
                   </Button>

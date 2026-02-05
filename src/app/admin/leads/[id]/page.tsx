@@ -79,6 +79,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import DashboardLayout from '@/components/DashboardLayout';
+import { DYNAMIC_FIELDS } from '@/lib/dynamic-fields';
 
 // Define Lead status options from your model
 const LEAD_STATUSES = [
@@ -132,7 +133,6 @@ interface Lead {
   createdAt: string;
   updatedAt: string;
 }
-
 export default function LeadDetailsPage() {
   const params = useParams();
   const router = useRouter();
@@ -218,6 +218,25 @@ export default function LeadDetailsPage() {
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400';
     }
+  };
+
+  const formatDisplayDate = (dateStr: string | null | undefined): string => {
+    if (!dateStr) return '';
+    try {
+      // This regex checks for a YYYY-MM-DD pattern at the start of the string.
+      if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+        const year = parseInt(dateStr.substring(0, 4), 10);
+        const month = parseInt(dateStr.substring(5, 7), 10);
+        const day = parseInt(dateStr.substring(8, 10), 10);
+        if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+          const localDate = new Date(year, month - 1, day);
+          return format(localDate, 'MM/dd/yyyy');
+        }
+      }
+    } catch (e) {
+      return dateStr;
+    }
+    return dateStr;
   };
 
   if (loading) {
@@ -410,7 +429,7 @@ export default function LeadDetailsPage() {
                       <span className="text-sm font-medium text-muted-foreground">Date of Birth</span>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span>{format(new Date(lead.dateOfBirth), 'MM/dd/yyyy')}</span>
+                        <span>{formatDisplayDate(lead.dateOfBirth)}</span>
                       </div>
                     </div>
                   )}
@@ -574,12 +593,24 @@ export default function LeadDetailsPage() {
               <CardContent>
                 {lead.fields && lead.fields.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {lead.fields.map((field, index) => (
-                      <div key={index} className="border rounded-md p-3">
-                        <span className="text-sm font-medium text-muted-foreground">{field.key}</span>
-                        <p className="mt-1">{field.value}</p>
-                      </div>
-                    ))}
+                    {lead.fields.map((field, index) => {
+                      let fieldValue = field.value;
+                      
+                      // Get field definition from DYNAMIC_FIELDS
+                      const appFields = DYNAMIC_FIELDS[lead.applicationType] || [];
+                      const fieldDef = appFields.find(f => f.key === field.key);
+
+                      if (fieldDef?.type === 'date') {
+                        fieldValue = formatDisplayDate(field.value);
+                      }
+
+                      return (
+                        <div key={index} className="border rounded-md p-3">
+                          <span className="text-sm font-medium text-muted-foreground">{fieldDef?.label || field.key}</span>
+                          <p className="mt-1">{fieldValue}</p>
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="text-center py-12 text-muted-foreground">

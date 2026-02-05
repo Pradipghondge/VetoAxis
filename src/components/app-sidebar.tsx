@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { LayoutDashboard, Gauge, Users, SheetIcon, Lock, Box } from "lucide-react"
+import Image from "next/image"
+import { LayoutDashboard, Gauge, Users, SheetIcon, Lock } from "lucide-react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "@/contexts/AuthContext"
@@ -58,7 +59,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
               <Link href="/dashboard" className="flex items-center gap-3">
-                <Box className="size-5 text-foreground shrink-0" />
+                <Image src="/logo.png" width={24} height={24} alt="VetoAxis Logo" className="shrink-0" />
                 <span className="text-sm font-semibold truncate group-data-[collapsible=icon]:hidden">VetoAxis</span>
               </Link>
             </SidebarMenuButton>
