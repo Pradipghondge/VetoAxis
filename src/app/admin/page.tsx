@@ -152,7 +152,7 @@ const newUserSchema = z.object({
 
 const updateUserSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  email: z.string().email('Invalid email address'),
+  email: z.string().min(1, 'Email is required').email('Invalid email address'),
   role: z.enum(['agent', 'admin', 'super_admin']),
   active: z.boolean(),
   organizationId: z.string().optional(),
@@ -272,9 +272,12 @@ export default function AdminPage() {
   });
 
   useEffect(() => {
-    fetchCurrentUser();
-    fetchUsers();
-    fetchOrganizations();
+    const loadInitialData = async () => {
+      await fetchCurrentUser();
+      await fetchOrganizations();
+      fetchUsers();
+    };
+    loadInitialData();
   }, []);
 
   // Helper functions to check current user permissions
@@ -1119,7 +1122,7 @@ const formatDate = (dateString: string | Date) => {
                           </TableCell>
 
                           <TableCell>
-                            {user.organization?.name || (user.role === 'super_admin' ? '—' : 'Not Assigned')}
+                            {(user.organizationId as any)?.name || (user.role === 'super_admin' ? '—' : 'Not Assigned')}
                           </TableCell>
 
                           <TableCell>

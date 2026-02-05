@@ -31,12 +31,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     navGroups: [
       { title: "Overview", items: [{ label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard }] },
       { title: "Leads Management", items: [{ label: 'All Leads', href: '/leads', icon: Gauge }] },
-      { title: "Administration", items: [
-        { label: 'User Management', href: '/admin', icon: Users },
-        { label: 'Lead Management', href: '/admin/leads', icon: SheetIcon },
-        { label: 'Security', href: '/security', icon: Lock }
-      ]}
-    ]
+      { 
+        title: "Administration", 
+        items: [
+          { label: 'User Management', href: '/admin', icon: Users, roles: ['admin', 'super_admin'] },
+          { label: 'Lead Management', href: '/admin/leads', icon: SheetIcon, roles: ['admin', 'super_admin'] },
+          { label: 'Security', href: '/security', icon: Lock, roles: ['admin', 'super_admin', 'agent'] }
+        ]
+      }
+    ].map(group => {
+      if (group.title === "Administration") {
+        const administrationItems = group.items as (typeof group.items[number] & { roles?: string[] })[];
+        return {
+          ...group,
+          items: administrationItems.filter(item => item.roles?.includes(user?.role || ''))
+        };
+      }
+      return group;
+    }).filter(group => group.items.length > 0)
   }
 
   return (

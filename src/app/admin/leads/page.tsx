@@ -73,6 +73,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import DashboardLayout from '@/components/DashboardLayout';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 
@@ -115,6 +116,7 @@ export default function LeadManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [stats, setStats] = useState({ total: 0, pending: 0, verified: 0, rejected: 0 });
+  const { user } = useAuth();
 
   const updateForm = useForm<UpdateLeadFormValues>({
     resolver: zodResolver(updateLeadSchema),
@@ -336,19 +338,23 @@ export default function LeadManagement() {
                           <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-600"><MoreHorizontal className="h-5 w-5" /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem onClick={() => handleUpdateLeadClick(lead)} className="cursor-pointer">
-                            <FileEdit className="mr-2 h-4 w-4" /> Update Status
-                          </DropdownMenuItem>
+                          {user?.role === 'super_admin' && (
+                            <DropdownMenuItem onClick={() => handleUpdateLeadClick(lead)} className="cursor-pointer">
+                              <FileEdit className="mr-2 h-4 w-4" /> Update Status
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem onClick={() => router.push(`/admin/leads/${lead._id}`)} className="cursor-pointer">
                             <Eye className="mr-2 h-4 w-4" /> View Details
                           </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem 
-                            onClick={() => onDeleteLead(lead._id)} 
-                            className="cursor-pointer text-rose-600 focus:text-rose-600 focus:bg-rose-50"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" /> Delete Lead
-                          </DropdownMenuItem>
+                          {user?.role === 'super_admin' && <DropdownMenuSeparator />}
+                          {user?.role === 'super_admin' && (
+                            <DropdownMenuItem 
+                              onClick={() => onDeleteLead(lead._id)} 
+                              className="cursor-pointer text-rose-600 focus:text-rose-600 focus:bg-rose-50"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete Lead
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

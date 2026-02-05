@@ -124,9 +124,11 @@ export default function LeadDetailPage() {
               <span style={{ color: currentStatus.color }}>{currentStatus.icon}</span>
               <span className="text-[11px] font-bold uppercase">{lead.status}</span>
             </div>
-            <Button onClick={() => setStatusDialogOpen(true)} size="sm" className="font-bold">
-              <Edit className="mr-2 h-4 w-4" /> Update
-            </Button>
+            {user?.role === 'super_admin' && (
+              <Button onClick={() => setStatusDialogOpen(true)} size="sm" className="font-bold">
+                <Edit className="mr-2 h-4 w-4" /> Update
+              </Button>
+            )}
           </div>
         </div>
 

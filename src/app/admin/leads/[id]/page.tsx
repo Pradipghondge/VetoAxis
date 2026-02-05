@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import axios from 'axios';
 import {
   Card,
@@ -135,6 +136,7 @@ interface Lead {
 export default function LeadDetailsPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const [lead, setLead] = useState<Lead | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -331,10 +333,12 @@ export default function LeadDetailsPage() {
               <ChevronLeft className="mr-2 h-4 w-4" />
               Back to Leads
             </Button>
-            <Button onClick={() => setUpdateDialogOpen(true)}>
-              <FileEdit className="mr-2 h-4 w-4" />
-              Update Status
-            </Button>
+            {user?.role === 'super_admin' && (
+              <Button onClick={() => setUpdateDialogOpen(true)}>
+                <FileEdit className="mr-2 h-4 w-4" />
+                Update Status
+              </Button>
+            )}
           </div>
         </div>
 
