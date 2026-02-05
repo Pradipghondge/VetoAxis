@@ -43,18 +43,19 @@ import {
 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { motion } from 'framer-motion';
+import { DateInput } from '@/components/ui/DateInput';
 import { DYNAMIC_FIELDS } from '@/lib/dynamic-fields';
 
 const APPLICATION_TYPES = Object.keys(DYNAMIC_FIELDS);
 
-// Schema updated to accept strings for dates
+// Schema updated to accept strings for dates in 'YYYY-MM-DD' format
 const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Invalid email address').optional().or(z.literal('')),
-  phone: z.string().optional(),
-  dateOfBirth: z.string().optional(),
-  address: z.string().optional(),
+  email: z.string().email('Invalid email address'),
+  phone: z.string().min(1, 'Phone number is required'),
+  dateOfBirth: z.string().min(1, 'Date of birth is required'),
+  address: z.string().min(1, 'Address is required'),
   applicationType: z.string().min(1, 'Application type is required'),
   lawsuit: z.string().optional(),
   notes: z.string().optional(),
@@ -84,13 +85,6 @@ export default function CreateLeadClient() {
     },
   });
 
-  // Helper to convert HTML5 date (YYYY-MM-DD) to (MM/DD/YYYY)
-  const formatToMMDDYYYY = (dateStr: string) => {
-    if (!dateStr) return '';
-    const [year, month, day] = dateStr.split('-');
-    return `${month}/${day}/${year}`;
-  };
-
   const onSubmit = async (values: FormValues) => {
     const requiredDynamicFields = (DYNAMIC_FIELDS[selectedType] || []).filter(field => field.required);
     const missingFields = requiredDynamicFields.filter(field => !dynamicFields[field.key]);
@@ -106,23 +100,10 @@ export default function CreateLeadClient() {
 
     setLoading(true);
     try {
-      // 1. Format main date of birth
-      const formattedDOB = values.dateOfBirth ? formatToMMDDYYYY(values.dateOfBirth) : undefined;
-
-      // 2. Format any dates within the dynamic fields
-      const formattedDynamicFields = { ...dynamicFields };
-      const fieldConfigs = DYNAMIC_FIELDS[selectedType] || [];
-      
-      fieldConfigs.forEach(field => {
-        if (field.type === 'date' && formattedDynamicFields[field.key]) {
-          formattedDynamicFields[field.key] = formatToMMDDYYYY(formattedDynamicFields[field.key]);
-        }
-      });
-
+      // The date is already in YYYY-MM-DD format from the form state
       const payload = {
         ...values,
-        dateOfBirth: formattedDOB,
-        fields: formattedDynamicFields,
+        fields: dynamicFields,
         status: 'PENDING',
       };
 
@@ -145,10 +126,17 @@ export default function CreateLeadClient() {
     const fields = DYNAMIC_FIELDS[selectedType] || [];
     return fields.map(field => {
       let inputComponent;
-      if (field.type === 'text' || field.type === 'email' || field.type === 'phone' || field.type === 'date') {
+      if (field.type === 'date') {
+        inputComponent = (
+          <DateInput
+            value={dynamicFields[field.key] || ''}
+            onChange={value => setDynamicFields(prev => ({ ...prev, [field.key]: value }))}
+          />
+        );
+      } else if (field.type === 'text' || field.type === 'email' || field.type === 'phone') {
         inputComponent = (
           <Input
-            type={field.type} // Uses 'date' type for native picker
+            type={field.type}
             value={dynamicFields[field.key] || ''}
             onChange={e => setDynamicFields(prev => ({ ...prev, [field.key]: e.target.value }))}
             placeholder={`Enter ${field.label.toLowerCase()}`}
@@ -243,14 +231,25 @@ export default function CreateLeadClient() {
                     <FormItem className={fieldName === 'address' ? 'md:col-span-2' : ''}>
                       <FormLabel className="text-sm capitalize">
                         {fieldName.replace(/([A-Z])/g, ' $1')}
-                        {(fieldName === 'firstName' || fieldName === 'lastName') && '*'}
+                        {(fieldName === 'firstName' || fieldName === 'lastName' || fieldName === 'email' || fieldName === 'phone' || fieldName === 'dateOfBirth' || fieldName === 'address') && '*'}
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          type={fieldName === 'dateOfBirth' ? 'date' : 'text'}
-                          {...field}
-                          className="h-10 bg-background"
-                        />
+                        {fieldName === 'dateOfBirth' ? (
+                          <DateInput {...field} />
+                        ) : (
+                          <Input
+                            type={fieldName === 'email' ? 'email' : 'text'}
+                            placeholder={
+                              fieldName === 'firstName' ? 'Enter first name' :
+                              fieldName === 'lastName' ? 'Enter last name' :
+                              fieldName === 'email' ? 'Enter email address' :
+                              fieldName === 'phone' ? 'Enter phone number' :
+                              'Enter full address'
+                            }
+                            {...field}
+                            className="h-10 bg-background"
+                          />
+                        )}
                       </FormControl>
                       <FormMessage />
                     </FormItem>

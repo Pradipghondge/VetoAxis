@@ -29,6 +29,13 @@ import { z } from 'zod';
 import { LeadStatus } from '@/types';
 import { motion } from 'framer-motion';
 
+// Helper to capitalize only the first letter
+const formatSentenceCase = (str: string) => {
+  if (!str) return '—';
+  const lowercase = str.toLowerCase();
+  return lowercase.charAt(0).toUpperCase() + lowercase.slice(1).replace(/_/g, ' ');
+};
+
 // Lead Status Configuration
 const STATUS_CONFIG: Record<string, { color: string, icon: React.ReactNode }> = {
   PENDING: { color: '#f59e0b', icon: <Clock className="h-4 w-4" /> },
@@ -115,14 +122,14 @@ export default function LeadDetailPage() {
                 {lead.firstName} {lead.lastName}
                 <Badge variant="secondary" className="text-[10px] font-mono">ID: {lead._id.slice(-6).toUpperCase()}</Badge>
               </h1>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-tight">Lead Detail Profile</p>
+              <p className="text-xs text-muted-foreground font-medium capitalize tracking-tight">Lead detail profile</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <div className="px-3 py-1.5 border rounded-lg flex items-center gap-2 bg-muted/30">
               <span style={{ color: currentStatus.color }}>{currentStatus.icon}</span>
-              <span className="text-[11px] font-bold uppercase">{lead.status}</span>
+              <span className="text-[11px] font-bold capitalize">{lead.status.toLowerCase().replace(/_/g, ' ')}</span>
             </div>
             {user?.role === 'super_admin' && (
               <Button onClick={() => setStatusDialogOpen(true)} size="sm" className="font-bold">
@@ -138,8 +145,8 @@ export default function LeadDetailPage() {
           <div className="lg:col-span-8 space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="bg-muted/50 p-1 rounded-lg">
-                <TabsTrigger value="overview" className="px-6 py-2 text-xs font-bold uppercase">Overview</TabsTrigger>
-                <TabsTrigger value="fields" className="px-6 py-2 text-xs font-bold uppercase">Raw Data</TabsTrigger>
+                <TabsTrigger value="overview" className="px-6 py-2 text-xs font-bold capitalize">Overview</TabsTrigger>
+                <TabsTrigger value="fields" className="px-6 py-2 text-xs font-bold capitalize">Raw data</TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview" className="mt-4 space-y-6">
@@ -173,11 +180,11 @@ export default function LeadDetailPage() {
                     <CardContent className="pt-4 space-y-4">
                       <div>
                         <label className="text-[9px] uppercase font-bold text-muted-foreground/60 block mb-0.5">Type</label>
-                        <p className="text-sm font-medium uppercase">{lead.applicationType || '—'}</p>
+                        <p className="text-sm font-medium capitalize">{lead.applicationType?.toLowerCase() || '—'}</p>
                       </div>
                       <div>
                         <label className="text-[9px] uppercase font-bold text-muted-foreground/60 block mb-0.5">Lawsuit</label>
-                        <p className="text-sm font-medium uppercase">{lead.lawsuit || '—'}</p>
+                        <p className="text-sm font-medium capitalize">{lead.lawsuit?.toLowerCase() || '—'}</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -191,7 +198,7 @@ export default function LeadDetailPage() {
                     <CardContent className="pt-4 space-y-4">
                       <div>
                         <label className="text-[9px] uppercase font-bold text-muted-foreground/60 block mb-0.5">Address</label>
-                        <p className="text-sm font-medium truncate uppercase">{lead.address || '—'}</p>
+                        <p className="text-sm font-medium truncate capitalize">{lead.address?.toLowerCase() || '—'}</p>
                       </div>
                       <div>
                         <label className="text-[9px] uppercase font-bold text-muted-foreground/60 block mb-0.5">Date of Birth</label>
@@ -229,11 +236,11 @@ export default function LeadDetailPage() {
                             <p className="text-xs font-semibold">{format(new Date(f.value), 'MM/dd/yyyy')}</p> 
                           </div>
                         ) : (
-                          <p className="text-xs font-semibold">{f.value}</p>
+                          <p className="text-xs font-semibold capitalize">{f.value?.toString().toLowerCase()}</p>
                         )}
                       </div>
-                    )) : (
-                      <p className="col-span-full text-center py-12 text-muted-foreground text-xs uppercase font-bold">No metadata found</p>
+                    ) ) : (
+                      <p className="col-span-full text-center py-12 text-muted-foreground text-xs capitalize font-bold">No metadata found</p>
                     )}
                   </div>
                 </Card>
@@ -258,7 +265,9 @@ export default function LeadDetailPage() {
                         <div className="absolute left-0 top-1 h-2 w-2 rounded-full bg-primary ring-4 ring-background z-10" />
                         <div className="space-y-2">
                           <div className="flex justify-between items-center gap-2">
-                            <Badge variant="outline" className="text-[10px] font-bold px-2 py-0">{log.toStatus}</Badge>
+                            <Badge variant="outline" className="text-[10px] font-bold px-2 py-0 capitalize">
+                              {log.toStatus.toLowerCase().replace(/_/g, ' ')}
+                            </Badge>
                             <div className="text-[10px] text-muted-foreground font-medium text-right">
                               <div>{format(new Date(log.timestamp), 'MM/dd/yyyy')}</div>
                               <div>{format(new Date(log.timestamp), 'hh:mm a')}</div>
@@ -296,7 +305,9 @@ export default function LeadDetailPage() {
                     </FormControl>
                     <SelectContent>
                       {LEAD_STATUSES.map(s => (
-                        <SelectItem key={s} value={s} className="text-xs font-bold">{s}</SelectItem>
+                        <SelectItem key={s} value={s} className="text-xs font-bold capitalize">
+                            {s.toLowerCase().replace(/_/g, ' ')}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

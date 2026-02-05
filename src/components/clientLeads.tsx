@@ -17,7 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import {
   Loader2, Search, History, ChevronRight, ChevronLeft, 
   Mail, PhoneCall, UserPlus, ExternalLink, ShieldCheck, 
-  Filter, X, UserCircle // Added UserCircle icon
+  Filter, X, UserCircle 
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -56,11 +56,16 @@ export default function ClientLeads() {
 
   const getStatusStyle = (status: string) => {
     switch (status) {
-      case 'VERIFIED': case 'PAID': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      case 'REJECTED': case 'CHARGEBACK': return 'bg-rose-50 text-rose-700 border-rose-200';
-      case 'PENDING': return 'bg-amber-50 text-amber-700 border-amber-200';
-      case 'WORKING': return 'bg-blue-50 text-blue-700 border-blue-200';
-      default: return 'bg-slate-50 text-slate-700 border-slate-200';
+      case 'VERIFIED': case 'PAID': 
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20';
+      case 'REJECTED': case 'CHARGEBACK': 
+        return 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20';
+      case 'PENDING': 
+        return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20';
+      case 'WORKING': 
+        return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20';
+      default: 
+        return 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700';
     }
   };
 
@@ -73,21 +78,21 @@ export default function ClientLeads() {
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col space-y-8 max-w-7xl mx-auto px-6 py-8">
+      <div className="flex flex-col space-y-8 max-w-7xl mx-auto px-6 py-8 transition-colors duration-200">
         
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Lead Database</h1>
-            <p className="text-slate-500 mt-1">Manage, filter, and track your lead conversions</p>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Lead Database</h1>
+            <p className="text-slate-500 dark:text-zinc-400 mt-1">Manage, filter, and track your lead conversions</p>
           </div>
           <div className="flex items-center gap-3">
-             <Badge className="bg-emerald-50 text-emerald-600 border border-emerald-100 px-4 py-1.5 rounded-full flex gap-2 items-center">
+             <Badge className="bg-emerald-50 text-emerald-600 border border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-500 dark:border-emerald-500/20 px-4 py-1.5 rounded-full flex gap-2 items-center">
               <ShieldCheck className="h-4 w-4" /> Database Encrypted
             </Badge>
             <Button 
               onClick={() => router.push('/leads/create')}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md transition-all gap-2"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200 shadow-md transition-all gap-2"
             >
               <UserPlus className="h-4 w-4" /> Add New Lead
             </Button>
@@ -95,33 +100,33 @@ export default function ClientLeads() {
         </div>
 
         {/* Main Table Card */}
-        <Card className="border-none shadow-md bg-white overflow-hidden">
-          <CardHeader className="px-6 py-5">
+        <Card className="border border-slate-200 dark:border-zinc-800 shadow-md dark:shadow-2xl bg-white dark:bg-[#0a0a0a] overflow-hidden transition-colors">
+          <CardHeader className="px-6 py-5 bg-white dark:bg-[#0a0a0a]">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <CardTitle className="text-xl flex items-center gap-2 font-bold text-slate-800">
-                <span className="p-2 bg-indigo-50 rounded-lg">
-                  <Filter className="h-5 w-5 text-indigo-600" />
+              <CardTitle className="text-xl flex items-center gap-2 font-bold text-slate-800 dark:text-white">
+                <span className="p-2 bg-indigo-50 dark:bg-zinc-900 rounded-lg border border-indigo-100 dark:border-zinc-800">
+                  <Filter className="h-5 w-5 text-indigo-600 dark:text-zinc-400" />
                 </span>
                 Record Filters
               </CardTitle>
               
               <div className="flex flex-wrap items-center gap-3">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
                   <Input 
                     placeholder="Search name, email, ID..." 
-                    className="pl-10 w-full md:w-[280px] border-slate-200 focus:ring-indigo-500" 
+                    className="pl-10 w-full md:w-[280px] bg-white dark:bg-[#111111] border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white focus:ring-indigo-500 dark:focus:ring-white/20 placeholder:text-slate-400 dark:placeholder:text-zinc-600" 
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                   />
                 </div>
                 
-                <span className="text-sm font-medium text-slate-500">Status:</span>
+                <span className="text-sm font-medium text-slate-500 dark:text-zinc-500">Status:</span>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[160px] border-slate-200">
+                  <SelectTrigger className="w-[160px] bg-white dark:bg-[#111111] border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white">
                     <SelectValue placeholder="All Statuses" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white dark:bg-[#111111] border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white">
                     <SelectItem value="All">All Statuses</SelectItem>
                     {LEAD_STATUSES.map(status => (
                       <SelectItem key={status} value={status}>
@@ -135,7 +140,7 @@ export default function ClientLeads() {
                   <Button 
                     variant="ghost" 
                     onClick={() => { setSearchInput(''); setStatusFilter(''); }}
-                    className="text-slate-400 hover:text-rose-600"
+                    className="text-slate-400 hover:text-rose-600 dark:text-zinc-500 dark:hover:text-rose-400 dark:hover:bg-rose-400/10"
                   >
                     <X className="h-4 w-4 mr-1" /> Clear
                   </Button>
@@ -144,27 +149,27 @@ export default function ClientLeads() {
             </div>
           </CardHeader>
           
-          <Separator className="opacity-50" />
+          <Separator className="opacity-50 dark:bg-zinc-800 dark:opacity-100" />
           
-          <CardContent className="p-0">
+          <CardContent className="p-0 bg-white dark:bg-[#0a0a0a]">
             <Table>
-              <TableHeader className="bg-slate-50/50">
-                <TableRow className="border-slate-100">
-                  <TableHead className="font-semibold text-slate-600 px-6 py-4">Client Identity</TableHead>
-                  <TableHead className="font-semibold text-slate-600">Communication</TableHead>
-                  <TableHead className="font-semibold text-slate-600">Case Type</TableHead>
-                  <TableHead className="font-semibold text-slate-600">Status</TableHead>
-                  <TableHead className="font-semibold text-slate-600">Buyer Code</TableHead>
-                  <TableHead className="font-semibold text-slate-600">Created By</TableHead>
-                  <TableHead className="font-semibold text-slate-600">Entry Date</TableHead>
-                  <TableHead className="text-right px-6">Actions</TableHead>
+              <TableHeader className="bg-slate-50/50 dark:bg-[#111111]/50">
+                <TableRow className="border-slate-100 dark:border-zinc-800 hover:bg-transparent">
+                  <TableHead className="font-semibold text-slate-600 dark:text-zinc-400 px-6 py-4">Client Identity</TableHead>
+                  <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Communication</TableHead>
+                  <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Case Type</TableHead>
+                  <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Status</TableHead>
+                  <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Buyer Code</TableHead>
+                  <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Created By</TableHead>
+                  <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Entry Date</TableHead>
+                  <TableHead className="text-right px-6 text-slate-600 dark:text-zinc-400">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
                     <TableCell colSpan={8} className="h-64 text-center">
-                      <Loader2 className="animate-spin mx-auto h-8 w-8 text-indigo-600" />
+                      <Loader2 className="animate-spin mx-auto h-8 w-8 text-indigo-600 dark:text-white" />
                       <p className="text-sm text-slate-500 mt-2">Fetching records...</p>
                     </TableCell>
                   </TableRow>
@@ -175,69 +180,55 @@ export default function ClientLeads() {
                     </TableCell>
                   </TableRow>
                 ) : leads.map((lead) => (
-                  <TableRow key={lead._id} className="hover:bg-slate-50/50 transition-colors border-slate-100">
+                  <TableRow key={lead._id} className="hover:bg-slate-50/50 dark:hover:bg-zinc-900/30 transition-colors border-slate-100 dark:border-zinc-800">
                     <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center text-xs font-bold border border-indigo-100">
+                        <div className="h-9 w-9 rounded-lg bg-indigo-50 text-indigo-700 dark:bg-zinc-900 dark:text-zinc-300 flex items-center justify-center text-xs font-bold border border-indigo-100 dark:border-zinc-800">
                           {lead.firstName?.[0]}{lead.lastName?.[0]}
                         </div>
                         <div>
-                          <div className="font-semibold text-slate-900">{lead.firstName} {lead.lastName}</div>
-                          <div className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">#{lead._id.slice(-6)}</div>
+                          <div className="font-semibold text-slate-900 dark:text-zinc-100">{lead.firstName} {lead.lastName}</div>
+                          <div className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-zinc-600 font-bold">#{lead._id.slice(-6)}</div>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <div className="text-sm text-slate-600 flex items-center gap-1.5">
-                          <Mail className="h-3 w-3 text-slate-400" /> {lead.email}
+                        <div className="text-sm text-slate-600 dark:text-zinc-300 flex items-center gap-1.5">
+                          <Mail className="h-3 w-3 text-slate-400 dark:text-zinc-500" /> {lead.email}
                         </div>
-                        <div className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
-                          <PhoneCall className="h-3 w-3 text-slate-400" /> {lead.phone}
+                        <div className="text-xs text-slate-400 dark:text-zinc-500 flex items-center gap-1.5 mt-0.5">
+                          <PhoneCall className="h-3 w-3 text-slate-400 dark:text-zinc-600" /> {lead.phone}
                         </div>
                       </div>
                     </TableCell>
-
-                    <TableCell className="text-sm font-medium text-slate-600">
-                      {lead.applicationType || "N/A"}
-                    </TableCell>
+                    <TableCell className="text-sm font-medium text-slate-600 dark:text-zinc-400">{lead.applicationType || "N/A"}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={`font-medium rounded-md px-2.5 py-0.5 border ${getStatusStyle(lead.status)}`}>
                         {lead.status.replace(/_/g, ' ')}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm font-medium text-slate-600">{lead.buyerCode || "N/A"}</TableCell>
+                    <TableCell className="text-sm font-medium text-slate-600 dark:text-zinc-400">{lead.buyerCode || "N/A"}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <UserCircle className="h-4 w-4 text-slate-400" />
-                        <div>
-                          <div className="text-sm font-medium text-slate-700 whitespace-nowrap">
-                            {lead.createdBy?.name || "System"}
-                          </div>
-                         
+                        <UserCircle className="h-4 w-4 text-slate-400 dark:text-zinc-600" />
+                        <div className="text-sm font-medium text-slate-700 dark:text-zinc-300 whitespace-nowrap">
+                          {lead.createdBy?.name || "System"}
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm text-slate-500">
+                    <TableCell className="text-sm text-slate-500 dark:text-zinc-500">
                       {format(new Date(lead.createdAt), 'MM/dd/yyyy')}
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs text-slate-400 dark:text-zinc-800">
                         {format(new Date(lead.createdAt), 'hh:mm a')}
                       </div>
                     </TableCell>
                     <TableCell className="text-right px-6">
                       <div className="flex justify-end gap-2">
-                        <button 
-                          title="History"
-                          className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                          onClick={() => setHistoryDialog({ open: true, lead })}
-                        >
+                        <button title="History" className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:text-white dark:hover:bg-zinc-800 rounded-lg transition-colors" onClick={() => setHistoryDialog({ open: true, lead })}>
                           <History className="h-4 w-4" />
                         </button>
-                        <button 
-                          title="View Details"
-                          className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-                          onClick={() => router.push(`/leads/${lead._id}`)}
-                        >
+                        <button title="View Details" className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:hover:text-white dark:hover:bg-zinc-800 rounded-lg transition-colors" onClick={() => router.push(`/leads/${lead._id}`)}>
                           <ExternalLink className="h-4 w-4" />
                         </button>
                       </div>
@@ -248,31 +239,18 @@ export default function ClientLeads() {
             </Table>
           </CardContent>
           
-          <CardFooter className="px-6 py-4 flex flex-col sm:flex-row items-center justify-between bg-slate-50/30 border-t gap-4">
-            <div className="text-sm text-slate-500 font-medium">
+          <CardFooter className="px-6 py-4 flex flex-col sm:flex-row items-center justify-between bg-slate-50/30 dark:bg-[#0a0a0a] border-t border-slate-100 dark:border-zinc-800 gap-4">
+            <div className="text-sm text-slate-500 dark:text-zinc-500 font-medium">
               Showing {((pagination.page - 1) * 10) + 1} to {Math.min(pagination.page * 10, pagination.total)} of {pagination.total} leads
             </div>
-            
             <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                disabled={pagination.page === 1}
-                onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
-                className="border-slate-200 bg-white"
-              >
+              <Button variant="outline" size="sm" disabled={pagination.page === 1} onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))} className="border-slate-200 bg-white dark:border-zinc-800 dark:bg-[#111111] dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white disabled:opacity-20 transition-colors">
                 <ChevronLeft className="h-4 w-4 mr-1" /> Previous
               </Button>
-              <div className="text-xs font-bold px-3 py-1 bg-white border border-slate-200 rounded text-slate-600">
+              <div className="text-xs font-bold px-3 py-1 bg-white dark:bg-[#111111] border border-slate-200 dark:border-zinc-800 rounded text-slate-600 dark:text-zinc-400">
                 {pagination.page} / {pagination.pages || 1}
               </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                disabled={pagination.page >= pagination.pages}
-                onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-                className="border-slate-200 bg-white"
-              >
+              <Button variant="outline" size="sm" disabled={pagination.page >= pagination.pages} onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))} className="border-slate-200 bg-white dark:border-zinc-800 dark:bg-[#111111] dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white disabled:opacity-20 transition-colors">
                 Next <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
@@ -280,59 +258,53 @@ export default function ClientLeads() {
         </Card>
       </div>
 
-      {/* History Dialog remains unchanged but ensured it's included for the full code */}
+      {/* History Dialog */}
       <Dialog open={historyDialog.open} onOpenChange={(open) => !open && setHistoryDialog({ open: false, lead: null })}>
-        <DialogContent className="max-w-lg p-0 overflow-hidden border-none shadow-2xl">
-          <DialogHeader className="p-6 bg-slate-900 text-white">
+        <DialogContent className="max-w-lg p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-[#0a0a0a] dark:border dark:border-zinc-800">
+          <DialogHeader className="p-6 bg-slate-900 text-white dark:bg-[#111111]">
             <DialogTitle className="text-xl flex items-center gap-2">
-              <History className="h-5 w-5 text-indigo-400" />
+              <History className="h-5 w-5 text-indigo-400 dark:text-zinc-400" />
               Activity History
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-slate-400 dark:text-zinc-500">
               Tracking timeline for {historyDialog.lead?.firstName} {historyDialog.lead?.lastName}
             </DialogDescription>
           </DialogHeader>
-
-          <ScrollArea className="max-h-[400px] p-6 bg-white">
+          <ScrollArea className="max-h-[400px] p-6 bg-white dark:bg-[#0a0a0a]">
             <div className="space-y-6 relative">
-              <div className="absolute left-[7px] top-2 bottom-2 w-[1px] bg-slate-200" />
+              <div className="absolute left-[7px] top-2 bottom-2 w-[1px] bg-slate-200 dark:bg-zinc-800" />
               {historyDialog.lead?.statusHistory?.length > 0 ? (
                 historyDialog.lead.statusHistory.map((log: any, i: number) => (
                   <div key={i} className="relative pl-7 group">
-                    <div className="absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-indigo-600 ring-2 ring-indigo-50" />
+                    <div className="absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full border-2 border-white dark:border-[#0a0a0a] bg-indigo-600 dark:bg-zinc-600 ring-2 ring-indigo-50 dark:ring-zinc-900" />
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center justify-between">
-                        <Badge variant="secondary" className="text-[10px] font-bold bg-slate-100 text-slate-700 border-none">
+                        <Badge variant="secondary" className="text-[10px] font-bold bg-slate-100 text-slate-700 dark:bg-zinc-900 dark:text-zinc-400 border-none">
                           {log.toStatus}
                         </Badge>
-                        <div className="text-[10px] text-slate-400 font-medium text-right">
+                        <div className="text-[10px] text-slate-400 dark:text-zinc-600 font-medium text-right">
                           <div>{format(new Date(log.timestamp), 'MM/dd/yyyy')}</div>
                           <div>{format(new Date(log.timestamp), 'hh:mm a')}</div>
                         </div>
                       </div>
-                      <div className="mt-1 text-sm text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">
+                      <div className="mt-1 text-sm text-slate-600 dark:text-zinc-400 leading-relaxed bg-slate-50 dark:bg-[#111111] p-3 rounded-lg border border-slate-100 dark:border-zinc-800">
                         {log.notes || "No additional notes provided."}
                       </div>
-                      <p className="text-[10px] text-slate-400 mt-1 pl-1 italic">
+                      <p className="text-[10px] text-slate-400 dark:text-zinc-600 mt-1 pl-1 italic">
                         Authorized by: {log.changedBy?.name || "System"}
                       </p>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center py-8 text-slate-400 text-sm italic">
+                <div className="text-center py-8 text-slate-400 dark:text-zinc-600 text-sm italic">
                   No history records found for this lead.
                 </div>
               )}
             </div>
           </ScrollArea>
-          
-          <div className="p-4 bg-slate-50 border-t flex justify-end">
-            <Button 
-              onClick={() => setHistoryDialog({ open: false, lead: null })}
-              className="bg-white border-slate-200 text-slate-700 hover:bg-slate-100"
-              variant="outline"
-            >
+          <div className="p-4 bg-slate-50 dark:bg-[#111111] border-t border-slate-200 dark:border-zinc-800 flex justify-end">
+            <Button onClick={() => setHistoryDialog({ open: false, lead: null })} className="bg-white border-slate-200 text-slate-700 hover:bg-slate-100 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-800" variant="outline">
               Close History
             </Button>
           </div>
