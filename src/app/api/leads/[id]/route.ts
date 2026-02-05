@@ -21,8 +21,7 @@ export async function GET(
 
     if (!lead) return NextResponse.json({ message: 'Lead not found' }, { status: 404 });
 
-    // Admin/Creator check logic remains the same
-    if (decoded.role !== 'admin' && decoded.role !== 'super_admin' &&
+    if (decoded.role !== 'super_admin' &&
         lead.createdBy && lead.createdBy._id.toString() !== decoded.id) {
       return NextResponse.json({ message: 'Access Denied' }, { status: 403 });
     }
@@ -48,6 +47,15 @@ export async function PUT(
 
     const lead = await Lead.findById(leadId);
     if (!lead) return NextResponse.json({ message: 'Lead not found' }, { status: 404 });
+
+    if (decoded.role !== 'super_admin' &&
+        lead.createdBy && lead.createdBy.toString() !== decoded.id) {
+      return NextResponse.json({ message: 'Access Denied' }, { status: 403 });
+    }
+
+    if (body.status && decoded.role !== 'super_admin') {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 403 });
+    }
 
     // Handle status history and dynamic fields as before
     if (body.status && body.status !== lead.status) {

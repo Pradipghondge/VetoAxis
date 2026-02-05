@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthToken } from '@/lib/auth';
 import Lead from '@/models/Lead';
 import { dbConnect } from '@/lib/dbConnect';
-import User from '@/models/User';
 
 export async function GET(
   request: NextRequest,
@@ -22,6 +21,10 @@ export async function GET(
     const userId = decoded.id;
     const userRole = decoded.role;
 
+    if (!['admin', 'super_admin'].includes(userRole as string)) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 403 });
+    }
+
     // Check if the lead exists
     const lead = await Lead.findById(leadId)
       .populate('createdBy', 'name email organizationId')
@@ -35,19 +38,11 @@ export async function GET(
       );
     }
 
-    // Check organization access (unless super_admin)
-    if (userRole !== 'super_admin') {
-      const user = await User.findById(userId).select('organizationId');
-
-      // Must be in same organization or be the creator
-      if (!user ||
-          (!user.organizationId || lead.organizationId.toString() !== user.organizationId.toString()) &&
-          lead.createdBy && lead.createdBy._id.toString() !== userId) {
-        return NextResponse.json(
-          { message: 'You do not have permission to view this lead' },
-          { status: 403 }
-        );
-      }
+    if (userRole === 'admin' && lead.createdBy && lead.createdBy._id.toString() !== userId) {
+      return NextResponse.json(
+        { message: 'You do not have permission to view this lead' },
+        { status: 403 }
+      );
     }
 
     return NextResponse.json({ lead });
@@ -73,6 +68,10 @@ export async function PUT(
 
     if (!decoded || typeof decoded !== 'object') {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    if (decoded.role !== 'super_admin') {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 403 });
     }
 
     const body = await request.json();

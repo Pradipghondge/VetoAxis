@@ -91,6 +91,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import DashboardLayout from '@/components/DashboardLayout';
+import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/types';
 
 // Define the Organization type
@@ -202,6 +203,8 @@ type NewOrganizationFormValues = z.infer<typeof newOrganizationSchema>;
 
 export default function AdminPage() {
   const router = useRouter();
+  const { user, loading: authLoading, authChecked } = useAuth();
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
   const [users, setUsers] = useState<UserType[]>([]);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
@@ -272,13 +275,20 @@ export default function AdminPage() {
   });
 
   useEffect(() => {
+    if (authLoading || !authChecked || !isAdmin) return;
     const loadInitialData = async () => {
       await fetchCurrentUser();
       await fetchOrganizations();
       fetchUsers();
     };
     loadInitialData();
-  }, []);
+  }, [authLoading, authChecked, isAdmin]);
+
+  useEffect(() => {
+    if (!authLoading && authChecked && user && !isAdmin) {
+      router.replace('/dashboard');
+    }
+  }, [authLoading, authChecked, user, isAdmin, router]);
 
   // Helper functions to check current user permissions
   const isSuperAdmin = () => currentUser?.role === 'super_admin';
@@ -646,6 +656,16 @@ const formatDate = (dateString: string | Date) => {
   // Use the date-fns format function for Date + AM/PM Time
   return format(date, 'MM/dd/yy');
 };
+
+  if (authLoading || (authChecked && user && !isAdmin)) {
+    return (
+      <DashboardLayout>
+        <div className="flex h-[60vh] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

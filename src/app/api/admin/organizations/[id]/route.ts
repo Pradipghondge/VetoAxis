@@ -20,6 +20,10 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
+    if (!['admin', 'super_admin'].includes(decoded.role as string)) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 403 });
+    }
+
 
     // For non-super-admins, verify they're requesting their own org
     if (decoded.role !== 'super_admin') {
@@ -76,6 +80,10 @@ export async function PUT(
 
     if (!decoded || typeof decoded !== 'object') {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    if (!['admin', 'super_admin'].includes(decoded.role as string)) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 403 });
     }
 
     // Only super_admin can update organizations
