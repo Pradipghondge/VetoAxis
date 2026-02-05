@@ -1602,6 +1602,7 @@ const formatDate = (dateString: string | Date) => {
               </Button>
               <Button
                 variant={selectedUser?.active !== false ? "destructive" : "default"}
+                className={selectedUser?.active !== false ? "bg-red-600 text-white hover:bg-red-700 dark:bg-red-900 dark:text-white dark:hover:bg-red-800" : ""}
                 onClick={onToggleActivation}
                 disabled={submitting}
               >
