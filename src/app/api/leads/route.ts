@@ -33,13 +33,8 @@ export async function GET(request: NextRequest) {
     // Build query
     let query: any = {};
 
-    // Get the user's organization
-    const user = await User.findById(userId).select('organizationId');
-
-    // If the user has an organization ID and is not a super_admin,
-    // filter leads by their organization
-    if (userRole !== 'super_admin' && user?.organizationId) {
-      query.organizationId = user.organizationId;
+    if (userRole !== 'super_admin') {
+      query.createdBy = userId;
     }
 
     if (status) {
@@ -127,8 +122,6 @@ export async function POST(request: NextRequest) {
 
     // Build duplicate query with organization restriction for non-super_admin
     let duplicateQuery: any = {};
-
-    // Only super_admin can see duplicates across organizations
     if (decoded.role !== 'super_admin' && user?.organizationId) {
       duplicateQuery.organizationId = user.organizationId;
     }

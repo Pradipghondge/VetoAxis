@@ -19,6 +19,10 @@ export async function PUT(
     }
     const body = await request.json();
 
+    if (!['admin', 'super_admin'].includes(decoded.role as string)) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 403 });
+    }
+
     // Check if the user exists
     const user = await User.findById(userId);
 
@@ -135,6 +139,10 @@ export async function DELETE(
 
     if (!decoded || typeof decoded !== 'object') {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    if (!['admin', 'super_admin'].includes(decoded.role as string)) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 403 });
     }
 
 

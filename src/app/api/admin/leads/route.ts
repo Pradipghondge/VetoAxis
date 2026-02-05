@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthToken } from '@/lib/auth';
 import Lead from '@/models/Lead';
 import { dbConnect } from '@/lib/dbConnect';
-import User from '@/models/User';
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,8 +16,9 @@ export async function GET(request: NextRequest) {
     const userId = decoded.id;
     const userRole = decoded.role;
 
-    // Get user's organization
-    const user = await User.findById(userId).select('organizationId');
+    if (!['admin', 'super_admin'].includes(userRole as string)) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 403 });
+    }
 
     // Get query parameters for potential filtering
     const { searchParams } = new URL(request.url);
@@ -29,8 +29,8 @@ export async function GET(request: NextRequest) {
     if (status) {
       query.status = status;
     }
-    if (userRole !== 'super_admin' && user?.organizationId) {
-      query.organizationId = user.organizationId;
+    if (userRole === 'admin') {
+      query.createdBy = userId;
     }
 
     const leads = await Lead.find(query)

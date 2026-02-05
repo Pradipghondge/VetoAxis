@@ -15,6 +15,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
+    if (!['admin', 'super_admin'].includes(decoded.role as string)) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 403 });
+    }
+
     // Only super_admin can list all organizations
     if (decoded.role !== 'super_admin') {
       // Regular admin/agent can only see their organization
@@ -57,6 +61,10 @@ export async function POST(request: NextRequest) {
 
     if (!decoded || typeof decoded !== 'object') {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    if (!['admin', 'super_admin'].includes(decoded.role as string)) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 403 });
     }
 
     // Only super_admin can create organizations

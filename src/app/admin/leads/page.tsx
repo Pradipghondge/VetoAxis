@@ -116,14 +116,24 @@ export default function LeadManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [stats, setStats] = useState({ total: 0, pending: 0, verified: 0, rejected: 0 });
-  const { user } = useAuth();
+  const { user, loading: authLoading, authChecked } = useAuth();
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
 
   const updateForm = useForm<UpdateLeadFormValues>({
     resolver: zodResolver(updateLeadSchema),
     defaultValues: { status: 'PENDING', notes: '', buyerCode: '' },
   });
 
-  useEffect(() => { fetchLeads(); }, [statusFilter]);
+  useEffect(() => {
+    if (authLoading || !authChecked || !isAdmin) return;
+    fetchLeads();
+  }, [statusFilter, authLoading, authChecked, isAdmin]);
+
+  useEffect(() => {
+    if (!authLoading && authChecked && user && !isAdmin) {
+      router.replace('/dashboard');
+    }
+  }, [authLoading, authChecked, user, isAdmin, router]);
 
   const fetchLeads = async () => {
     setLoading(true);
@@ -194,6 +204,16 @@ export default function LeadManagement() {
         return 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700';
     }
   };
+
+  if (authLoading || (authChecked && user && !isAdmin)) {
+    return (
+      <DashboardLayout>
+        <div className="flex h-[60vh] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

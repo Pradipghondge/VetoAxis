@@ -17,6 +17,10 @@ export async function GET(request: NextRequest) {
     const userId = decoded.id;
     const userRole = decoded.role;
 
+    if (!['admin', 'super_admin'].includes(userRole as string)) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 403 });
+    }
+
     if (!userId) {
       return NextResponse.json({ error: 'Token missing user ID' }, { status: 401 });
     }
@@ -68,6 +72,10 @@ export async function POST(request: NextRequest) {
 
     const userId = decoded.id;
     const userRole = decoded.role;
+
+    if (!['admin', 'super_admin'].includes(userRole as string)) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 403 });
+    }
 
     if (!userId) {
       return NextResponse.json({ error: 'Token missing user ID' }, { status: 401 });

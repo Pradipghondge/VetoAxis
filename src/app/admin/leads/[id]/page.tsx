@@ -136,7 +136,8 @@ interface Lead {
 export default function LeadDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading, authChecked } = useAuth();
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
   const [lead, setLead] = useState<Lead | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -153,10 +154,17 @@ export default function LeadDetailsPage() {
   });
 
   useEffect(() => {
+    if (authLoading || !authChecked || !isAdmin) return;
     if (params.id) {
       fetchLeadDetails(params.id as string);
     }
-  }, [params.id]);
+  }, [params.id, authLoading, authChecked, isAdmin]);
+
+  useEffect(() => {
+    if (!authLoading && authChecked && user && !isAdmin) {
+      router.replace('/dashboard');
+    }
+  }, [authLoading, authChecked, user, isAdmin, router]);
 
   const fetchLeadDetails = async (id: string) => {
     setLoading(true);
@@ -239,7 +247,7 @@ export default function LeadDetailsPage() {
     return dateStr;
   };
 
-  if (loading) {
+  if (authLoading || (authChecked && user && !isAdmin) || loading) {
     return (
       <DashboardLayout>
         <div className="flex justify-center items-center h-[60vh]">
