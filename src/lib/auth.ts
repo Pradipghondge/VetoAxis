@@ -5,7 +5,7 @@ import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secure-jwt-secret-key';
-const JWT_EXPIRES_IN = '7d';
+const JWT_EXPIRES_IN = '1d';
 const COOKIE_NAME = 'auth_token';
 
 export const verifyToken = (token: string) => {
@@ -72,7 +72,7 @@ export const setAuthCookie = async (token: string, res?: NextResponse) => {
   const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV !== 'development',
-    maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+    maxAge: 1 * 24 * 60 * 60, // 1 day in seconds
     path: '/',
     sameSite: 'lax' as const
   };

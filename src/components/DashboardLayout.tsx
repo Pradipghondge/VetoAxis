@@ -14,7 +14,7 @@ export default function DashboardLayout({ children, hideSidebar }: { children: R
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="mt-6 text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground">Synchronizing identity...</p>
+        <p className="mt-6 text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground">Loading...</p>
       </div>
     );
   }
