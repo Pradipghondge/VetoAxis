@@ -30,7 +30,7 @@ export const STATUS_CONFIG: Record<
   },
   SENT_CLIENT: {
     icon: <ArrowUpRight />,
-    color: '#059669', // emerald
+    color: '#1e40af', // emerald
     description: 'Transferred to client portal',
   },
   SENT_TO_LAW_FIRM: {
