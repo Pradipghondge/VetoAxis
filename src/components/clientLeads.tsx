@@ -20,6 +20,7 @@ import {
   Filter, X, UserCircle 
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { STATUS_CONFIG } from '@/app/dashboard/status-registry';
 
 export default function ClientLeads() {
   const { user, loading: authLoading, authChecked } = useAuth();
@@ -53,21 +54,6 @@ export default function ClientLeads() {
   useEffect(() => {
     if (authChecked && !authLoading && user) fetchLeads();
   }, [user, authChecked, authLoading, pagination.page, statusFilter, searchInput]);
-
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case 'VERIFIED': case 'PAID': 
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20';
-      case 'REJECTED': case 'CHARGEBACK': 
-        return 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20';
-      case 'PENDING': 
-        return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20';
-      case 'WORKING': 
-        return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20';
-      default: 
-        return 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700';
-    }
-  };
 
   const LEAD_STATUSES = [
     "PENDING", "REJECTED", "VERIFIED", "REJECTED_BY_CLIENT", "PAID","POSTED", "SIGNED", "VM", "TRANSFERRED", "SEND TO ANOTHER BUYER",
@@ -204,9 +190,23 @@ export default function ClientLeads() {
                     </TableCell>
                     <TableCell className="text-sm font-medium text-slate-600 dark:text-zinc-400">{lead.applicationType || "N/A"}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={`font-medium rounded-md px-2.5 py-0.5 border ${getStatusStyle(lead.status)}`}>
-                        {lead.status.replace(/_/g, ' ')}
-                      </Badge>
+                      {(() => {
+                        const statusConfig = STATUS_CONFIG[lead.status];
+                        const color = statusConfig?.color || '#64748b'; // Fallback to slate-500/gray
+                        return (
+                          <Badge 
+                            variant="outline" 
+                            className="font-medium rounded-md px-2.5 py-0.5 border"
+                            style={{
+                              color: color,
+                              borderColor: `${color}40`, // 25% opacity for border
+                              backgroundColor: `${color}10`, // ~6% opacity for background
+                            }}
+                          >
+                            {lead.status.replace(/_/g, ' ')}
+                          </Badge>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell className="text-sm font-medium text-slate-600 dark:text-zinc-400">{lead.buyerCode || "N/A"}</TableCell>
                     <TableCell>
