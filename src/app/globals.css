@@ -18,46 +18,45 @@
 :root {
   --radius: 0.65rem;
 
-  /* 🖋️ Slate & Saffron Light Theme */
-  --background: oklch(0.99 0.001 80);      /* Crisp, clean paper white */
-  --foreground: oklch(0.25 0.01 40);       /* Deep Slate/Charcoal */
+  /* 🌌 Modern Slate Light Theme */
+  --background: oklch(0.98 0.005 250);     /* Very subtle blue-tinted white */
+  --foreground: oklch(0.25 0.02 260);      /* Deep slate gray */
 
   --card: oklch(1 0 0); 
-  --card-foreground: oklch(0.25 0.01 40);
+  --card-foreground: oklch(0.25 0.02 260);
 
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.25 0.01 40);
+  --popover-foreground: oklch(0.25 0.02 260);
 
-  /* Primary = Saffron Yellow-Orange */
-  /* This color is high-vis and feels modern but professional */
-  --primary: oklch(0.75 0.15 75); 
-  --primary-foreground: oklch(0.25 0.01 40); /* Dark text on light primary for readability */
+  /* Primary = Deep Indigo/Violet */
+  --primary: oklch(0.45 0.14 277); 
+  --primary-foreground: oklch(1 0 0);
 
-  /* Secondary = Soft Stone */
-  --secondary: oklch(0.95 0.01 60);
-  --secondary-foreground: oklch(0.25 0.01 40);
+  /* Secondary = Soft Blue-Gray */
+  --secondary: oklch(0.94 0.01 260);
+  --secondary-foreground: oklch(0.25 0.02 260);
 
-  --muted: oklch(0.96 0.01 60);
-  --muted-foreground: oklch(0.50 0.01 60);
+  --muted: oklch(0.96 0.01 260);
+  --muted-foreground: oklch(0.55 0.03 260);
 
-  --accent: oklch(0.93 0.02 75);
-  --accent-foreground: oklch(0.25 0.01 40);
+  --accent: oklch(0.92 0.02 260);
+  --accent-foreground: oklch(0.25 0.02 260);
 
-  --destructive: oklch(0.55 0.18 28);
+  --destructive: oklch(0.6 0.18 25);
 
-  --border: oklch(0.90 0.01 60);
-  --input: oklch(0.90 0.01 60);
-  --ring: oklch(0.75 0.15 75);
+  --border: oklch(0.9 0.01 260);
+  --input: oklch(0.9 0.01 260);
+  --ring: oklch(0.45 0.14 277);
 
-  /* Sidebar - Dark charcoal to anchor the UI */
-  --sidebar: oklch(0.98 0.005 60);
-  --sidebar-foreground: oklch(0.25 0.01 40);
-  --sidebar-primary: oklch(0.25 0.01 40);
+  /* Sidebar - A bit more distinct from the background */
+  --sidebar: oklch(0.97 0.01 260);
+  --sidebar-foreground: oklch(0.25 0.02 260);
+  --sidebar-primary: oklch(0.45 0.14 277);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.94 0.02 75);
-  --sidebar-accent-foreground: oklch(0.25 0.01 40);
-  --sidebar-border: oklch(0.91 0.01 60);
-  --sidebar-ring: oklch(0.75 0.15 75);
+  --sidebar-accent: oklch(0.94 0.02 260);
+  --sidebar-accent-foreground: oklch(0.25 0.02 260);
+  --sidebar-border: oklch(0.92 0.01 260);
+  --sidebar-ring: oklch(0.45 0.14 277);
 }
 
 
