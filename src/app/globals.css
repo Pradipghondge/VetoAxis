@@ -18,47 +18,47 @@
 :root {
   --radius: 0.65rem;
 
-  /* 🩶 Graphite Light Theme (Tweakcn-style) */
-  --background: oklch(0.97 0 0);          /* page bg */
-  --foreground: oklch(0.32 0 0);          /* #333333 */
+  /* 🖋️ Slate & Saffron Light Theme */
+  --background: oklch(0.99 0.001 80);      /* Crisp, clean paper white */
+  --foreground: oklch(0.25 0.01 40);       /* Deep Slate/Charcoal */
 
-  --card: oklch(1 0 0);                   /* white cards */
-  --card-foreground: oklch(0.32 0 0);
+  --card: oklch(1 0 0); 
+  --card-foreground: oklch(0.25 0.01 40);
 
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.32 0 0);
+  --popover-foreground: oklch(0.25 0.01 40);
 
-  /* Primary = #606060 */
-  --primary: oklch(0.45 0 0);
-  --primary-foreground: oklch(1 0 0);
+  /* Primary = Saffron Yellow-Orange */
+  /* This color is high-vis and feels modern but professional */
+  --primary: oklch(0.75 0.15 75); 
+  --primary-foreground: oklch(0.25 0.01 40); /* Dark text on light primary for readability */
 
-  /* Secondary = #e0e0e0 */
-  --secondary: oklch(0.9 0 0);
-  --secondary-foreground: oklch(0.32 0 0);
+  /* Secondary = Soft Stone */
+  --secondary: oklch(0.95 0.01 60);
+  --secondary-foreground: oklch(0.25 0.01 40);
 
-  --muted: oklch(0.94 0 0);
-  --muted-foreground: oklch(0.45 0 0);
+  --muted: oklch(0.96 0.01 60);
+  --muted-foreground: oklch(0.50 0.01 60);
 
-  --accent: oklch(0.9 0 0);
-  --accent-foreground: oklch(0.32 0 0);
+  --accent: oklch(0.93 0.02 75);
+  --accent-foreground: oklch(0.25 0.01 40);
 
-  --destructive: oklch(0.577 0.245 27.325);
+  --destructive: oklch(0.55 0.18 28);
 
-  --border: oklch(0.88 0 0);
-  --input: oklch(0.88 0 0);
-  --ring: oklch(0.45 0 0);
+  --border: oklch(0.90 0.01 60);
+  --input: oklch(0.90 0.01 60);
+  --ring: oklch(0.75 0.15 75);
 
-  /* Sidebar */
-  --sidebar: oklch(0.965 0 0);
-  --sidebar-foreground: oklch(0.32 0 0);
-  --sidebar-primary: oklch(0.45 0 0);
+  /* Sidebar - Dark charcoal to anchor the UI */
+  --sidebar: oklch(0.98 0.005 60);
+  --sidebar-foreground: oklch(0.25 0.01 40);
+  --sidebar-primary: oklch(0.25 0.01 40);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.92 0 0);
-  --sidebar-accent-foreground: oklch(0.32 0 0);
-  --sidebar-border: oklch(0.88 0 0);
-  --sidebar-ring: oklch(0.45 0 0);
+  --sidebar-accent: oklch(0.94 0.02 75);
+  --sidebar-accent-foreground: oklch(0.25 0.01 40);
+  --sidebar-border: oklch(0.91 0.01 60);
+  --sidebar-ring: oklch(0.75 0.15 75);
 }
-
 
 
 .dark {
