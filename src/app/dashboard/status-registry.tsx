@@ -54,6 +54,11 @@ export const STATUS_CONFIG: Record<
     color: '#22c55e', // green
     description: 'Data points fully validated',
   },
+  SIGNED: {
+  icon: <FileText />,
+  color: '#059669',
+  description: 'Contract successfully signed',
+},
 
   // --- ACTIVE PIPELINE ---
   WORKING: {
@@ -136,7 +141,7 @@ export const STATUS_CONFIG: Record<
  * Order: Money -> Pipeline -> Outreach -> Rejection
  */
 export const STATUS_SEQUENCE = [
-  "PAID", "BILLABLE", "SENT_CLIENT", "SENT_TO_LAW_FIRM", "ID_VERIFIED", "VERIFIED",
+  "PAID", "BILLABLE", "SIGNED", "SENT_CLIENT", "SENT_TO_LAW_FIRM", "ID_VERIFIED", "VERIFIED",
   "WORKING", "QC", "CALL_BACK", "WAITING_ID", "PENDING",
   "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4",
   "CAMPAIGN_PAUSED", "NOT_RESPONDING", "REJECTED", "REJECTED_BY_CLIENT", "DUPLICATE", "FELONY", "CHARGEBACK", "DEAD_LEAD"
@@ -147,7 +152,7 @@ export const STATUS_SEQUENCE = [
  */
 export const BUCKETS = {
   PIPELINE: ["WORKING", "QC", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4", "CALL_BACK"],
-  CONVERSION: ["VERIFIED", "ID_VERIFIED", "SENT_CLIENT", "PAID", "BILLABLE", "SENT_TO_LAW_FIRM"],
+  CONVERSION: ["VERIFIED", "ID_VERIFIED", "SIGNED", "SENT_CLIENT", "PAID", "BILLABLE", "SENT_TO_LAW_FIRM"],
   RISK: ["REJECTED", "REJECTED_BY_CLIENT", "DUPLICATE", "NOT_RESPONDING", "FELONY", "DEAD_LEAD", "CHARGEBACK"]
 };
 
