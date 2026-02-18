@@ -30,7 +30,7 @@ export type LeadStatus =
   | 'ATTEMPT_4'
   | 'CHARGEBACK'
   | 'WAITING_ID'
-  | 'SENT_CLIENT'
+  | 'SENT_TO_CLIENT'
   | 'QC'
   | 'ID_VERIFIED'
   | 'CAMPAIGN_PAUSED'
