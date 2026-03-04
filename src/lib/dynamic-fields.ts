@@ -38,11 +38,6 @@ export const DYNAMIC_FIELDS: Record<
 
   /* ───────────────────────── RIDESHARE ────────────────────────── */
   'Rideshare': [
-    { key: 'Name', label: 'Name', type: 'text', required: true },
-    { key: 'Email', label: 'Email', type: 'email', required: true },
-    { key: 'Phone', label: 'Phone', type: 'phone', required: true },
-    { key: 'Dob', label: 'Date Of Birth', type: 'date', required: true },
-    { key: 'Address', label: 'Address', type: 'text', required: true },
     { key: 'Incident Date', label: 'Date Of Incident', type: 'date', required: true },
     { key: 'Type Of Assault', label: 'Type Of Assault', type: 'radio', required: true, options: [
         { label: 'Exposure Of Genitals', value: 'Exposure of genitals' },
@@ -95,11 +90,6 @@ export const DYNAMIC_FIELDS: Record<
 
   /* ───────────────────────── ROBLOX ────────────────────────────── */
   'Roblox': [
-    { key: 'Name', label: 'Name', type: 'text', required: true },
-    { key: 'Email', label: 'Email', type: 'email', required: true },
-    { key: 'Phone', label: 'Phone', type: 'phone', required: true },
-    { key: 'Dob', label: 'Date Of Birth', type: 'date', required: true },
-    { key: 'Address', label: 'Address', type: 'text', required: true },
     { key: 'Incident Date', label: 'Date Of Incident', type: 'date', required: true },
     { key: 'Roblox Id And User', label: 'Roblox ID And User Name', type: 'text', required: true },
     { key: 'Abuser Roblox Id', label: 'Abuser’s Roblox ID', type: 'text', required: true },
@@ -108,18 +98,13 @@ export const DYNAMIC_FIELDS: Record<
     { key: 'Other App Id', label: 'ID Of Other App (If Any)', type: 'text', required: false },
     { key: 'Attorney', label: 'Are You Currently Represented By An  Attorney?', type: 'radio', required: true, options: [
         { label: 'Yes', value: 'Yes' },
-        { label: 'No', value: 'No' }
+        { label: 'No', 'value': 'No' }
       ]
     }
   ],
 
   /* ───────────────────────── ILLINOIS ABUSE ────────────────────── */
   'Illinois Abuse': [
-    { key: 'Name', label: 'Name', type: 'text', required: true },
-    { key: 'Email', label: 'Email', type: 'email', required: true },
-    { key: 'Phone', label: 'Phone', type: 'phone', required: true },
-    { key: 'Dob', label: 'Date Of Birth', type: 'date', required: true },
-    { key: 'Address', label: 'Address', type: 'text', required: true },
     { key: 'Incident Date', label: 'Date Of Incident', type: 'date', required: true },
     { key: 'Type Of Abuse', label: 'Type Of Abuse', type: 'text', required: true },
     { key: 'Location Of Incident', label: 'Location / Facility Name', type: 'text', required: true },
@@ -155,9 +140,6 @@ export const DYNAMIC_FIELDS: Record<
 
   /* ───────────────────────── AFFF ──────────────────────────────── */
   'AFFF': [
-    { key: 'Phone Number', label: 'Phone Number', type: 'text' },
-    { key: 'First Name', label: 'First Name', type: 'text' },
-    { key: 'Last Name', label: 'Last Name', type: 'text' },
     { key: 'Exposed To AFFF', label: 'Were You Or A Loved One Exposed To AFFF', type: 'radio' },
     { key: 'When Exposed', label: 'When Were You Or A Loved One Exposed To AFFF?', type: 'text' },
     { key: 'Exposure Frequency', label: 'How Many Times Were You Exposed To AFFF Over The Last 10 Years?', type: 'radio' },
@@ -177,12 +159,6 @@ export const DYNAMIC_FIELDS: Record<
     { key: 'Diagnosis Date', label: 'Diagnosis Date', type: 'date' },
     { key: 'Has Legal Representation', label: 'Do You Have Legal Representation?', type: 'radio' },
     { key: 'Preferred Contact Method', label: 'What Is Your Preferred Method Of Contact?', type: 'radio' },
-    { key: 'Date Of Birth', label: 'Date Of Birth', type: 'date' },
-    { key: 'Email', label: 'Email', type: 'text' },
-    { key: 'Street Address', label: 'Street Address', type: 'text' },
-    { key: 'City', label: 'City', type: 'text' },
-    { key: 'State', label: 'State', type: 'text' },
-    { key: 'Zip Code', label: 'Zip Code', type: 'text' }
   ]
 };
 
