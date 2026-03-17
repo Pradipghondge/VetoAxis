@@ -5,6 +5,27 @@ import { dbConnect } from '@/lib/dbConnect';
 import { DYNAMIC_FIELDS } from '@/lib/dynamic-fields';
 import User from '@/models/User';
 
+const parseDateOnly = (value: string) => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return null;
+
+  const year = Number.parseInt(match[1], 10);
+  const month = Number.parseInt(match[2], 10);
+  const day = Number.parseInt(match[3], 10);
+  if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day)) return null;
+
+  const date = new Date(year, month - 1, day);
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return { year, month, day };
+};
+
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
@@ -27,6 +48,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(url.searchParams.get('limit') || '10');
     const status = url.searchParams.get('status');
     const search = url.searchParams.get('search');
+    const entryDate = url.searchParams.get('entryDate');
 
     const skip = (page - 1) * limit;
 
@@ -48,6 +70,14 @@ export async function GET(request: NextRequest) {
         { email: { $regex: search, $options: 'i' } },
         { phone: { $regex: search, $options: 'i' } }
       ];
+    }
+    if (entryDate) {
+      const parsed = parseDateOnly(entryDate);
+      if (parsed) {
+        const start = new Date(parsed.year, parsed.month - 1, parsed.day, 0, 0, 0, 0);
+        const end = new Date(parsed.year, parsed.month - 1, parsed.day, 23, 59, 59, 999);
+        query.createdAt = { $gte: start, $lte: end };
+      }
     }
 
     const leads = await Lead.find(query)
