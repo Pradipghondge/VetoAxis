@@ -45,17 +45,12 @@ export async function PUT(
     const { id: leadId } = await params;
     const body = await request.json();
 
-    const lead = await Lead.findById(leadId);
-    if (!lead) return NextResponse.json({ message: 'Lead not found' }, { status: 404 });
-
-    if (decoded.role !== 'super_admin' &&
-        lead.createdBy && lead.createdBy.toString() !== decoded.id) {
-      return NextResponse.json({ message: 'Access Denied' }, { status: 403 });
-    }
-
-    if (body.status && decoded.role !== 'super_admin') {
+    if (decoded.role !== 'super_admin') {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 403 });
     }
+
+    const lead = await Lead.findById(leadId);
+    if (!lead) return NextResponse.json({ message: 'Lead not found' }, { status: 404 });
 
     // Handle status history and dynamic fields as before
     if (body.status && body.status !== lead.status) {
@@ -77,7 +72,7 @@ export async function PUT(
     }
 
     // Update basic fields
-    const updateable = ['firstName', 'lastName', 'email', 'phone', 'address', 'applicationType', 'lawsuit', 'notes'];
+    const updateable = ['firstName', 'lastName', 'email', 'phone', 'dateOfBirth', 'address', 'applicationType', 'lawsuit', 'notes'];
     updateable.forEach(field => { if (body[field]) lead[field] = body[field]; });
 
     await lead.save();

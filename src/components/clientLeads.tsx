@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
+import { DateInput } from '@/components/ui/DateInput';
 import { Separator } from '@/components/ui/separator';
 import {
   Loader2, Search, History, ChevronRight, ChevronLeft, 
@@ -31,6 +32,7 @@ export default function ClientLeads() {
   const [loading, setLoading] = useState(true);
   const [searchInput, setSearchInput] = useState(searchParams.get('search') || '');
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '');
+  const [entryDate, setEntryDate] = useState(searchParams.get('entryDate') || '');
   const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 10, pages: 0 });
   const [historyDialog, setHistoryDialog] = useState<{ open: boolean; lead: any | null }>({ open: false, lead: null });
 
@@ -40,6 +42,9 @@ export default function ClientLeads() {
       let url = `/api/leads?page=${pagination.page}&limit=10&search=${searchInput}&t=${Date.now()}`;
       if (statusFilter && statusFilter !== 'All') {
         url += `&status=${statusFilter}`;
+      }
+      if (entryDate) {
+        url += `&entryDate=${entryDate}`;
       }
       const { data } = await axios.get(url);
       setLeads(data.leads);
@@ -53,13 +58,13 @@ export default function ClientLeads() {
 
   useEffect(() => {
     if (authChecked && !authLoading && user) fetchLeads();
-  }, [user, authChecked, authLoading, pagination.page, statusFilter, searchInput]);
+  }, [user, authChecked, authLoading, pagination.page, statusFilter, searchInput, entryDate]);
 
   const LEAD_STATUSES = [
     "PENDING", "REJECTED", "VERIFIED", "REJECTED_BY_CLIENT", "PAID","POSTED", "SIGNED", "VM", "TRANSFERRED", "SEND TO ANOTHER BUYER",
     "DUPLICATE", "NOT_RESPONDING", "FELONY", "DEAD_LEAD", "WORKING",
     "CALL_BACK", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4",
-    "CHARGEBACK", "WAITING_ID", "SENT_TO_CLIENT", "QC", "ID_VERIFIED"
+    "CHARGEBACK", "WAITING_ID", "SENT_TO_CLIENT", "QC", "ID_VERIFIED", "RETURNED"
   ];
 
   return (
@@ -121,11 +126,21 @@ export default function ClientLeads() {
                     ))}
                   </SelectContent>
                 </Select>
+                <div className="flex items-center gap-2 rounded-md border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#111111] px-3 py-1.5">
+                  <span className="text-xs font-medium text-slate-500 dark:text-zinc-400 whitespace-nowrap">Entry Date</span>
+                  <DateInput
+                    value={entryDate}
+                    onChange={setEntryDate}
+                    placeholder="MM/DD/YYYY"
+                    calendarOnly
+                    className="h-8 w-[150px] border-0 px-1 text-xs shadow-none focus-visible:ring-0"
+                  />
+                </div>
 
-                {(searchInput || statusFilter) && (
+                {(searchInput || statusFilter || entryDate) && (
                   <Button 
                     variant="ghost" 
-                    onClick={() => { setSearchInput(''); setStatusFilter(''); }}
+                    onClick={() => { setSearchInput(''); setStatusFilter(''); setEntryDate(''); }}
                     className="text-slate-400 hover:text-rose-600 dark:text-zinc-500 dark:hover:text-rose-400 dark:hover:bg-rose-400/10"
                   >
                     <X className="h-4 w-4 mr-1" /> Clear

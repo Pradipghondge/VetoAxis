@@ -42,6 +42,7 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { DateInput } from '@/components/ui/DateInput';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -82,7 +83,7 @@ const LEAD_STATUSES = [
   "DUPLICATE", "NOT_RESPONDING", "FELONY", "DEAD_LEAD", "WORKING", 
   "CALL_BACK", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4", 
   "CHARGEBACK", "WAITING_ID", "SENT_TO_CLIENT", "QC", "ID_VERIFIED", 
-  "BILLABLE", "CAMPAIGN_PAUSED", "SENT_TO_LAW_FIRM"
+  "BILLABLE", "CAMPAIGN_PAUSED", "SENT_TO_LAW_FIRM", "RETURNED"
 ];
 
 const updateLeadSchema = z.object({
@@ -124,6 +125,7 @@ export default function LeadManagement() {
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [createdByFilter, setCreatedByFilter] = useState<string>('ALL');
   const [buyerCodeFilter, setBuyerCodeFilter] = useState<string>('ALL');
+  const [entryDate, setEntryDate] = useState<string>('');
   const [users, setUsers] = useState<UserOption[]>([]);
   const [buyerCodes, setBuyerCodes] = useState<string[]>([]);
   const [reloadKey, setReloadKey] = useState<number>(0);
@@ -171,6 +173,7 @@ export default function LeadManagement() {
         const params = new URLSearchParams();
         if (statusFilter && statusFilter !== 'All') params.set('status', statusFilter);
         if (buyerCodeFilter && buyerCodeFilter !== 'ALL') params.set('buyerCode', buyerCodeFilter);
+        if (entryDate) params.set('entryDate', entryDate);
         if (isSuperAdmin) {
           if (createdByFilter && createdByFilter !== 'ALL') params.set('createdBy', createdByFilter);
         } else if (user?.id) {
@@ -197,7 +200,7 @@ export default function LeadManagement() {
     };
     load();
     return () => controller.abort();
-  }, [statusFilter, createdByFilter, buyerCodeFilter, reloadKey, authLoading, authChecked, isAdmin, isSuperAdmin, user?.id]);
+  }, [statusFilter, createdByFilter, buyerCodeFilter, entryDate, reloadKey, authLoading, authChecked, isAdmin, isSuperAdmin, user?.id]);
 
   const onUpdateLead = async (values: UpdateLeadFormValues) => {
     if (!selectedLead) return;
@@ -362,6 +365,16 @@ export default function LeadManagement() {
                     {LEAD_STATUSES.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>)}
                   </SelectContent>
                 </Select>
+                <div className="flex items-center gap-2 rounded-md border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#111111] px-3 py-1.5">
+                  <span className="text-xs font-medium text-slate-500 dark:text-zinc-400 whitespace-nowrap">Entry Date</span>
+                  <DateInput
+                    value={entryDate}
+                    onChange={setEntryDate}
+                    placeholder="MM/DD/YYYY"
+                    calendarOnly
+                    className="h-8 w-[150px] border-0 px-1 text-xs shadow-none focus-visible:ring-0"
+                  />
+                </div>
               </div>
             </div>
           </CardHeader>
