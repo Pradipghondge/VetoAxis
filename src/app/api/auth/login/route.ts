@@ -41,7 +41,6 @@ export async function POST(req: NextRequest) {
       role: user.role
     };
 
-    console.log('Creating token for user:', userData);
     const token = generateToken(userData);
 
     const response = NextResponse.json(
@@ -65,8 +64,6 @@ export async function POST(req: NextRequest) {
       path: '/',
       sameSite: 'lax'
     });
-
-    console.log('Login successful, set auth cookie for user:', user.email);
 
     return response;
   } catch (error) {
