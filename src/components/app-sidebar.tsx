@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { LayoutDashboard, Gauge, Users, SheetIcon, Lock } from "lucide-react"
+import { LayoutDashboard, Gauge, Users, SheetIcon, Lock, ActivitySquare } from "lucide-react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "@/contexts/AuthContext"
@@ -37,6 +37,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         items: [
           { label: 'User Management', href: '/admin', icon: Users, roles: ['admin', 'super_admin'] },
           { label: 'Lead Management', href: '/admin/leads', icon: SheetIcon, roles: ['admin', 'super_admin'] },
+          { label: 'Session Activity', href: '/admin/sessions', icon: ActivitySquare, roles: ['super_admin'] },
           { label: 'Security', href: '/security', icon: Lock, roles: ['admin', 'super_admin', 'agent'] }
         ]
       }

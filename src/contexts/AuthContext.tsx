@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
 type User = {
@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [authChecked, setAuthChecked] = useState<boolean>(false);
   const authCheckCount = useRef(0);
+  const heartbeatInFlight = useRef(false);
   const router = useRouter();
 
   // Check if user is authenticated on initial load
@@ -115,6 +116,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false;
     }
   };
+
+  const sendHeartbeat = useCallback(async () => {
+    if (!user || heartbeatInFlight.current) return;
+
+    try {
+      heartbeatInFlight.current = true;
+      await fetch('/api/auth/session/heartbeat', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (err) {
+      console.error('Heartbeat error:', err);
+    } finally {
+      heartbeatInFlight.current = false;
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    void sendHeartbeat();
+
+    const intervalId = window.setInterval(() => {
+      void sendHeartbeat();
+    }, 45 * 1000);
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void sendHeartbeat();
+      }
+    };
+
+    const onFocus = () => {
+      void sendHeartbeat();
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('focus', onFocus);
+
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [user, sendHeartbeat]);
 
   const login = async (email: string, password: string) => {
     try {
