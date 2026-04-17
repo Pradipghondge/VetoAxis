@@ -54,7 +54,6 @@ export async function POST(req: NextRequest) {
       role: user.role
     };
 
-    console.log('Creating token for user:', userData);
     const token = generateToken(userData);
 
     const response = NextResponse.json(
@@ -100,8 +99,6 @@ export async function POST(req: NextRequest) {
       sameSite: 'lax'
     });
     setSessionCookie(response, sessionId);
-
-    console.log('Login successful, set auth cookie for user:', user.email);
 
     return response;
   } catch (error) {

@@ -4,9 +4,28 @@ import { verifyTokenEdge, getAuthTokenEdge } from '@/lib/edge-auth';
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Quick skip for all API routes
+  // Protect API routes (allow only auth endpoints without token)
   if (pathname.startsWith('/api/')) {
-    return NextResponse.next();
+    const publicApiRoutes = ['/api/auth/login', '/api/auth/register'];
+    const isPublicApiRoute = publicApiRoutes.some(route => pathname.startsWith(route));
+    if (isPublicApiRoute) {
+      return NextResponse.next();
+    }
+
+    const token = getAuthTokenEdge(request);
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    try {
+      const decoded = await verifyTokenEdge(token);
+      if (!decoded) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      return NextResponse.next();
+    } catch {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
   }
 
   const protectedRoutes = ['/dashboard', '/admin', '/leads'];

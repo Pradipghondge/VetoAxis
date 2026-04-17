@@ -153,10 +153,14 @@ export async function POST(request: NextRequest) {
     let duplicateReason = '';
     let existingLeadInfo = null;
 
-    // Build duplicate query with organization restriction for non-super_admin
+    // Build duplicate query with proper scope
     let duplicateQuery: any = {};
-    if (decoded.role !== 'super_admin' && user?.organizationId) {
-      duplicateQuery.organizationId = user.organizationId;
+    if (decoded.role !== 'super_admin') {
+      if (user?.organizationId) {
+        duplicateQuery.organizationId = user.organizationId;
+      } else {
+        duplicateQuery.createdBy = decoded.id;
+      }
     }
 
     // Only check if email or phone is provided
@@ -179,9 +183,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Reset duplicate query except for organization filter
-    if (decoded.role !== 'super_admin' && user?.organizationId) {
-      duplicateQuery = { organizationId: user.organizationId };
+    // Reset duplicate query except for scope filter
+    if (decoded.role !== 'super_admin') {
+      if (user?.organizationId) {
+        duplicateQuery = { organizationId: user.organizationId };
+      } else {
+        duplicateQuery = { createdBy: decoded.id };
+      }
     } else {
       duplicateQuery = {};
     }
@@ -218,15 +226,12 @@ export async function POST(request: NextRequest) {
     // Transform dynamic fields from object to array format
     const fieldsArray = [];
     if (body.fields && typeof body.fields === 'object') {
-      console.log("Received dynamic fields:", body.fields);
       for (const [key, value] of Object.entries(body.fields)) {
         if (value) { // Only add non-empty values
           fieldsArray.push({ key, value });
         }
       }
     }
-
-    console.log("Transformed fields for database:", fieldsArray);
 
     // Create the lead with proper fields format and assign organization
     const lead = await Lead.create({

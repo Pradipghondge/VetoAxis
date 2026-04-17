@@ -42,7 +42,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   const checkAuth = async (): Promise<boolean> => {
     if (authCheckCount.current > 5) {
-      console.log('Too many auth checks, stopping to prevent infinite loop');
       setLoading(false);
       setAuthChecked(true);
       return false;
@@ -52,10 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       setLoading(true);
-      console.log('Checking authentication status...');
 
       // Debug the cookie directly in the browser
-      console.log('Current cookies:', document.cookie);
 
       // Use fetch with no-cache headers
       const res = await fetch(`/api/auth/me?t=${Date.now()}`, {
@@ -69,21 +66,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       // Log the response status
-      console.log('Auth check response status:', res.status);
-      console.log('Auth check response headers:', Object.fromEntries(res.headers.entries()));
 
       // Try to clone and log the raw response
       try {
         const resClone = res.clone();
         const rawText = await resClone.text();
-        console.log('Raw response:', rawText);
       } catch (e) {
-        console.error('Could not log raw response:', e);
       }
 
       // Don't await the json parsing if status isn't ok
       if (!res.ok) {
-        console.log('Auth check failed, status:', res.status);
         setUser(null);
         setAuthChecked(true);
         setLoading(false);
@@ -93,7 +85,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Parse the response body
       try {
         const data = await res.json();
-        console.log('Auth check successful, user data:', data);
 
         if (data.user) {
           // Make sure we properly extract the user object as expected by the dashboard
@@ -107,21 +98,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setLoading(false);
           return true;
         } else {
-          console.error('Auth response missing user data');
           setUser(null);
           setAuthChecked(true);
           setLoading(false);
           return false;
         }
       } catch (parseError) {
-        console.error('Error parsing auth response:', parseError);
         setUser(null);
         setAuthChecked(true);
         setLoading(false);
         return false;
       }
     } catch (err) {
-      console.error('Auth check network error:', err);
       setUser(null);
       setAuthChecked(true);
       setLoading(false);
@@ -199,7 +187,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return data;
     } catch (err: any) {
-      console.error('Login error:', err);
       setError(err.message || 'Failed to login');
       throw err;
     } finally {
@@ -219,7 +206,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       router.push('/login');
     } catch (err: any) {
-      console.error('Logout error:', err);
       setError(err.message || 'Failed to logout');
     } finally {
       setLoading(false);
@@ -251,7 +237,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return data;
     } catch (err: any) {
-      console.error('Registration error:', err);
       setError(err.message || 'Failed to register');
       throw err;
     } finally {

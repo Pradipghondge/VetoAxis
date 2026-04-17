@@ -75,9 +75,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    console.log("Received request body:", body); // Added log
     const { status, notes, buyerCode } = body;
-    console.log("Received buyerCode:", buyerCode); // Added log
 
     const statusHistory = {
       fromStatus: (await Lead.findById(leadId).select('status')).status,
@@ -86,7 +84,6 @@ export async function PUT(
       changedBy: decoded.id
     };
 
-    console.log("Attempting to save buyerCode:", buyerCode); // Added log
     const updatedLead = await Lead.findByIdAndUpdate(
       leadId,
       {
@@ -102,8 +99,6 @@ export async function PUT(
         { status: 404 }
       );
     }
-
-    console.log("Lead after update:", updatedLead); // Added log
 
     return NextResponse.json({
       message: 'Lead updated successfully',
