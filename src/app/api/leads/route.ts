@@ -5,6 +5,21 @@ import { dbConnect } from '@/lib/dbConnect';
 import { DYNAMIC_FIELDS } from '@/lib/dynamic-fields';
 import User from '@/models/User';
 
+const normalizeEmail = (value?: string | null) => {
+  if (!value) return '';
+  return value.trim().toLowerCase();
+};
+
+const normalizePhone = (value?: string | null) => {
+  if (!value) return '';
+  return value.replace(/\D/g, '');
+};
+
+const normalizeText = (value?: string | null) => {
+  if (!value) return '';
+  return value.trim().toLowerCase().replace(/\s+/g, ' ');
+};
+
 const parseDateOnly = (value: string) => {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (!match) return null;
@@ -122,6 +137,11 @@ export async function POST(request: NextRequest) {
     const user = await User.findById(decoded.id).select('organizationId');
 
     const body = await request.json();
+    const normalizedEmail = normalizeEmail(body.email);
+    const normalizedPhone = normalizePhone(body.phone);
+    const normalizedFirstName = normalizeText(body.firstName);
+    const normalizedLastName = normalizeText(body.lastName);
+    const normalizedAddress = normalizeText(body.address);
 
     // Server-side validation for required fields
     const { applicationType, fields, ...rest } = body;
@@ -164,8 +184,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Only check if email or phone is provided
-    if (body.email) {
-      duplicateQuery.email = body.email;
+    if (normalizedEmail) {
+      duplicateQuery.emailNormalized = normalizedEmail;
 
       const duplicateEmail = await Lead.findOne(duplicateQuery)
         .populate('createdBy', 'name email');
@@ -195,8 +215,8 @@ export async function POST(request: NextRequest) {
     }
 
     // If not duplicate by email, check phone
-    if (!isDuplicate && body.phone) {
-      duplicateQuery.phone = body.phone;
+    if (!isDuplicate && normalizedPhone) {
+      duplicateQuery.phoneNormalized = normalizedPhone;
 
       const duplicatePhone = await Lead.findOne(duplicateQuery)
         .populate('createdBy', 'name email');
@@ -210,6 +230,28 @@ export async function POST(request: NextRequest) {
           status: duplicatePhone.status,
           createdBy: duplicatePhone.createdBy ? duplicatePhone.createdBy.name : 'Unknown',
           createdAt: duplicatePhone.createdAt
+        };
+      }
+    }
+
+    // Fallback check: same normalized name and address
+    if (!isDuplicate && normalizedFirstName && normalizedLastName && normalizedAddress) {
+      const duplicateNameAddress = await Lead.findOne({
+        ...duplicateQuery,
+        firstName: { $regex: new RegExp(`^${normalizedFirstName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+        lastName: { $regex: new RegExp(`^${normalizedLastName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+        address: { $regex: new RegExp(`^${normalizedAddress.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+      }).populate('createdBy', 'name email');
+
+      if (duplicateNameAddress) {
+        isDuplicate = true;
+        duplicateReason = 'name + address';
+        existingLeadInfo = {
+          id: duplicateNameAddress._id,
+          name: `${duplicateNameAddress.firstName} ${duplicateNameAddress.lastName}`,
+          status: duplicateNameAddress.status,
+          createdBy: duplicateNameAddress.createdBy ? duplicateNameAddress.createdBy.name : 'Unknown',
+          createdAt: duplicateNameAddress.createdAt
         };
       }
     }
@@ -238,7 +280,9 @@ export async function POST(request: NextRequest) {
       firstName: body.firstName,
       lastName: body.lastName,
       email: body.email,
+      emailNormalized: normalizedEmail || undefined,
       phone: body.phone,
+      phoneNormalized: normalizedPhone || undefined,
       dateOfBirth: body.dateOfBirth,
       address: body.address,
       applicationType: body.applicationType,
@@ -271,6 +315,13 @@ export async function POST(request: NextRequest) {
       duplicateInfo: isDuplicate ? existingLeadInfo : null
     }, { status: 201 });
   } catch (error) {
+    const mongoError = error as { code?: number };
+    if (mongoError?.code === 11000) {
+      return NextResponse.json(
+        { message: 'Duplicate lead detected while saving. Please refresh and review the existing record.' },
+        { status: 409 }
+      );
+    }
     console.error('Error creating lead:', error);
     return NextResponse.json(
       { message: 'Server error', error: (error as Error).message },
