@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthToken } from '@/lib/auth';
 import Lead from '@/models/Lead';
 import { dbConnect } from '@/lib/dbConnect';
+import { DYNAMIC_FIELDS } from '@/lib/dynamic-fields';
 
 export async function GET(
   request: NextRequest,
@@ -51,6 +52,29 @@ export async function PUT(
 
     const lead = await Lead.findById(leadId);
     if (!lead) return NextResponse.json({ message: 'Lead not found' }, { status: 404 });
+
+    const applicationType = body.applicationType || lead.applicationType;
+    const incomingFields = body.fields && typeof body.fields === 'object'
+      ? body.fields
+      : Array.isArray(lead.fields)
+        ? lead.fields.reduce((acc: Record<string, string>, field: { key: string; value: string }) => {
+            if (field?.key) acc[field.key] = field.value || '';
+            return acc;
+          }, {})
+        : {};
+
+    const dynamicFieldsConfig = DYNAMIC_FIELDS[applicationType] || [];
+    const isJuvenileAbuse = applicationType === 'Juvenile Detention Center (JDC)';
+    const requiredFields = isJuvenileAbuse
+      ? dynamicFieldsConfig.filter(f => f.key === 'Location Of Incident')
+      : dynamicFieldsConfig.filter(f => f.required);
+    const missingFields = requiredFields.filter(field => !incomingFields[field.key]?.toString().trim());
+
+    if (missingFields.length > 0) {
+      return NextResponse.json({
+        message: `Missing required fields: ${missingFields.map(field => field.label).join(', ')}`,
+      }, { status: 400 });
+    }
 
     // Handle status history and dynamic fields as before
     if (body.status && body.status !== lead.status) {

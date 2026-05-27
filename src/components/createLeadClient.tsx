@@ -178,9 +178,12 @@ export default function CreateLeadClient({ mode = 'create', leadId }: CreateLead
         return;
       }
 
-      await axios.post('/api/leads', { ...payload, status: 'PENDING' });
+      const { data } = await axios.post('/api/leads', { ...payload, status: 'PENDING' });
       setSubmitted(true);
-      toast({ title: 'Success', description: 'Lead created successfully' });
+      toast({
+        title: data.isDuplicate ? 'Duplicate Lead' : 'Success',
+        description: data.message || 'Lead created successfully',
+      });
       setTimeout(() => router.push('/leads'), 1500);
     } catch (error: any) {
       toast({

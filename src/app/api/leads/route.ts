@@ -20,6 +20,28 @@ const normalizeText = (value?: string | null) => {
   return value.trim().toLowerCase().replace(/\s+/g, ' ');
 };
 
+const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const getFieldValue = (fields: unknown, key: string) => {
+  if (!fields || typeof fields !== 'object' || Array.isArray(fields)) return '';
+  const value = (fields as Record<string, unknown>)[key];
+  return typeof value === 'string' ? value : '';
+};
+
+const buildDuplicateScope = (decoded: any, user: any) => {
+  if (decoded.role === 'super_admin') return {};
+  if (user?.organizationId) return { organizationId: user.organizationId };
+  return { createdBy: decoded.id };
+};
+
+const buildLeadInfo = (lead: any) => ({
+  id: lead._id,
+  name: `${lead.firstName} ${lead.lastName}`,
+  status: lead.status,
+  createdBy: lead.createdBy ? lead.createdBy.name : 'Unknown',
+  createdAt: lead.createdAt
+});
+
 const parseDateOnly = (value: string) => {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (!match) return null;
@@ -157,7 +179,7 @@ export async function POST(request: NextRequest) {
     const missingFields = [];
 
     for (const field of requiredFields) {
-      if (!fields[field.key]) {
+      if (!fields[field.key]?.toString().trim()) {
         missingFields.push(field.label);
       }
     }
@@ -174,18 +196,11 @@ export async function POST(request: NextRequest) {
     let existingLeadInfo = null;
 
     // Build duplicate query with proper scope
-    let duplicateQuery: any = {};
-    if (decoded.role !== 'super_admin') {
-      if (user?.organizationId) {
-        duplicateQuery.organizationId = user.organizationId;
-      } else {
-        duplicateQuery.createdBy = decoded.id;
-      }
-    }
+    let duplicateQuery: any = buildDuplicateScope(decoded, user);
 
     // Only check if email or phone is provided
     if (normalizedEmail) {
-      duplicateQuery.emailNormalized = normalizedEmail;
+      duplicateQuery = { ...duplicateQuery, emailNormalized: normalizedEmail };
 
       const duplicateEmail = await Lead.findOne(duplicateQuery)
         .populate('createdBy', 'name email');
@@ -193,30 +208,16 @@ export async function POST(request: NextRequest) {
       if (duplicateEmail) {
         isDuplicate = true;
         duplicateReason = 'email';
-        existingLeadInfo = {
-          id: duplicateEmail._id,
-          name: `${duplicateEmail.firstName} ${duplicateEmail.lastName}`,
-          status: duplicateEmail.status,
-          createdBy: duplicateEmail.createdBy ? duplicateEmail.createdBy.name : 'Unknown',
-          createdAt: duplicateEmail.createdAt
-        };
+        existingLeadInfo = buildLeadInfo(duplicateEmail);
       }
     }
 
     // Reset duplicate query except for scope filter
-    if (decoded.role !== 'super_admin') {
-      if (user?.organizationId) {
-        duplicateQuery = { organizationId: user.organizationId };
-      } else {
-        duplicateQuery = { createdBy: decoded.id };
-      }
-    } else {
-      duplicateQuery = {};
-    }
+    duplicateQuery = buildDuplicateScope(decoded, user);
 
     // If not duplicate by email, check phone
     if (!isDuplicate && normalizedPhone) {
-      duplicateQuery.phoneNormalized = normalizedPhone;
+      duplicateQuery = { ...duplicateQuery, phoneNormalized: normalizedPhone };
 
       const duplicatePhone = await Lead.findOne(duplicateQuery)
         .populate('createdBy', 'name email');
@@ -224,35 +225,63 @@ export async function POST(request: NextRequest) {
       if (duplicatePhone) {
         isDuplicate = true;
         duplicateReason = 'phone number';
-        existingLeadInfo = {
-          id: duplicatePhone._id,
-          name: `${duplicatePhone.firstName} ${duplicatePhone.lastName}`,
-          status: duplicatePhone.status,
-          createdBy: duplicatePhone.createdBy ? duplicatePhone.createdBy.name : 'Unknown',
-          createdAt: duplicatePhone.createdAt
-        };
+        existingLeadInfo = buildLeadInfo(duplicatePhone);
       }
     }
+
+    duplicateQuery = buildDuplicateScope(decoded, user);
+
+    if (!isDuplicate && applicationType === 'Rideshare') {
+      const incidentPersonName = normalizeText(getFieldValue(fields, 'Incident Reported Person Name'));
+      const incidentPersonNumber = normalizePhone(getFieldValue(fields, 'Incident Reported Person Number'));
+
+      if (incidentPersonNumber) {
+        const rideshareLeads = await Lead.find({
+          ...duplicateQuery,
+          applicationType: 'Rideshare',
+          fields: {
+            $all: [
+              { $elemMatch: { key: 'Incident Reported Person Number' } }
+            ]
+          }
+        }).populate('createdBy', 'name email');
+
+        const duplicateIncidentPerson = rideshareLeads.find((lead: any) => {
+          const existingFields = Array.isArray(lead.fields) ? lead.fields : [];
+          const existingName = normalizeText(
+            existingFields.find((field: any) => field.key === 'Incident Reported Person Name')?.value
+          );
+          const existingNumber = normalizePhone(
+            existingFields.find((field: any) => field.key === 'Incident Reported Person Number')?.value
+          );
+
+          return existingNumber === incidentPersonNumber &&
+            (!incidentPersonName || !existingName || existingName === incidentPersonName);
+        });
+
+        if (duplicateIncidentPerson) {
+          isDuplicate = true;
+          duplicateReason = 'rideshare incident reported person details';
+          existingLeadInfo = buildLeadInfo(duplicateIncidentPerson);
+        }
+      }
+    }
+
+    duplicateQuery = buildDuplicateScope(decoded, user);
 
     // Fallback check: same normalized name and address
     if (!isDuplicate && normalizedFirstName && normalizedLastName && normalizedAddress) {
       const duplicateNameAddress = await Lead.findOne({
         ...duplicateQuery,
-        firstName: { $regex: new RegExp(`^${normalizedFirstName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
-        lastName: { $regex: new RegExp(`^${normalizedLastName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
-        address: { $regex: new RegExp(`^${normalizedAddress.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+        firstName: { $regex: new RegExp(`^${escapeRegex(normalizedFirstName)}$`, 'i') },
+        lastName: { $regex: new RegExp(`^${escapeRegex(normalizedLastName)}$`, 'i') },
+        address: { $regex: new RegExp(`^${escapeRegex(normalizedAddress)}$`, 'i') },
       }).populate('createdBy', 'name email');
 
       if (duplicateNameAddress) {
         isDuplicate = true;
         duplicateReason = 'name + address';
-        existingLeadInfo = {
-          id: duplicateNameAddress._id,
-          name: `${duplicateNameAddress.firstName} ${duplicateNameAddress.lastName}`,
-          status: duplicateNameAddress.status,
-          createdBy: duplicateNameAddress.createdBy ? duplicateNameAddress.createdBy.name : 'Unknown',
-          createdAt: duplicateNameAddress.createdAt
-        };
+        existingLeadInfo = buildLeadInfo(duplicateNameAddress);
       }
     }
 
@@ -280,9 +309,9 @@ export async function POST(request: NextRequest) {
       firstName: body.firstName,
       lastName: body.lastName,
       email: body.email,
-      emailNormalized: normalizedEmail || undefined,
+      emailNormalized: isDuplicate ? undefined : (normalizedEmail || undefined),
       phone: body.phone,
-      phoneNormalized: normalizedPhone || undefined,
+      phoneNormalized: isDuplicate ? undefined : (normalizedPhone || undefined),
       dateOfBirth: body.dateOfBirth,
       address: body.address,
       applicationType: body.applicationType,
