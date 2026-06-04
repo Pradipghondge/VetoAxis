@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { formatDistanceToNow, format } from 'date-fns';
@@ -54,21 +54,54 @@ type SessionsApiResponse = {
   };
   activeSessions: SessionRecord[];
   recentSessions: SessionRecord[];
+  recentPagination: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
 };
+
+const RECENT_SESSIONS_PAGE_SIZE = 30;
 
 export default function AdminSessionsPage() {
   const router = useRouter();
   const { user, loading: authLoading, authChecked } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [data, setData] = useState<SessionsApiResponse | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const loadingMoreRef = useRef(false);
 
   const isSuperAdmin = user?.role === 'super_admin';
 
-  const fetchSessions = async () => {
-    setLoading(true);
+  const fetchSessions = useCallback(async (page = 1, options: { replace?: boolean } = {}) => {
+    const replace = options.replace ?? page === 1;
+    if (replace) {
+      loadingMoreRef.current = false;
+      setLoadingMore(false);
+      setLoading(true);
+    } else {
+      if (loadingMoreRef.current) return;
+      loadingMoreRef.current = true;
+      setLoadingMore(true);
+    }
+
     try {
-      const response = await axios.get<SessionsApiResponse>('/api/admin/sessions');
-      setData(response.data);
+      const response = await axios.get<SessionsApiResponse>(
+        `/api/admin/sessions?page=${page}&limit=${RECENT_SESSIONS_PAGE_SIZE}`
+      );
+      setData((current) => {
+        if (replace || !current) return response.data;
+
+        return {
+          ...response.data,
+          recentSessions: [
+            ...(current.recentSessions || []),
+            ...(response.data.recentSessions || []),
+          ],
+        };
+      });
     } catch (error: any) {
       if (error?.response?.status === 403) {
         router.replace('/dashboard');
@@ -76,9 +109,14 @@ export default function AdminSessionsPage() {
       }
       console.error('Error loading sessions:', error);
     } finally {
-      setLoading(false);
+      if (replace) {
+        setLoading(false);
+      } else {
+        loadingMoreRef.current = false;
+        setLoadingMore(false);
+      }
     }
-  };
+  }, [router]);
 
   useEffect(() => {
     if (authLoading || !authChecked || !user) return;
@@ -86,12 +124,27 @@ export default function AdminSessionsPage() {
       router.replace('/dashboard');
       return;
     }
-    void fetchSessions();
+    void fetchSessions(1, { replace: true });
     const timer = window.setInterval(() => {
-      void fetchSessions();
+      void fetchSessions(1, { replace: true });
     }, 60 * 1000);
     return () => clearInterval(timer);
-  }, [authLoading, authChecked, user, isSuperAdmin, router]);
+  }, [authLoading, authChecked, user, isSuperAdmin, router, fetchSessions]);
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    const pagination = data?.recentPagination;
+    if (!target || loading || loadingMore || !pagination || pagination.page >= pagination.pages) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      const [entry] = entries;
+      if (!entry.isIntersecting) return;
+      void fetchSessions(pagination.page + 1, { replace: false });
+    }, { rootMargin: '300px 0px' });
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [data?.recentPagination, fetchSessions, loading, loadingMore]);
 
   const onlineWindowLabel = useMemo(() => {
     if (!data?.summary.onlineWindowMs) return '2 minutes';
@@ -119,7 +172,7 @@ export default function AdminSessionsPage() {
               Live presence and login/logout history. Online is based on heartbeat within {onlineWindowLabel}.
             </p>
           </div>
-          <Button onClick={fetchSessions} variant="outline" size="sm">
+          <Button onClick={() => void fetchSessions(1, { replace: true })} variant="outline" size="sm">
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
@@ -259,8 +312,19 @@ export default function AdminSessionsPage() {
                     </TableRow>
                   ))
                 )}
+                {loadingMore && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-16 text-center">
+                      <RefreshCw className="mx-auto h-4 w-4 animate-spin text-muted-foreground" />
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
+            <div ref={loadMoreRef} className="h-1" />
+            <div className="pt-4 text-sm text-muted-foreground">
+              Showing {(data?.recentSessions ?? []).length} of {data?.recentPagination.total ?? 0} audit records
+            </div>
           </CardContent>
         </Card>
       </div>
