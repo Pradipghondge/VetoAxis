@@ -68,6 +68,8 @@ const leadSchema = new mongoose.Schema({
 // Indexes to speed up filtering by creator and buyer code
 leadSchema.index({ createdBy: 1, createdAt: -1 });
 leadSchema.index({ buyerCode: 1, createdAt: -1 });
+leadSchema.index({ status: 1, createdAt: -1 });
+leadSchema.index({ createdAt: -1 });
 leadSchema.index({ organizationId: 1, emailNormalized: 1 }, {
   unique: true,
   partialFilterExpression: { emailNormalized: { $exists: true, $ne: "" } }

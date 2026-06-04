@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import {
   Card,
@@ -86,6 +86,8 @@ const LEAD_STATUSES = [
   "BILLABLE", "CAMPAIGN_PAUSED", "SENT_TO_LAW_FIRM", "RETURNED"
 ];
 
+const LEADS_PAGE_SIZE = 30;
+
 const updateLeadSchema = z.object({
   status: z.enum(LEAD_STATUSES as [string, ...string[]]),
   notes: z.string().optional(),
@@ -114,6 +116,13 @@ interface UserOption {
   email: string;
 }
 
+interface LeadsPagination {
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
 export default function LeadManagement() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const router = useRouter();
@@ -122,6 +131,7 @@ export default function LeadManagement() {
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [createdByFilter, setCreatedByFilter] = useState<string>('ALL');
   const [buyerCodeFilter, setBuyerCodeFilter] = useState<string>('ALL');
@@ -131,6 +141,10 @@ export default function LeadManagement() {
   const [reloadKey, setReloadKey] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [stats, setStats] = useState({ total: 0, pending: 0, verified: 0, rejected: 0 });
+  const [pagination, setPagination] = useState<LeadsPagination>({ total: 0, page: 1, limit: LEADS_PAGE_SIZE, pages: 1 });
+  const [loadingMore, setLoadingMore] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const loadingMoreRef = useRef(false);
   const { user, loading: authLoading, authChecked } = useAuth();
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
   const isSuperAdmin = user?.role === 'super_admin';
@@ -165,42 +179,94 @@ export default function LeadManagement() {
   }, [authLoading, authChecked, isSuperAdmin]);
 
   useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery.trim());
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [searchQuery]);
+
+  const buildLeadParams = useCallback((page: number) => {
+    const params = new URLSearchParams();
+    params.set('page', String(page));
+    params.set('limit', String(LEADS_PAGE_SIZE));
+    if (statusFilter && statusFilter !== 'All') params.set('status', statusFilter);
+    if (buyerCodeFilter && buyerCodeFilter !== 'ALL') params.set('buyerCode', buyerCodeFilter);
+    if (entryDate) params.set('entryDate', entryDate);
+    if (debouncedSearchQuery) params.set('search', debouncedSearchQuery);
+    if (isSuperAdmin) {
+      if (createdByFilter && createdByFilter !== 'ALL') params.set('createdBy', createdByFilter);
+    } else if (user?.id) {
+      params.set('createdBy', user.id);
+    }
+    return params;
+  }, [statusFilter, buyerCodeFilter, entryDate, debouncedSearchQuery, isSuperAdmin, createdByFilter, user?.id]);
+
+  const fetchLeadsPage = useCallback(async (
+    pageToLoad: number,
+    options: { replace?: boolean; signal?: AbortSignal } = {}
+  ) => {
+    const replace = options.replace ?? false;
+    if (replace) {
+      loadingMoreRef.current = false;
+      setLoadingMore(false);
+      setLoading(true);
+    } else {
+      if (loadingMoreRef.current) return;
+      loadingMoreRef.current = true;
+      setLoadingMore(true);
+    }
+
+    try {
+      const params = buildLeadParams(pageToLoad);
+      const { data } = await axios.get(`/api/admin/leads?${params.toString()}`, { signal: options.signal });
+      const incomingLeads = data.leads || [];
+
+      setLeads((current) => replace ? incomingLeads : [...current, ...incomingLeads]);
+      setPagination(data.pagination || { total: incomingLeads.length, page: pageToLoad, limit: LEADS_PAGE_SIZE, pages: pageToLoad });
+      setStats(data.stats || {
+        total: incomingLeads.length,
+        pending: incomingLeads.filter((l: Lead) => l.status === 'PENDING').length,
+        verified: incomingLeads.filter((l: Lead) => l.status === 'VERIFIED' || l.status === 'ID_VERIFIED').length,
+        rejected: incomingLeads.filter((l: Lead) => l.status === 'REJECTED' || l.status === 'REJECTED_BY_CLIENT').length,
+      });
+      setErrorMessage('');
+    } catch (error: any) {
+      if (axios.isCancel(error) || error?.name === 'CanceledError') return;
+      const msg = error?.response?.data?.message || error?.message || 'Failed to load leads';
+      setErrorMessage(msg);
+      toast({ title: 'Error', description: msg, variant: 'destructive' });
+    } finally {
+      if (replace) {
+        setLoading(false);
+      } else {
+        loadingMoreRef.current = false;
+        setLoadingMore(false);
+      }
+    }
+  }, [buildLeadParams]);
+
+  useEffect(() => {
     if (authLoading || !authChecked || !isAdmin) return;
     const controller = new AbortController();
-    const load = async () => {
-      setLoading(true);
-      try {
-        const params = new URLSearchParams();
-        if (statusFilter && statusFilter !== 'All') params.set('status', statusFilter);
-        if (buyerCodeFilter && buyerCodeFilter !== 'ALL') params.set('buyerCode', buyerCodeFilter);
-        if (entryDate) params.set('entryDate', entryDate);
-        if (isSuperAdmin) {
-          if (createdByFilter && createdByFilter !== 'ALL') params.set('createdBy', createdByFilter);
-        } else if (user?.id) {
-          params.set('createdBy', user.id);
-        }
-        const endpoint = params.toString() ? `/api/admin/leads?${params.toString()}` : '/api/admin/leads';
-        const { data } = await axios.get(endpoint, { signal: controller.signal });
-        setLeads(data.leads);
-        setErrorMessage('');
-        setStats({
-          total: data.leads.length,
-          pending: data.leads.filter((l: Lead) => l.status === 'PENDING').length,
-          verified: data.leads.filter((l: Lead) => l.status === 'VERIFIED' || l.status === 'ID_VERIFIED').length,
-          rejected: data.leads.filter((l: Lead) => l.status === 'REJECTED' || l.status === 'REJECTED_BY_CLIENT').length,
-        });
-      } catch (error: any) {
-        if (axios.isCancel(error)) return;
-        const msg = error?.response?.data?.message || error?.message || 'Failed to load leads';
-        setErrorMessage(msg);
-        toast({ title: 'Error', description: msg, variant: 'destructive' });
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
+    setLeads([]);
+    fetchLeadsPage(1, { replace: true, signal: controller.signal });
     return () => controller.abort();
-  }, [statusFilter, createdByFilter, buyerCodeFilter, entryDate, reloadKey, authLoading, authChecked, isAdmin, isSuperAdmin, user?.id]);
+  }, [fetchLeadsPage, reloadKey, authLoading, authChecked, isAdmin]);
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target || loading || loadingMore || pagination.page >= pagination.pages) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      const [entry] = entries;
+      if (!entry.isIntersecting) return;
+      fetchLeadsPage(pagination.page + 1);
+    }, { rootMargin: '300px 0px' });
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [fetchLeadsPage, loading, loadingMore, pagination.page, pagination.pages]);
 
   const onUpdateLead = async (values: UpdateLeadFormValues) => {
     if (!selectedLead) return;
@@ -235,11 +301,6 @@ export default function LeadManagement() {
     updateForm.setValue('buyerCode', lead.buyerCode || '');
     setUpdateDialogOpen(true);
   };
-
-  const filteredLeads = leads.filter((lead) =>
-    `${lead.firstName} ${lead.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    lead.email?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const getStatusStyle = (status: string) => {
     switch (status) {
@@ -396,75 +457,95 @@ export default function LeadManagement() {
               <TableBody>
                 {loading ? (
                   <TableRow><TableCell colSpan={8} className="h-64 text-center"><Loader2 className="animate-spin mx-auto h-8 w-8 text-indigo-600 dark:text-white" /></TableCell></TableRow>
-                ) : filteredLeads.map((lead) => (
-                  <TableRow key={lead._id} className="hover:bg-slate-50/50 dark:hover:bg-zinc-900/30 transition-colors border-slate-100 dark:border-zinc-800">
-                    <TableCell className="px-6">
-                      <div className="font-semibold text-slate-900 dark:text-zinc-100 whitespace-nowrap">{lead.firstName} {lead.lastName}</div>
-                      <div className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-zinc-600 font-bold">#{lead._id.slice(-6)}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm text-slate-600 dark:text-zinc-300">{lead.email}</div>
-                      <div className="text-xs text-slate-400 dark:text-zinc-500">{lead.phone}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-zinc-400 font-medium">
-                        <Briefcase className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500" />
-                        {lead.applicationType || "General"}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <UserCircle className="h-4 w-4 text-slate-400 dark:text-zinc-600" />
-                        <div className="text-sm font-medium text-slate-700 dark:text-zinc-300">{lead.createdBy?.name || "System"}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={`font-medium rounded-md px-2 py-0.5 border ${getStatusStyle(lead.status)}`}>
-                        {lead.status.replace(/_/g, ' ')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm font-mono bg-slate-100 dark:bg-zinc-900 px-1.5 py-0.5 rounded text-slate-600 dark:text-zinc-400 border border-transparent dark:border-zinc-800">
-                        {lead.buyerCode || "N/A"}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-sm text-slate-500 dark:text-zinc-500 whitespace-nowrap">
-                      {lead.createdAt ? format(new Date(lead.createdAt), 'MM/dd/yyyy') : '-'}
-                      <div className="text-[10px] text-slate-400 dark:text-zinc-700">{lead.createdAt ? format(new Date(lead.createdAt), 'hh:mm a') : ''}</div>
-                    </TableCell>
-                    <TableCell className="text-right px-6">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-600 dark:hover:text-white"><MoreHorizontal className="h-5 w-5" /></Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48 dark:bg-[#111111] dark:border-zinc-800 dark:text-white">
-                          {user?.role === 'super_admin' && (
-                            <DropdownMenuItem onClick={() => handleUpdateLeadClick(lead)} className="cursor-pointer dark:focus:bg-zinc-800">
-                              <FileEdit className="mr-2 h-4 w-4" /> Update Status
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem onClick={() => router.push(`/admin/leads/${lead._id}`)} className="cursor-pointer dark:focus:bg-zinc-800">
-                            <Eye className="mr-2 h-4 w-4" /> View Details
-                          </DropdownMenuItem>
-                          {user?.role === 'super_admin' && <DropdownMenuSeparator className="dark:bg-zinc-800" />}
-                          {user?.role === 'super_admin' && (
-                            <DropdownMenuItem 
-                              onClick={() => onDeleteLead(lead._id)} 
-                              className="cursor-pointer text-rose-600 focus:text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-500/10 dark:focus:text-rose-400"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" /> Delete Lead
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                ) : leads.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="h-40 text-center text-sm text-slate-500 dark:text-zinc-500">
+                      No leads found matching your filters.
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  <>
+                    {leads.map((lead) => (
+                      <TableRow key={lead._id} className="hover:bg-slate-50/50 dark:hover:bg-zinc-900/30 transition-colors border-slate-100 dark:border-zinc-800">
+                        <TableCell className="px-6">
+                          <div className="font-semibold text-slate-900 dark:text-zinc-100 whitespace-nowrap">{lead.firstName} {lead.lastName}</div>
+                          <div className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-zinc-600 font-bold">#{lead._id.slice(-6)}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm text-slate-600 dark:text-zinc-300">{lead.email}</div>
+                          <div className="text-xs text-slate-400 dark:text-zinc-500">{lead.phone}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-zinc-400 font-medium">
+                            <Briefcase className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500" />
+                            {lead.applicationType || "General"}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <UserCircle className="h-4 w-4 text-slate-400 dark:text-zinc-600" />
+                            <div className="text-sm font-medium text-slate-700 dark:text-zinc-300">{lead.createdBy?.name || "System"}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={`font-medium rounded-md px-2 py-0.5 border ${getStatusStyle(lead.status)}`}>
+                            {lead.status.replace(/_/g, ' ')}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm font-mono bg-slate-100 dark:bg-zinc-900 px-1.5 py-0.5 rounded text-slate-600 dark:text-zinc-400 border border-transparent dark:border-zinc-800">
+                            {lead.buyerCode || "N/A"}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-sm text-slate-500 dark:text-zinc-500 whitespace-nowrap">
+                          {lead.createdAt ? format(new Date(lead.createdAt), 'MM/dd/yyyy') : '-'}
+                          <div className="text-[10px] text-slate-400 dark:text-zinc-700">{lead.createdAt ? format(new Date(lead.createdAt), 'hh:mm a') : ''}</div>
+                        </TableCell>
+                        <TableCell className="text-right px-6">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-600 dark:hover:text-white"><MoreHorizontal className="h-5 w-5" /></Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48 dark:bg-[#111111] dark:border-zinc-800 dark:text-white">
+                              {user?.role === 'super_admin' && (
+                                <DropdownMenuItem onClick={() => handleUpdateLeadClick(lead)} className="cursor-pointer dark:focus:bg-zinc-800">
+                                  <FileEdit className="mr-2 h-4 w-4" /> Update Status
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem onClick={() => router.push(`/admin/leads/${lead._id}`)} className="cursor-pointer dark:focus:bg-zinc-800">
+                                <Eye className="mr-2 h-4 w-4" /> View Details
+                              </DropdownMenuItem>
+                              {user?.role === 'super_admin' && <DropdownMenuSeparator className="dark:bg-zinc-800" />}
+                              {user?.role === 'super_admin' && (
+                                <DropdownMenuItem 
+                                  onClick={() => onDeleteLead(lead._id)} 
+                                  className="cursor-pointer text-rose-600 focus:text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-500/10 dark:focus:text-rose-400"
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" /> Delete Lead
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {loadingMore && (
+                      <TableRow>
+                        <TableCell colSpan={8} className="h-16 text-center">
+                          <Loader2 className="animate-spin mx-auto h-5 w-5 text-indigo-600 dark:text-white" />
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
+                )}
               </TableBody>
             </Table>
+            <div ref={loadMoreRef} className="h-1" />
           </CardContent>
           <CardFooter className="px-6 py-4 flex justify-between bg-slate-50/30 dark:bg-[#0a0a0a] rounded-b-xl border-t border-slate-100 dark:border-zinc-800 transition-colors">
-            <span className="text-sm text-slate-500 dark:text-zinc-500 font-medium">{filteredLeads.length} leads in view</span>
+            <span className="text-sm text-slate-500 dark:text-zinc-500 font-medium">
+              Showing {leads.length} of {pagination.total} leads
+            </span>
             <Button variant="outline" size="sm" onClick={() => setReloadKey((k) => k + 1)} className="border-slate-200 bg-white text-slate-600 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 shadow-sm">
               <RefreshCw className="mr-2 h-3.5 w-3.5" /> Force Refresh
             </Button>
