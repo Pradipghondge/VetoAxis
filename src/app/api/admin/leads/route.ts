@@ -3,6 +3,11 @@ import { getAuthToken } from '@/lib/auth';
 import Lead from '@/models/Lead';
 import { dbConnect } from '@/lib/dbConnect';
 
+const DEFAULT_LIMIT = 30;
+const MAX_LIMIT = 100;
+
+const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const parseDateOnly = (value: string) => {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (!match) return null;
@@ -47,6 +52,14 @@ export async function GET(request: NextRequest) {
     const createdBy = searchParams.get('createdBy');
     const buyerCode = searchParams.get('buyerCode');
     const entryDate = searchParams.get('entryDate');
+    const search = searchParams.get('search')?.trim();
+    const pageParam = Number.parseInt(searchParams.get('page') || '1', 10);
+    const limitParam = Number.parseInt(searchParams.get('limit') || `${DEFAULT_LIMIT}`, 10);
+    const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
+    const limit = Number.isFinite(limitParam) && limitParam > 0
+      ? Math.min(limitParam, MAX_LIMIT)
+      : DEFAULT_LIMIT;
+    const skip = (page - 1) * limit;
 
     // Build query
     const query: any = {};
@@ -69,14 +82,54 @@ export async function GET(request: NextRequest) {
     } else if (createdBy) {
       query.createdBy = createdBy;
     }
+    if (search) {
+      const regex = { $regex: escapeRegex(search), $options: 'i' };
+      query.$or = [
+        { firstName: regex },
+        { lastName: regex },
+        { email: regex },
+        { phone: regex },
+      ];
+    }
 
-    const leads = await Lead.find(query)
-      .select('firstName lastName email phone status applicationType createdAt buyerCode createdBy')
-      .populate('createdBy', 'name email')
-      .sort({ createdAt: -1 })
-      .lean();
+    const countStatuses = (statuses: string[]) => {
+      if (query.status && !statuses.includes(query.status)) return Promise.resolve(0);
 
-    return NextResponse.json({ leads });
+      return Lead.countDocuments({
+        ...query,
+        status: statuses.length === 1 ? statuses[0] : { $in: statuses },
+      });
+    };
+
+    const [leads, total, pending, verified, rejected] = await Promise.all([
+      Lead.find(query)
+        .select('firstName lastName email phone status applicationType createdAt buyerCode createdBy')
+        .populate('createdBy', 'name email')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Lead.countDocuments(query),
+      countStatuses(['PENDING']),
+      countStatuses(['VERIFIED', 'ID_VERIFIED']),
+      countStatuses(['REJECTED', 'REJECTED_BY_CLIENT']),
+    ]);
+
+    return NextResponse.json({
+      leads,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit),
+      },
+      stats: {
+        total,
+        pending,
+        verified,
+        rejected,
+      },
+    });
   } catch (error) {
     console.error('Error fetching leads:', error);
     return NextResponse.json(
