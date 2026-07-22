@@ -44,16 +44,23 @@ import {
 import { toast } from '@/components/ui/use-toast';
 import { motion } from 'framer-motion';
 import { DYNAMIC_FIELDS } from '@/lib/dynamic-fields';
+import { normalizePhone, validateUSPhoneNumber } from '@/lib/lead-utils';
 
 const APPLICATION_TYPES = Object.keys(DYNAMIC_FIELDS);
 
 const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Invalid email').optional().or(z.literal('')),
-  phone: z.string().optional(),
+  email: z.string().email('Invalid email'),
+  phone: z.string().superRefine((value, ctx) => {
+    const error = validateUSPhoneNumber(value);
+    if (error) ctx.addIssue({ code: 'custom', message: error });
+  }),
   dateOfBirth: z.string().optional(),
-  address: z.string().optional(),
+  streetAddress: z.string().min(1, 'Street Address is required'),
+  city: z.string().min(1, 'City is required'),
+  state: z.string().min(1, 'State is required'),
+  zipCode: z.string().min(1, 'Zip Code is required'),
   applicationType: z.string().min(1, 'Application type is required'),
   lawsuit: z.string().optional(),
   notes: z.string().optional(),
@@ -76,7 +83,10 @@ export default function PublicLeadPage() {
       email: '',
       phone: '',
       dateOfBirth: '',
-      address: '',
+      streetAddress: '',
+      city: '',
+      state: '',
+      zipCode: '',
       applicationType: '',
       lawsuit: '',
       notes: '',
@@ -98,6 +108,13 @@ export default function PublicLeadPage() {
     const missingFields = requiredDynamicFields.filter(
       f => !dynamicFields[f.key]
     );
+    const invalidPhoneFields = (DYNAMIC_FIELDS[selectedType] || [])
+      .filter(f => f.type === 'phone')
+      .map(f => ({
+        label: f.label,
+        error: dynamicFields[f.key] ? validateUSPhoneNumber(dynamicFields[f.key], f.label) : null,
+      }))
+      .filter(f => f.error);
 
     if (missingFields.length > 0) {
       toast({
@@ -105,6 +122,15 @@ export default function PublicLeadPage() {
         description: `Please fill out: ${missingFields
           .map(f => f.label)
           .join(', ')}`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (invalidPhoneFields.length > 0) {
+      toast({
+        title: 'Error',
+        description: invalidPhoneFields.map(f => f.error).join(' '),
         variant: 'destructive',
       });
       return;
@@ -171,7 +197,9 @@ export default function PublicLeadPage() {
             />
           ) : (
             <Input
-              type={field.type}
+              type={field.type === 'phone' ? 'text' : field.type}
+              inputMode={field.type === 'phone' ? 'numeric' : undefined}
+              maxLength={field.type === 'phone' ? 10 : undefined}
               placeholder={
                 selectedType === 'Juvenile Detention Center (JDC)' && field.key === 'Location Of Incident'
                   ? 'Enter Juvenile Detention Center (JDC) name'
@@ -181,7 +209,7 @@ export default function PublicLeadPage() {
               onChange={e =>
                 setDynamicFields(p => ({
                   ...p,
-                  [field.key]: e.target.value,
+                  [field.key]: field.type === 'phone' ? normalizePhone(e.target.value).slice(0, 10) : e.target.value,
                 }))
               }
             />
@@ -235,21 +263,26 @@ export default function PublicLeadPage() {
               </CardHeader>
               <Separator />
               <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {['firstName', 'lastName', 'email', 'phone', 'dateOfBirth', 'address'].map(name => (
+                {['firstName', 'lastName', 'email', 'phone', 'dateOfBirth', 'streetAddress', 'city', 'state', 'zipCode'].map(name => (
                   <FormField
                     key={name}
                     control={form.control}
                     name={name as keyof FormValues}
                     render={({ field }) => (
-                      <FormItem className={name === 'address' ? 'md:col-span-2' : ''}>
+                      <FormItem className={name === 'streetAddress' ? 'md:col-span-2' : ''}>
                         <FormLabel>
                           {name.replace(/([A-Z])/g, ' $1')}
-                          {(name === 'firstName' || name === 'lastName') && '*'}
+                          {(name === 'firstName' || name === 'lastName' || name === 'phone' || name === 'streetAddress' || name === 'city' || name === 'state' || name === 'zipCode') && '*'}
                         </FormLabel>
                         <FormControl>
                           <Input
                             type={name === 'dateOfBirth' ? 'date' : 'text'}
+                            inputMode={name === 'phone' || name === 'zipCode' ? 'numeric' : undefined}
+                            maxLength={name === 'phone' ? 10 : undefined}
                             {...field}
+                            onChange={(event) => {
+                              field.onChange(name === 'phone' ? normalizePhone(event.target.value).slice(0, 10) : event.target.value);
+                            }}
                           />
                         </FormControl>
                         <FormMessage />

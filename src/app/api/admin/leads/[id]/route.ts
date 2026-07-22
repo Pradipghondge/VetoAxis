@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthToken } from '@/lib/auth';
 import Lead from '@/models/Lead';
 import { dbConnect } from '@/lib/dbConnect';
+import { LEAD_STATUSES } from '@/lib/lead-utils';
 
 export async function GET(
   request: NextRequest,
@@ -77,8 +78,14 @@ export async function PUT(
     const body = await request.json();
     const { status, notes, buyerCode } = body;
 
+    if (status && !LEAD_STATUSES.includes(status)) {
+      return NextResponse.json({ message: 'Invalid status selected' }, { status: 400 });
+    }
+
+    const vendorCode = typeof buyerCode === 'string' ? buyerCode.trim().toUpperCase() : buyerCode;
+
     const statusHistory = {
-      fromStatus: (await Lead.findById(leadId).select('status')).status,
+      fromStatus: (await Lead.findById(leadId).select('status'))?.status,
       toStatus: status,
       notes: notes || "",
       changedBy: decoded.id
@@ -87,7 +94,7 @@ export async function PUT(
     const updatedLead = await Lead.findByIdAndUpdate(
       leadId,
       {
-        $set: { status, buyerCode },
+        $set: { status, buyerCode: vendorCode },
         $push: { statusHistory },
       },
       { new: true }

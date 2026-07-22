@@ -77,19 +77,13 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-
-const LEAD_STATUSES = [
-  "PENDING", "REJECTED", "VERIFIED", "REJECTED_BY_CLIENT","POSTED", "PAID", "SIGNED","VM","TRANSFERRED","SEND TO ANOTHER BUYER",
-  "DUPLICATE", "NOT_RESPONDING", "FELONY", "DEAD_LEAD", "WORKING", 
-  "CALL_BACK", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4", 
-  "CHARGEBACK", "WAITING_ID", "SENT_TO_CLIENT", "QC", "ID_VERIFIED", 
-  "BILLABLE", "CAMPAIGN_PAUSED", "SENT_TO_LAW_FIRM", "RETURNED"
-];
+import { DYNAMIC_FIELDS } from '@/lib/dynamic-fields';
+import { LEAD_STATUSES } from '@/lib/lead-utils';
 
 const LEADS_PAGE_SIZE = 30;
 
 const updateLeadSchema = z.object({
-  status: z.enum(LEAD_STATUSES as [string, ...string[]]),
+  status: z.enum([...LEAD_STATUSES] as [string, ...string[]]),
   notes: z.string().optional(),
   buyerCode: z.string().optional(),
 });
@@ -135,6 +129,7 @@ export default function LeadManagement() {
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [createdByFilter, setCreatedByFilter] = useState<string>('ALL');
   const [buyerCodeFilter, setBuyerCodeFilter] = useState<string>('ALL');
+  const [caseTypeFilter, setCaseTypeFilter] = useState<string>('ALL');
   const [entryDate, setEntryDate] = useState<string>('');
   const [users, setUsers] = useState<UserOption[]>([]);
   const [buyerCodes, setBuyerCodes] = useState<string[]>([]);
@@ -192,6 +187,7 @@ export default function LeadManagement() {
     params.set('limit', String(LEADS_PAGE_SIZE));
     if (statusFilter && statusFilter !== 'All') params.set('status', statusFilter);
     if (buyerCodeFilter && buyerCodeFilter !== 'ALL') params.set('buyerCode', buyerCodeFilter);
+    if (caseTypeFilter && caseTypeFilter !== 'ALL') params.set('applicationType', caseTypeFilter);
     if (entryDate) params.set('entryDate', entryDate);
     if (debouncedSearchQuery) params.set('search', debouncedSearchQuery);
     if (isSuperAdmin) {
@@ -200,7 +196,7 @@ export default function LeadManagement() {
       params.set('createdBy', user.id);
     }
     return params;
-  }, [statusFilter, buyerCodeFilter, entryDate, debouncedSearchQuery, isSuperAdmin, createdByFilter, user?.id]);
+  }, [statusFilter, buyerCodeFilter, caseTypeFilter, entryDate, debouncedSearchQuery, isSuperAdmin, createdByFilter, user?.id]);
 
   const fetchLeadsPage = useCallback(async (
     pageToLoad: number,
@@ -406,10 +402,10 @@ export default function LeadManagement() {
                     </Select>
                     <Select value={buyerCodeFilter} onValueChange={setBuyerCodeFilter}>
                       <SelectTrigger className="w-[170px] bg-white dark:bg-[#111111] border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white">
-                        <SelectValue placeholder="Buyer Code" />
+                        <SelectValue placeholder="Vendor Code" />
                       </SelectTrigger>
                       <SelectContent className="bg-white dark:bg-[#111111] border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white">
-                        <SelectItem value="ALL">All Buyer Codes</SelectItem>
+                        <SelectItem value="ALL">All Vendor Codes</SelectItem>
                         {buyerCodes.map((code) => (
                           <SelectItem key={code} value={code}>{code}</SelectItem>
                         ))}
@@ -424,6 +420,15 @@ export default function LeadManagement() {
                   <SelectContent className="bg-white dark:bg-[#111111] border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white">
                     <SelectItem value="All">All Statuses</SelectItem>
                     {LEAD_STATUSES.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Select value={caseTypeFilter} onValueChange={setCaseTypeFilter}>
+                  <SelectTrigger className="w-[190px] bg-white dark:bg-[#111111] border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white">
+                    <SelectValue placeholder="Case Type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white dark:bg-[#111111] border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white">
+                    <SelectItem value="ALL">All Case Types</SelectItem>
+                    {Object.keys(DYNAMIC_FIELDS).map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
                   </SelectContent>
                 </Select>
                 <div className="flex items-center gap-2 rounded-md border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#111111] px-3 py-1.5">
@@ -449,7 +454,7 @@ export default function LeadManagement() {
                   <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Case Type</TableHead>
                   <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Created By</TableHead>
                   <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Status</TableHead>
-                  <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Buyer Code</TableHead>
+                  <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Vendor Code</TableHead>
                   <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Entry Date</TableHead>
                   <TableHead className="text-right px-6 text-slate-600 dark:text-zinc-400">Actions</TableHead>
                 </TableRow>
@@ -578,7 +583,7 @@ export default function LeadManagement() {
                 )} />
                 <FormField control={updateForm.control} name="notes" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-slate-700 dark:text-zinc-300 font-semibold">Change Reason / Notes</FormLabel>
+                    <FormLabel className="text-slate-700 dark:text-zinc-300 font-semibold">Change Reason / Notepad</FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="Why is this status being changed?" 
@@ -590,10 +595,10 @@ export default function LeadManagement() {
                 )} />
                 <FormField control={updateForm.control} name="buyerCode" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-slate-700 dark:text-zinc-300 font-semibold">Buyer Code</FormLabel>
+                    <FormLabel className="text-slate-700 dark:text-zinc-300 font-semibold">Vendor Code</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="Assign buyer code..." 
+                        placeholder="Assign vendor code..." 
                         className="border-slate-200 dark:bg-[#111111] dark:border-zinc-800 dark:text-white placeholder:text-zinc-600" 
                         {...field} 
                       />

@@ -52,6 +52,7 @@ export async function GET(request: NextRequest) {
     const createdBy = searchParams.get('createdBy');
     const buyerCode = searchParams.get('buyerCode');
     const entryDate = searchParams.get('entryDate');
+    const applicationType = searchParams.get('applicationType');
     const search = searchParams.get('search')?.trim();
     const pageParam = Number.parseInt(searchParams.get('page') || '1', 10);
     const limitParam = Number.parseInt(searchParams.get('limit') || `${DEFAULT_LIMIT}`, 10);
@@ -69,12 +70,15 @@ export async function GET(request: NextRequest) {
     if (buyerCode) {
       query.buyerCode = buyerCode;
     }
+    if (applicationType) {
+      query.applicationType = applicationType;
+    }
     if (entryDate) {
       const parsed = parseDateOnly(entryDate);
       if (parsed) {
         const start = new Date(parsed.year, parsed.month - 1, parsed.day, 0, 0, 0, 0);
-        const end = new Date(parsed.year, parsed.month - 1, parsed.day, 23, 59, 59, 999);
-        query.createdAt = { $gte: start, $lte: end };
+        const end = new Date(parsed.year, parsed.month - 1, parsed.day + 1, 0, 0, 0, 0);
+        query.createdAt = { $gte: start, $lt: end };
       }
     }
     if (userRole === 'admin') {
