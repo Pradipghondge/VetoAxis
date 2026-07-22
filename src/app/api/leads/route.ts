@@ -8,6 +8,7 @@ import {
   composeAddress,
   getFieldValue,
   getWitnessDetails,
+  getStatusQueryValue,
   normalizeAddress,
   normalizeEmail,
   normalizePhone,
@@ -30,8 +31,6 @@ const buildLeadInfo = (lead: any) => ({
   createdBy: lead.createdBy ? lead.createdBy.name : 'Unknown',
   createdAt: lead.createdAt
 });
-
-const buildVendorCode = (userId: string) => `VEN-${userId.slice(-6).toUpperCase()}`;
 
 const parseDateOnly = (value: string) => {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
@@ -89,7 +88,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (status) {
-      query.status = status;
+      query.status = getStatusQueryValue(status);
     }
 
     if (applicationType) {
@@ -318,7 +317,6 @@ export async function POST(request: NextRequest) {
       status: status,
       fields: fieldsArray,
       createdBy: decoded.id,
-      buyerCode: body.buyerCode || buildVendorCode(decoded.id),
       // Assign the user's organization ID to the lead
       organizationId: user?.organizationId || null,
       statusHistory: [

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthToken } from '@/lib/auth';
 import Lead from '@/models/Lead';
 import { dbConnect } from '@/lib/dbConnect';
+import { getStatusQueryValue, LEGACY_STATUS_VALUES } from '@/lib/lead-utils';
 
 const DEFAULT_LIMIT = 30;
 const MAX_LIMIT = 100;
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
     // Build query
     const query: any = {};
     if (status && status !== 'All') {
-      query.status = status;
+      query.status = getStatusQueryValue(status);
     }
     if (buyerCode) {
       query.buyerCode = buyerCode;
@@ -97,11 +98,15 @@ export async function GET(request: NextRequest) {
     }
 
     const countStatuses = (statuses: string[]) => {
-      if (query.status && !statuses.includes(query.status)) return Promise.resolve(0);
+      const statusValues = statuses.flatMap(status => LEGACY_STATUS_VALUES[status] || [status]);
+      const activeStatusValues = query.status?.$in || (query.status ? [query.status] : null);
+      if (activeStatusValues && !activeStatusValues.some((status: string) => statusValues.includes(status))) {
+        return Promise.resolve(0);
+      }
 
       return Lead.countDocuments({
         ...query,
-        status: statuses.length === 1 ? statuses[0] : { $in: statuses },
+        status: statusValues.length === 1 ? statusValues[0] : { $in: statusValues },
       });
     };
 

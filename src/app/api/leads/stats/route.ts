@@ -21,7 +21,21 @@ export async function GET(request: NextRequest) {
     // 1. Existing Status Counts
     const statusCounts = await Lead.aggregate([
       { $match: leadFilter },
-      { $group: { _id: "$status", count: { $sum: 1 } } }
+      {
+        $addFields: {
+          normalizedStatus: {
+            $switch: {
+              branches: [
+                { case: { $eq: ["$status", "Posted"] }, then: "POSTED" },
+                { case: { $eq: ["$status", "Transferred"] }, then: "TRANSFERRED" },
+                { case: { $eq: ["$status", "SEND TO ANOTHER BUYER"] }, then: "SEND_TO_ANOTHER_BUYER" },
+              ],
+              default: "$status",
+            },
+          },
+        },
+      },
+      { $group: { _id: "$normalizedStatus", count: { $sum: 1 } } }
     ]);
 
     // 2. Existing Total Count

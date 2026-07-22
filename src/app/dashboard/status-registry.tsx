@@ -6,7 +6,7 @@ import {
   Copy, PhoneOff, ShieldAlert, TimerOff, FastForward, 
   PhoneCall, Clock1, Clock2, Clock3, Clock4, CreditCard, 
   FileQuestion, ArrowUpRight, Search, BadgeCheck, Zap, 
-  FileText, Timer 
+  FileText, Timer, Voicemail
 } from 'lucide-react';
 
 /**
@@ -43,6 +43,21 @@ export const STATUS_CONFIG: Record<
     icon: <CheckCircle />, // Or <ArrowUpRight />
     color: '#3b82f6', // Bright Blue (Success/Active)
     description: 'Lead successfully posted to the destination system',
+  },
+  TRANSFERRED: {
+    icon: <ArrowUpRight />,
+    color: '#0284c7',
+    description: 'Lead transferred to the destination system',
+  },
+  SEND_TO_ANOTHER_BUYER: {
+    icon: <ArrowUpRight />,
+    color: '#0891b2',
+    description: 'Lead should be routed to another buyer',
+  },
+  VM: {
+    icon: <Voicemail />,
+    color: '#7c3aed',
+    description: 'Voicemail left',
   },
   ID_VERIFIED: {
     icon: <BadgeCheck />,
@@ -151,18 +166,18 @@ export const STATUS_CONFIG: Record<
  * Order: Money -> Pipeline -> Outreach -> Rejection
  */
 export const STATUS_SEQUENCE = [
-  "PAID", "BILLABLE", "SIGNED", "SENT_TO_CLIENT", "SENT_TO_LAW_FIRM", "ID_VERIFIED", "VERIFIED",
+  "PAID", "BILLABLE", "SIGNED", "POSTED", "TRANSFERRED", "SEND_TO_ANOTHER_BUYER", "SENT_TO_CLIENT", "SENT_TO_LAW_FIRM", "ID_VERIFIED", "VERIFIED",
   "WORKING", "QC", "CALL_BACK", "WAITING_ID", "PENDING",
   "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4",
-  "CAMPAIGN_PAUSED", "ON_HOLD", "NOT_RESPONDING", "REJECTED", "REJECTED_BY_CLIENT", "DUPLICATE", "RETURNED", "FELONY", "CHARGEBACK", "DEAD_LEAD"
+  "VM", "CAMPAIGN_PAUSED", "ON_HOLD", "NOT_RESPONDING", "REJECTED", "REJECTED_BY_CLIENT", "DUPLICATE", "RETURNED", "FELONY", "CHARGEBACK", "DEAD_LEAD"
 ];
 
 /**
  * 3. LOGICAL BUCKETS
  */
 export const BUCKETS = {
-  PIPELINE: ["WORKING", "QC", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4", "CALL_BACK"],
-  CONVERSION: ["VERIFIED", "ID_VERIFIED", "SIGNED", "SENT_TO_CLIENT", "PAID", "BILLABLE", "SENT_TO_LAW_FIRM"],
+  PIPELINE: ["WORKING", "QC", "VM", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4", "CALL_BACK"],
+  CONVERSION: ["VERIFIED", "ID_VERIFIED", "SIGNED", "POSTED", "TRANSFERRED", "SEND_TO_ANOTHER_BUYER", "SENT_TO_CLIENT", "PAID", "BILLABLE", "SENT_TO_LAW_FIRM"],
   RISK: ["REJECTED", "REJECTED_BY_CLIENT", "DUPLICATE", "RETURNED", "ON_HOLD", "NOT_RESPONDING", "FELONY", "DEAD_LEAD", "CHARGEBACK"]
 };
 

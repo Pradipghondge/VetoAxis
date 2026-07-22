@@ -80,7 +80,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import DashboardLayout from '@/components/DashboardLayout';
 import { DYNAMIC_FIELDS } from '@/lib/dynamic-fields';
-import { LEAD_STATUSES } from '@/lib/lead-utils';
+import { LEAD_STATUSES, normalizeLeadStatus } from '@/lib/lead-utils';
 
 // Define the schema for updating lead status
 const updateLeadSchema = z.object({
@@ -164,7 +164,7 @@ export default function LeadDetailsPage() {
     try {
       const { data } = await axios.get(`/api/admin/leads/${id}`);
       setLead(data.lead);
-      updateForm.setValue('status', data.lead.status);
+      updateForm.setValue('status', normalizeLeadStatus(data.lead.status) as UpdateLeadFormValues['status']);
       updateForm.setValue('buyerCode', data.lead.buyerCode || '');
     } catch (error: any) {
       console.error('Error fetching lead details:', error);
@@ -207,7 +207,16 @@ export default function LeadDetailsPage() {
     switch (status) {
       case 'VERIFIED':
       case 'ID_VERIFIED':
+      case 'SIGNED':
+      case 'POSTED':
+      case 'Posted':
+      case 'TRANSFERRED':
+      case 'Transferred':
+      case 'SEND_TO_ANOTHER_BUYER':
+      case 'SEND TO ANOTHER BUYER':
         return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+      case 'VM':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400';
       case 'REJECTED':
       case 'REJECTED_BY_CLIENT':
         return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
@@ -504,7 +513,7 @@ export default function LeadDetailsPage() {
 
                   {lead.buyerCode && (
                     <div className="grid grid-cols-1 gap-1">
-                      <span className="text-sm font-medium text-muted-foreground">Vendor Code</span>
+                      <span className="text-sm font-medium text-muted-foreground">Buyer Code</span>
                       <span>{lead.buyerCode}</span>
                     </div>
                   )}
@@ -706,10 +715,10 @@ export default function LeadDetailsPage() {
                   name="buyerCode"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Vendor Code</FormLabel>
+                      <FormLabel>Buyer Code</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Add vendor code (optional)"
+                          placeholder="Add buyer code (optional)"
                           {...field}
                         />
                       </FormControl>
