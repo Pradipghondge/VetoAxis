@@ -7,6 +7,7 @@ import {
   composeAddress,
   normalizeAddress,
   normalizeEmail,
+  normalizeLeadStatus,
   normalizePhone,
   normalizeText,
   validateLeadPayload,
@@ -82,15 +83,17 @@ export async function PUT(
     }
 
     // Handle status history and dynamic fields as before
-    if (body.status && body.status !== lead.status) {
+    const incomingStatus = body.status ? normalizeLeadStatus(body.status) : body.status;
+
+    if (incomingStatus && incomingStatus !== lead.status) {
       lead.statusHistory.push({
         fromStatus: lead.status,
-        toStatus: body.status,
+        toStatus: incomingStatus,
         notes: body.statusNote || "",
         changedBy: decoded.id,
         timestamp: new Date()
       });
-      lead.status = body.status;
+      lead.status = incomingStatus;
     }
 
     // Dynamic fields transformation

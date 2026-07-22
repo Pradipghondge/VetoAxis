@@ -5,7 +5,12 @@ export const LEAD_STATUSES = [
   'REJECTED',
   'VERIFIED',
   'REJECTED_BY_CLIENT',
+  'POSTED',
   'PAID',
+  'SIGNED',
+  'VM',
+  'TRANSFERRED',
+  'SEND_TO_ANOTHER_BUYER',
   'DUPLICATE',
   'NOT_RESPONDING',
   'FELONY',
@@ -27,6 +32,24 @@ export const LEAD_STATUSES = [
   'RETURNED',
   'ON_HOLD',
 ] as const;
+
+export const LEGACY_STATUS_VALUES: Record<string, string[]> = {
+  POSTED: ['POSTED', 'Posted'],
+  TRANSFERRED: ['TRANSFERRED', 'Transferred'],
+  SEND_TO_ANOTHER_BUYER: ['SEND_TO_ANOTHER_BUYER', 'SEND TO ANOTHER BUYER'],
+};
+
+export const getStatusQueryValue = (status: string) => {
+  const values = LEGACY_STATUS_VALUES[status];
+  return values ? { $in: values } : status;
+};
+
+export const normalizeLeadStatus = (status?: string | null) => {
+  if (status === 'Posted') return 'POSTED';
+  if (status === 'Transferred') return 'TRANSFERRED';
+  if (status === 'SEND TO ANOTHER BUYER') return 'SEND_TO_ANOTHER_BUYER';
+  return status || '';
+};
 
 export const WITNESS_NAME_KEY = 'Witness Name';
 export const WITNESS_PHONE_KEY = 'Witness Number';

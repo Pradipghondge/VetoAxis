@@ -23,7 +23,7 @@ import {
 import { format } from 'date-fns';
 import { STATUS_CONFIG } from '@/app/dashboard/status-registry';
 import { DYNAMIC_FIELDS } from '@/lib/dynamic-fields';
-import { LEAD_STATUSES } from '@/lib/lead-utils';
+import { LEAD_STATUSES, normalizeLeadStatus } from '@/lib/lead-utils';
 
 export default function ClientLeads() {
   const { user, loading: authLoading, authChecked } = useAuth();
@@ -171,7 +171,7 @@ export default function ClientLeads() {
                   <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Communication</TableHead>
                   <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Case Type</TableHead>
                   <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Status</TableHead>
-                  <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Vendor Code</TableHead>
+                  <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Buyer Code</TableHead>
                   <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Created By</TableHead>
                   <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Entry Date</TableHead>
                   <TableHead className="text-right px-6 text-slate-600 dark:text-zinc-400">Actions</TableHead>
@@ -217,7 +217,8 @@ export default function ClientLeads() {
                     <TableCell className="text-sm font-medium text-slate-600 dark:text-zinc-400">{lead.applicationType || "N/A"}</TableCell>
                     <TableCell>
                       {(() => {
-                        const statusConfig = STATUS_CONFIG[lead.status];
+                        const displayStatus = normalizeLeadStatus(lead.status);
+                        const statusConfig = STATUS_CONFIG[displayStatus];
                         const color = statusConfig?.color || '#64748b'; // Fallback to slate-500/gray
                         return (
                           <Badge 
@@ -229,7 +230,7 @@ export default function ClientLeads() {
                               backgroundColor: `${color}10`, // ~6% opacity for background
                             }}
                           >
-                            {lead.status.replace(/_/g, ' ')}
+                            {displayStatus.replace(/_/g, ' ')}
                           </Badge>
                         );
                       })()}

@@ -78,7 +78,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { DYNAMIC_FIELDS } from '@/lib/dynamic-fields';
-import { LEAD_STATUSES } from '@/lib/lead-utils';
+import { LEAD_STATUSES, normalizeLeadStatus } from '@/lib/lead-utils';
 
 const LEADS_PAGE_SIZE = 30;
 
@@ -292,7 +292,7 @@ export default function LeadManagement() {
 
   const handleUpdateLeadClick = (lead: Lead) => {
     setSelectedLead(lead);
-    updateForm.setValue('status', lead.status as any);
+    updateForm.setValue('status', normalizeLeadStatus(lead.status) as any);
     updateForm.setValue('notes', '');
     updateForm.setValue('buyerCode', lead.buyerCode || '');
     setUpdateDialogOpen(true);
@@ -301,7 +301,13 @@ export default function LeadManagement() {
   const getStatusStyle = (status: string) => {
     switch (status) {
       case 'VERIFIED': case 'ID_VERIFIED': 
+      case 'SIGNED':
+      case 'POSTED': case 'Posted':
+      case 'TRANSFERRED': case 'Transferred':
+      case 'SEND_TO_ANOTHER_BUYER': case 'SEND TO ANOTHER BUYER':
         return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20';
+      case 'VM':
+        return 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-500/20';
       case 'REJECTED': case 'REJECTED_BY_CLIENT': 
         return 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20';
       case 'PENDING': 
@@ -402,10 +408,10 @@ export default function LeadManagement() {
                     </Select>
                     <Select value={buyerCodeFilter} onValueChange={setBuyerCodeFilter}>
                       <SelectTrigger className="w-[170px] bg-white dark:bg-[#111111] border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white">
-                        <SelectValue placeholder="Vendor Code" />
+                        <SelectValue placeholder="Buyer Code" />
                       </SelectTrigger>
                       <SelectContent className="bg-white dark:bg-[#111111] border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white">
-                        <SelectItem value="ALL">All Vendor Codes</SelectItem>
+                        <SelectItem value="ALL">All Buyer Codes</SelectItem>
                         {buyerCodes.map((code) => (
                           <SelectItem key={code} value={code}>{code}</SelectItem>
                         ))}
@@ -454,7 +460,7 @@ export default function LeadManagement() {
                   <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Case Type</TableHead>
                   <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Created By</TableHead>
                   <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Status</TableHead>
-                  <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Vendor Code</TableHead>
+                  <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Buyer Code</TableHead>
                   <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Entry Date</TableHead>
                   <TableHead className="text-right px-6 text-slate-600 dark:text-zinc-400">Actions</TableHead>
                 </TableRow>
@@ -595,10 +601,10 @@ export default function LeadManagement() {
                 )} />
                 <FormField control={updateForm.control} name="buyerCode" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-slate-700 dark:text-zinc-300 font-semibold">Vendor Code</FormLabel>
+                    <FormLabel className="text-slate-700 dark:text-zinc-300 font-semibold">Buyer Code</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="Assign vendor code..." 
+                        placeholder="Assign buyer code..." 
                         className="border-slate-200 dark:bg-[#111111] dark:border-zinc-800 dark:text-white placeholder:text-zinc-600" 
                         {...field} 
                       />

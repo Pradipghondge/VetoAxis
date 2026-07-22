@@ -27,7 +27,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
-import { LEAD_STATUSES } from '@/lib/lead-utils';
+import { LEAD_STATUSES, normalizeLeadStatus } from '@/lib/lead-utils';
 
 // Helper to capitalize only the first letter
 const formatSentenceCase = (str: string) => {
@@ -42,6 +42,11 @@ const STATUS_CONFIG: Record<string, { color: string, icon: React.ReactNode }> = 
   ON_HOLD: { color: '#64748b', icon: <Clock className="h-4 w-4" /> },
   REJECTED: { color: '#ef4444', icon: <XCircle className="h-4 w-4" /> },
   VERIFIED: { color: '#10b981', icon: <CheckCircle className="h-4 w-4" /> },
+  SIGNED: { color: '#059669', icon: <FileText className="h-4 w-4" /> },
+  POSTED: { color: '#3b82f6', icon: <CheckCircle className="h-4 w-4" /> },
+  TRANSFERRED: { color: '#0284c7', icon: <ChevronRight className="h-4 w-4" /> },
+  SEND_TO_ANOTHER_BUYER: { color: '#0891b2', icon: <ChevronRight className="h-4 w-4" /> },
+  VM: { color: '#7c3aed', icon: <Phone className="h-4 w-4" /> },
   PAID: { color: '#3b82f6', icon: <Zap className="h-4 w-4" /> },
   WORKING: { color: '#6366f1', icon: <Activity className="h-4 w-4" /> },
 };
@@ -99,7 +104,8 @@ export default function LeadDetailPage() {
     </DashboardLayout>
   );
 
-  const currentStatus = STATUS_CONFIG[lead.status] || { color: '#737373', icon: <FileText /> };
+  const currentLeadStatus = normalizeLeadStatus(lead.status);
+  const currentStatus = STATUS_CONFIG[currentLeadStatus] || { color: '#737373', icon: <FileText /> };
 
   return (
     <DashboardLayout>
@@ -123,7 +129,7 @@ export default function LeadDetailPage() {
           <div className="flex items-center gap-3">
             <div className="px-3 py-1.5 border rounded-lg flex items-center gap-2 bg-muted/30">
               <span style={{ color: currentStatus.color }}>{currentStatus.icon}</span>
-              <span className="text-[11px] font-bold capitalize">{lead.status.toLowerCase().replace(/_/g, ' ')}</span>
+              <span className="text-[11px] font-bold capitalize">{currentLeadStatus.toLowerCase().replace(/_/g, ' ')}</span>
             </div>
             {user?.role === 'super_admin' && (
               <Button onClick={() => setStatusDialogOpen(true)} size="sm" className="font-bold">
