@@ -18,12 +18,18 @@ const dynamicFieldSchema = new mongoose.Schema({
 const leadSchema = new mongoose.Schema({
   firstName: String,
   lastName: String,
+  fullNameNormalized: String,
   phone: String,
   phoneNormalized: String,
   email: String,
   emailNormalized: String,
   dateOfBirth: Date,
   address: String,
+  streetAddress: String,
+  city: String,
+  state: String,
+  zipCode: String,
+  addressNormalized: String,
   applicationType: String,
   lawsuit: String,
   notes: String,
@@ -55,7 +61,8 @@ const leadSchema = new mongoose.Schema({
   "BILLABLE",
   "CAMPAIGN_PAUSED",
   "SENT_TO_LAW_FIRM",
-  "RETURNED"
+  "RETURNED",
+  "ON_HOLD"
 ],
 
     default: "PENDING",
@@ -70,6 +77,9 @@ leadSchema.index({ createdBy: 1, createdAt: -1 });
 leadSchema.index({ buyerCode: 1, createdAt: -1 });
 leadSchema.index({ status: 1, createdAt: -1 });
 leadSchema.index({ createdAt: -1 });
+leadSchema.index({ applicationType: 1, createdAt: -1 });
+leadSchema.index({ organizationId: 1, fullNameNormalized: 1 });
+leadSchema.index({ organizationId: 1, addressNormalized: 1 });
 leadSchema.index({ organizationId: 1, emailNormalized: 1 }, {
   unique: true,
   partialFilterExpression: { emailNormalized: { $exists: true, $ne: "" } }

@@ -45,6 +45,7 @@ import { toast } from '@/components/ui/use-toast';
 import { motion } from 'framer-motion';
 import { DateInput } from '@/components/ui/DateInput';
 import { DYNAMIC_FIELDS } from '@/lib/dynamic-fields';
+import { normalizePhone, validateUSPhoneNumber } from '@/lib/lead-utils';
 
 const APPLICATION_TYPES = Object.keys(DYNAMIC_FIELDS);
 
@@ -53,9 +54,15 @@ const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Invalid email address'),
-  phone: z.string().min(1, 'Phone number is required'),
+  phone: z.string().superRefine((value, ctx) => {
+    const error = validateUSPhoneNumber(value);
+    if (error) ctx.addIssue({ code: 'custom', message: error });
+  }),
   dateOfBirth: z.string().min(1, 'Date of birth is required'),
-  address: z.string().min(1, 'Address is required'),
+  streetAddress: z.string().min(1, 'Street Address is required'),
+  city: z.string().min(1, 'City is required'),
+  state: z.string().min(1, 'State is required'),
+  zipCode: z.string().min(1, 'Zip Code is required'),
   applicationType: z.string().min(1, 'Application type is required'),
   lawsuit: z.string().optional(),
   notes: z.string().optional(),
@@ -95,7 +102,10 @@ export default function CreateLeadClient({ mode = 'create', leadId }: CreateLead
       email: '',
       phone: '',
       dateOfBirth: '',
-      address: '',
+      streetAddress: '',
+      city: '',
+      state: '',
+      zipCode: '',
       applicationType: '',
       lawsuit: '',
       notes: '',
@@ -124,7 +134,10 @@ export default function CreateLeadClient({ mode = 'create', leadId }: CreateLead
           email: existingLead.email || '',
           phone: existingLead.phone || '',
           dateOfBirth: normalizeDateValue(existingLead.dateOfBirth),
-          address: existingLead.address || '',
+          streetAddress: existingLead.streetAddress || existingLead.address || '',
+          city: existingLead.city || '',
+          state: existingLead.state || '',
+          zipCode: existingLead.zipCode || '',
           applicationType: existingLead.applicationType || '',
           lawsuit: existingLead.lawsuit || '',
           notes: existingLead.notes || '',
@@ -154,11 +167,27 @@ export default function CreateLeadClient({ mode = 'create', leadId }: CreateLead
         : (DYNAMIC_FIELDS[selectedType] || []).filter(field => field.required);
 
     const missingFields = requiredDynamicFields.filter(field => !dynamicFields[field.key]);
+    const invalidPhoneFields = (DYNAMIC_FIELDS[selectedType] || [])
+      .filter(field => field.type === 'phone')
+      .map(field => ({
+        label: field.label,
+        error: dynamicFields[field.key] ? validateUSPhoneNumber(dynamicFields[field.key], field.label) : null,
+      }))
+      .filter(field => field.error);
 
     if (missingFields.length > 0) {
       toast({
         title: 'Error',
         description: `Please fill out: ${missingFields.map(f => f.label).join(', ')}`,
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (invalidPhoneFields.length > 0) {
+      toast({
+        title: 'Error',
+        description: invalidPhoneFields.map(field => field.error).join(' '),
         variant: 'destructive'
       });
       return;
@@ -218,9 +247,14 @@ export default function CreateLeadClient({ mode = 'create', leadId }: CreateLead
           : `Enter ${field.label.toLowerCase()}`;
         inputComponent = (
           <Input
-            type={field.type}
+            type={field.type === 'phone' ? 'text' : field.type}
+            inputMode={field.type === 'phone' ? 'numeric' : undefined}
+            maxLength={field.type === 'phone' ? 10 : undefined}
             value={dynamicFields[field.key] || ''}
-            onChange={e => setDynamicFields(prev => ({ ...prev, [field.key]: e.target.value }))}
+            onChange={e => setDynamicFields(prev => ({
+              ...prev,
+              [field.key]: field.type === 'phone' ? normalizePhone(e.target.value).slice(0, 10) : e.target.value
+            }))}
             placeholder={placeholder}
             className="bg-background"
           />
@@ -311,16 +345,16 @@ export default function CreateLeadClient({ mode = 'create', leadId }: CreateLead
               </CardHeader>
               <Separator />
               <CardContent className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                {['firstName', 'lastName', 'email', 'phone', 'dateOfBirth', 'address'].map(fieldName => (
+                {['firstName', 'lastName', 'email', 'phone', 'dateOfBirth', 'streetAddress', 'city', 'state', 'zipCode'].map(fieldName => (
                   <FormField
                     key={fieldName}
                     control={form.control}
                     name={fieldName as keyof FormValues}
                     render={({ field }) => (
-                      <FormItem className={fieldName === 'address' ? 'md:col-span-2' : ''}>
+                      <FormItem className={fieldName === 'streetAddress' ? 'md:col-span-2' : ''}>
                         <FormLabel className="text-sm capitalize">
                           {fieldName.replace(/([A-Z])/g, ' $1')}
-                          {(fieldName === 'firstName' || fieldName === 'lastName' || fieldName === 'email' || fieldName === 'phone' || fieldName === 'dateOfBirth' || fieldName === 'address') && '*'}
+                          *
                         </FormLabel>
                         <FormControl>
                           {fieldName === 'dateOfBirth' ? (
@@ -328,14 +362,25 @@ export default function CreateLeadClient({ mode = 'create', leadId }: CreateLead
                           ) : (
                             <Input
                               type={fieldName === 'email' ? 'email' : 'text'}
+                              inputMode={fieldName === 'phone' || fieldName === 'zipCode' ? 'numeric' : undefined}
+                              maxLength={fieldName === 'phone' ? 10 : undefined}
                               placeholder={
                                 fieldName === 'firstName' ? 'Enter first name' :
                                 fieldName === 'lastName' ? 'Enter last name' :
                                 fieldName === 'email' ? 'Enter email address' :
                                 fieldName === 'phone' ? 'Enter phone number' :
-                                'Enter full address'
+                                fieldName === 'streetAddress' ? 'Enter street address' :
+                                fieldName === 'city' ? 'Enter city' :
+                                fieldName === 'state' ? 'Enter state' :
+                                'Enter zip code'
                               }
                               {...field}
+                              onChange={(event) => {
+                                const value = fieldName === 'phone'
+                                  ? normalizePhone(event.target.value).slice(0, 10)
+                                  : event.target.value;
+                                field.onChange(value);
+                              }}
                               className="h-10 bg-background"
                             />
                           )}
@@ -383,7 +428,7 @@ export default function CreateLeadClient({ mode = 'create', leadId }: CreateLead
 
                 <FormField control={form.control} name="notes" render={({ field }) => (
                   <FormItem className="col-span-1 md:col-span-2">
-                    <FormLabel className="text-sm">Notes</FormLabel>
+                    <FormLabel className="text-sm">Notepad</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="Add any additional notes about this lead"

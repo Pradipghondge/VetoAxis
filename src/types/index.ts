@@ -33,9 +33,11 @@ export type LeadStatus =
   | 'SENT_TO_CLIENT'
   | 'QC'
   | 'ID_VERIFIED'
+  | 'BILLABLE'
   | 'CAMPAIGN_PAUSED'
   | 'SENT_TO_LAW_FIRM'
-  | 'RETURNED';
+  | 'RETURNED'
+  | 'ON_HOLD';
 
 export interface StatusHistoryItem {
   _id?: string | ObjectId;
@@ -54,6 +56,10 @@ export interface LeadType {
   email: string;
   dateOfBirth: Date;
   address: string;
+  streetAddress?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
   applicationType: string;
   lawsuit?: string;
   notes: string;

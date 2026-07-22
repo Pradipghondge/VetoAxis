@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { STATUS_CONFIG } from '@/app/dashboard/status-registry';
+import { DYNAMIC_FIELDS } from '@/lib/dynamic-fields';
+import { LEAD_STATUSES } from '@/lib/lead-utils';
 
 export default function ClientLeads() {
   const { user, loading: authLoading, authChecked } = useAuth();
@@ -32,6 +34,7 @@ export default function ClientLeads() {
   const [loading, setLoading] = useState(true);
   const [searchInput, setSearchInput] = useState(searchParams.get('search') || '');
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '');
+  const [caseTypeFilter, setCaseTypeFilter] = useState(searchParams.get('applicationType') || '');
   const [entryDate, setEntryDate] = useState(searchParams.get('entryDate') || '');
   const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 10, pages: 0 });
   const [historyDialog, setHistoryDialog] = useState<{ open: boolean; lead: any | null }>({ open: false, lead: null });
@@ -46,6 +49,9 @@ export default function ClientLeads() {
       if (entryDate) {
         url += `&entryDate=${entryDate}`;
       }
+      if (caseTypeFilter) {
+        url += `&applicationType=${encodeURIComponent(caseTypeFilter)}`;
+      }
       const { data } = await axios.get(url);
       setLeads(data.leads);
       setPagination(data.pagination);
@@ -58,14 +64,7 @@ export default function ClientLeads() {
 
   useEffect(() => {
     if (authChecked && !authLoading && user) fetchLeads();
-  }, [user, authChecked, authLoading, pagination.page, statusFilter, searchInput, entryDate]);
-
-  const LEAD_STATUSES = [
-    "PENDING", "REJECTED", "VERIFIED", "REJECTED_BY_CLIENT", "PAID","POSTED", "SIGNED", "VM", "TRANSFERRED", "SEND TO ANOTHER BUYER",
-    "DUPLICATE", "NOT_RESPONDING", "FELONY", "DEAD_LEAD", "WORKING",
-    "CALL_BACK", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4",
-    "CHARGEBACK", "WAITING_ID", "SENT_TO_CLIENT", "QC", "ID_VERIFIED", "RETURNED"
-  ];
+  }, [user, authChecked, authLoading, pagination.page, statusFilter, searchInput, entryDate, caseTypeFilter]);
 
   return (
     <DashboardLayout>
@@ -126,6 +125,18 @@ export default function ClientLeads() {
                     ))}
                   </SelectContent>
                 </Select>
+                <span className="text-sm font-medium text-slate-500 dark:text-zinc-500">Case Type:</span>
+                <Select value={caseTypeFilter || 'All'} onValueChange={(value) => setCaseTypeFilter(value === 'All' ? '' : value)}>
+                  <SelectTrigger className="w-[190px] bg-white dark:bg-[#111111] border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white">
+                    <SelectValue placeholder="All Case Types" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white dark:bg-[#111111] border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white">
+                    <SelectItem value="All">All Case Types</SelectItem>
+                    {Object.keys(DYNAMIC_FIELDS).map(type => (
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <div className="flex items-center gap-2 rounded-md border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#111111] px-3 py-1.5">
                   <span className="text-xs font-medium text-slate-500 dark:text-zinc-400 whitespace-nowrap">Entry Date</span>
                   <DateInput
@@ -137,10 +148,10 @@ export default function ClientLeads() {
                   />
                 </div>
 
-                {(searchInput || statusFilter || entryDate) && (
+                {(searchInput || statusFilter || entryDate || caseTypeFilter) && (
                   <Button 
                     variant="ghost" 
-                    onClick={() => { setSearchInput(''); setStatusFilter(''); setEntryDate(''); }}
+                    onClick={() => { setSearchInput(''); setStatusFilter(''); setEntryDate(''); setCaseTypeFilter(''); }}
                     className="text-slate-400 hover:text-rose-600 dark:text-zinc-500 dark:hover:text-rose-400 dark:hover:bg-rose-400/10"
                   >
                     <X className="h-4 w-4 mr-1" /> Clear
@@ -160,7 +171,7 @@ export default function ClientLeads() {
                   <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Communication</TableHead>
                   <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Case Type</TableHead>
                   <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Status</TableHead>
-                  <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Buyer Code</TableHead>
+                  <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Vendor Code</TableHead>
                   <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Created By</TableHead>
                   <TableHead className="font-semibold text-slate-600 dark:text-zinc-400">Entry Date</TableHead>
                   <TableHead className="text-right px-6 text-slate-600 dark:text-zinc-400">Actions</TableHead>

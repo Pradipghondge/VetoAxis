@@ -26,8 +26,8 @@ import { toast } from '@/components/ui/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { z } from 'zod';
-import { LeadStatus } from '@/types';
 import { motion } from 'framer-motion';
+import { LEAD_STATUSES } from '@/lib/lead-utils';
 
 // Helper to capitalize only the first letter
 const formatSentenceCase = (str: string) => {
@@ -39,18 +39,12 @@ const formatSentenceCase = (str: string) => {
 // Lead Status Configuration
 const STATUS_CONFIG: Record<string, { color: string, icon: React.ReactNode }> = {
   PENDING: { color: '#f59e0b', icon: <Clock className="h-4 w-4" /> },
+  ON_HOLD: { color: '#64748b', icon: <Clock className="h-4 w-4" /> },
   REJECTED: { color: '#ef4444', icon: <XCircle className="h-4 w-4" /> },
   VERIFIED: { color: '#10b981', icon: <CheckCircle className="h-4 w-4" /> },
   PAID: { color: '#3b82f6', icon: <Zap className="h-4 w-4" /> },
   WORKING: { color: '#6366f1', icon: <Activity className="h-4 w-4" /> },
 };
-
-const LEAD_STATUSES = [
-  "PENDING", "REJECTED", "VERIFIED", "REJECTED_BY_CLIENT","POSTED", "PAID","SIGNED","VM","TRANSFERRED","SEND TO ANOTHER BUYER",
-  "DUPLICATE", "NOT_RESPONDING", "FELONY", "DEAD_LEAD", "WORKING",
-  "CALL_BACK", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4",
-  "CHARGEBACK", "WAITING_ID", "SENT_TO_CLIENT", "QC", "ID_VERIFIED", "BILLABLE","CAMPAIGN_PAUSED", "SENT_TO_LAW_FIRM", "RETURNED"
-];
 
 const statusUpdateSchema = z.object({
   status: z.string().min(1, 'Status is required'),
@@ -214,7 +208,7 @@ export default function LeadDetailPage() {
                 <Card className="shadow-none border border-slate-200">
                   <CardHeader className="pb-3 border-b bg-muted/20">
                     <CardTitle className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-2">
-                      <FileText className="h-3 w-3" /> Internal Documentation
+                      <FileText className="h-3 w-3" /> Notepad
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-6">

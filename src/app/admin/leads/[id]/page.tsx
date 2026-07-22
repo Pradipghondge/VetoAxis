@@ -80,18 +80,11 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import DashboardLayout from '@/components/DashboardLayout';
 import { DYNAMIC_FIELDS } from '@/lib/dynamic-fields';
-
-// Define Lead status options from your model
-const LEAD_STATUSES = [
-  "PENDING", "REJECTED", "VERIFIED", "REJECTED_BY_CLIENT","POSTED", "PAID","SIGNED","VM","TRANSFERRED","SEND TO ANOTHER BUYER",
-  "DUPLICATE", "NOT_RESPONDING", "FELONY", "DEAD_LEAD", "WORKING",
-  "CALL_BACK", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4",
-  "CHARGEBACK", "WAITING_ID", "SENT_TO_CLIENT", "QC", "ID_VERIFIED", "RETURNED"
-];
+import { LEAD_STATUSES } from '@/lib/lead-utils';
 
 // Define the schema for updating lead status
 const updateLeadSchema = z.object({
-  status: z.enum(LEAD_STATUSES as [string, ...string[]]),
+  status: z.enum([...LEAD_STATUSES] as [string, ...string[]]),
   notes: z.string().optional(),
   buyerCode: z.string().optional(),
 });
@@ -511,7 +504,7 @@ export default function LeadDetailsPage() {
 
                   {lead.buyerCode && (
                     <div className="grid grid-cols-1 gap-1">
-                      <span className="text-sm font-medium text-muted-foreground">Buyer Code</span>
+                      <span className="text-sm font-medium text-muted-foreground">Vendor Code</span>
                       <span>{lead.buyerCode}</span>
                     </div>
                   )}
@@ -523,7 +516,7 @@ export default function LeadDetailsPage() {
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
                       <MessageSquare className="h-5 w-5" />
-                      Notes
+                      Notepad
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -696,7 +689,7 @@ export default function LeadDetailsPage() {
                   name="notes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Notes</FormLabel>
+                      <FormLabel>Notepad</FormLabel>
                       <FormControl>
                         <Textarea
                           placeholder="Add notes about this status change (optional)"
@@ -713,10 +706,10 @@ export default function LeadDetailsPage() {
                   name="buyerCode"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Buyer Code</FormLabel>
+                      <FormLabel>Vendor Code</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Add buyer code (optional)"
+                          placeholder="Add vendor code (optional)"
                           {...field}
                         />
                       </FormControl>

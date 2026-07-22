@@ -97,6 +97,11 @@ export const STATUS_CONFIG: Record<
     color: '#94a3b8', // gray-blue
     description: 'Active campaign on hold',
   },
+  ON_HOLD: {
+    icon: <Timer />,
+    color: '#64748b',
+    description: 'Temporarily paused for follow-up',
+  },
   NOT_RESPONDING: {
     icon: <PhoneOff />,
     color: '#64748b', // slate
@@ -149,7 +154,7 @@ export const STATUS_SEQUENCE = [
   "PAID", "BILLABLE", "SIGNED", "SENT_TO_CLIENT", "SENT_TO_LAW_FIRM", "ID_VERIFIED", "VERIFIED",
   "WORKING", "QC", "CALL_BACK", "WAITING_ID", "PENDING",
   "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4",
-  "CAMPAIGN_PAUSED", "NOT_RESPONDING", "REJECTED", "REJECTED_BY_CLIENT", "DUPLICATE", "RETURNED", "FELONY", "CHARGEBACK", "DEAD_LEAD"
+  "CAMPAIGN_PAUSED", "ON_HOLD", "NOT_RESPONDING", "REJECTED", "REJECTED_BY_CLIENT", "DUPLICATE", "RETURNED", "FELONY", "CHARGEBACK", "DEAD_LEAD"
 ];
 
 /**
@@ -158,7 +163,7 @@ export const STATUS_SEQUENCE = [
 export const BUCKETS = {
   PIPELINE: ["WORKING", "QC", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4", "CALL_BACK"],
   CONVERSION: ["VERIFIED", "ID_VERIFIED", "SIGNED", "SENT_TO_CLIENT", "PAID", "BILLABLE", "SENT_TO_LAW_FIRM"],
-  RISK: ["REJECTED", "REJECTED_BY_CLIENT", "DUPLICATE", "RETURNED", "NOT_RESPONDING", "FELONY", "DEAD_LEAD", "CHARGEBACK"]
+  RISK: ["REJECTED", "REJECTED_BY_CLIENT", "DUPLICATE", "RETURNED", "ON_HOLD", "NOT_RESPONDING", "FELONY", "DEAD_LEAD", "CHARGEBACK"]
 };
 
 /**
