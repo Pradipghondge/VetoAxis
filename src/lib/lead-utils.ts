@@ -31,6 +31,11 @@ export const LEAD_STATUSES = [
   'SENT_TO_LAW_FIRM',
   'RETURNED',
   'ON_HOLD',
+  'Refresh',
+  'RedoTCPA',
+  'Fraud',
+  'OnCall',
+  'InVerification',
 ] as const;
 
 export const LEGACY_STATUS_VALUES: Record<string, string[]> = {

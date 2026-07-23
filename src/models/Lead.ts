@@ -70,7 +70,12 @@ const leadSchema = new mongoose.Schema({
   "CAMPAIGN_PAUSED",
   "SENT_TO_LAW_FIRM",
   "RETURNED",
-  "ON_HOLD"
+  "ON_HOLD",
+  "Refresh",
+  "RedoTCPA",
+  "Fraud",
+  "OnCall",
+  "InVerification"
 ],
 
     default: "PENDING",

@@ -47,6 +47,11 @@ const STATUS_CONFIG: Record<string, { color: string, icon: React.ReactNode }> = 
   TRANSFERRED: { color: '#0284c7', icon: <ChevronRight className="h-4 w-4" /> },
   SEND_TO_ANOTHER_BUYER: { color: '#0891b2', icon: <ChevronRight className="h-4 w-4" /> },
   VM: { color: '#7c3aed', icon: <Phone className="h-4 w-4" /> },
+  Refresh: { color: '#0891b2', icon: <Clock className="h-4 w-4" /> },
+  RedoTCPA: { color: '#f97316', icon: <FileText className="h-4 w-4" /> },
+  Fraud: { color: '#991b1b', icon: <XCircle className="h-4 w-4" /> },
+  OnCall: { color: '#0ea5e9', icon: <Phone className="h-4 w-4" /> },
+  InVerification: { color: '#6366f1', icon: <Activity className="h-4 w-4" /> },
   PAID: { color: '#3b82f6', icon: <Zap className="h-4 w-4" /> },
   WORKING: { color: '#6366f1', icon: <Activity className="h-4 w-4" /> },
 };
