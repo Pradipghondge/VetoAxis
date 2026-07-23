@@ -96,27 +96,27 @@ export const STATUS_CONFIG: Record<
     color: '#eab308', // yellow
     description: 'Pending identity documents',
   },
-  Refresh: {
+  REFRESH: {
     icon: <Timer />,
     color: '#0891b2',
     description: 'Lead queued for refresh',
   },
-  RedoTCPA: {
+  REDOTCPA: {
     icon: <FileQuestion />,
     color: '#f97316',
     description: 'TCPA review needs to be redone',
   },
-  Fraud: {
+  FRAUD: {
     icon: <ShieldAlert />,
     color: '#991b1b',
     description: 'Potential fraud review',
   },
-  OnCall: {
+  ONCALL: {
     icon: <PhoneCall />,
     color: '#0ea5e9',
     description: 'Lead is currently on call',
   },
-  InVerification: {
+  INVERIFICATION: {
     icon: <Search />,
     color: '#6366f1',
     description: 'Lead is in verification',
@@ -192,18 +192,18 @@ export const STATUS_CONFIG: Record<
  */
 export const STATUS_SEQUENCE = [
   "PAID", "BILLABLE", "SIGNED", "POSTED", "TRANSFERRED", "SEND_TO_ANOTHER_BUYER", "SENT_TO_CLIENT", "SENT_TO_LAW_FIRM", "ID_VERIFIED", "VERIFIED",
-  "WORKING", "QC", "CALL_BACK", "OnCall", "InVerification", "WAITING_ID", "PENDING",
+  "WORKING", "QC", "CALL_BACK", "ONCALL", "INVERIFICATION", "WAITING_ID", "PENDING",
   "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4",
-  "VM", "Refresh", "RedoTCPA", "CAMPAIGN_PAUSED", "ON_HOLD", "NOT_RESPONDING", "REJECTED", "REJECTED_BY_CLIENT", "DUPLICATE", "RETURNED", "Fraud", "FELONY", "CHARGEBACK", "DEAD_LEAD"
+  "VM", "REFRESH", "REDOTCPA", "CAMPAIGN_PAUSED", "ON_HOLD", "NOT_RESPONDING", "REJECTED", "REJECTED_BY_CLIENT", "DUPLICATE", "RETURNED", "FRAUD", "FELONY", "CHARGEBACK", "DEAD_LEAD"
 ];
 
 /**
  * 3. LOGICAL BUCKETS
  */
 export const BUCKETS = {
-  PIPELINE: ["WORKING", "QC", "VM", "OnCall", "InVerification", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4", "CALL_BACK"],
+  PIPELINE: ["WORKING", "QC", "VM", "ONCALL", "INVERIFICATION", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4", "CALL_BACK"],
   CONVERSION: ["VERIFIED", "ID_VERIFIED", "SIGNED", "POSTED", "TRANSFERRED", "SEND_TO_ANOTHER_BUYER", "SENT_TO_CLIENT", "PAID", "BILLABLE", "SENT_TO_LAW_FIRM"],
-  RISK: ["REJECTED", "REJECTED_BY_CLIENT", "DUPLICATE", "RETURNED", "ON_HOLD", "Refresh", "RedoTCPA", "NOT_RESPONDING", "Fraud", "FELONY", "DEAD_LEAD", "CHARGEBACK"]
+  RISK: ["REJECTED", "REJECTED_BY_CLIENT", "DUPLICATE", "RETURNED", "ON_HOLD", "REFRESH", "REDOTCPA", "NOT_RESPONDING", "FRAUD", "FELONY", "DEAD_LEAD", "CHARGEBACK"]
 };
 
 /**

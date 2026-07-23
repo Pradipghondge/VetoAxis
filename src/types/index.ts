@@ -46,10 +46,15 @@ export type LeadStatus =
   | 'SENT_TO_LAW_FIRM'
   | 'RETURNED'
   | 'ON_HOLD'
+  | 'REFRESH'
   | 'Refresh'
+  | 'REDOTCPA'
   | 'RedoTCPA'
+  | 'FRAUD'
   | 'Fraud'
+  | 'ONCALL'
   | 'OnCall'
+  | 'INVERIFICATION'
   | 'InVerification';
 
 export interface StatusHistoryItem {

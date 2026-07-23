@@ -31,17 +31,22 @@ export const LEAD_STATUSES = [
   'SENT_TO_LAW_FIRM',
   'RETURNED',
   'ON_HOLD',
-  'Refresh',
-  'RedoTCPA',
-  'Fraud',
-  'OnCall',
-  'InVerification',
+  'REFRESH',
+  'REDOTCPA',
+  'FRAUD',
+  'ONCALL',
+  'INVERIFICATION',
 ] as const;
 
 export const LEGACY_STATUS_VALUES: Record<string, string[]> = {
   POSTED: ['POSTED', 'Posted'],
   TRANSFERRED: ['TRANSFERRED', 'Transferred'],
   SEND_TO_ANOTHER_BUYER: ['SEND_TO_ANOTHER_BUYER', 'SEND TO ANOTHER BUYER'],
+  REFRESH: ['REFRESH', 'Refresh'],
+  REDOTCPA: ['REDOTCPA', 'RedoTCPA'],
+  FRAUD: ['FRAUD', 'Fraud'],
+  ONCALL: ['ONCALL', 'OnCall'],
+  INVERIFICATION: ['INVERIFICATION', 'InVerification'],
 };
 
 export const getStatusQueryValue = (status: string) => {
@@ -53,6 +58,11 @@ export const normalizeLeadStatus = (status?: string | null) => {
   if (status === 'Posted') return 'POSTED';
   if (status === 'Transferred') return 'TRANSFERRED';
   if (status === 'SEND TO ANOTHER BUYER') return 'SEND_TO_ANOTHER_BUYER';
+  if (status === 'Refresh') return 'REFRESH';
+  if (status === 'RedoTCPA') return 'REDOTCPA';
+  if (status === 'Fraud') return 'FRAUD';
+  if (status === 'OnCall') return 'ONCALL';
+  if (status === 'InVerification') return 'INVERIFICATION';
   return status || '';
 };
 
