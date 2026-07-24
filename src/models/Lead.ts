@@ -98,13 +98,7 @@ leadSchema.index({ createdAt: -1 });
 leadSchema.index({ applicationType: 1, createdAt: -1 });
 leadSchema.index({ organizationId: 1, fullNameNormalized: 1 });
 leadSchema.index({ organizationId: 1, addressNormalized: 1 });
-leadSchema.index({ organizationId: 1, emailNormalized: 1 }, {
-  unique: true,
-  partialFilterExpression: { emailNormalized: { $exists: true, $ne: "" } }
-});
-leadSchema.index({ organizationId: 1, phoneNormalized: 1 }, {
-  unique: true,
-  partialFilterExpression: { phoneNormalized: { $exists: true, $ne: "" } }
-});
+leadSchema.index({ organizationId: 1, emailNormalized: 1 });
+leadSchema.index({ organizationId: 1, phoneNormalized: 1 });
 
 export default mongoose.models.Lead || mongoose.model("Lead", leadSchema);

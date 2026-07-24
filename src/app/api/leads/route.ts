@@ -3,11 +3,10 @@ import Lead from '@/models/Lead';
 import { getAuthToken } from '@/lib/auth';
 import { dbConnect } from '@/lib/dbConnect';
 import User from '@/models/User';
+import { findDuplicateLead } from '@/lib/lead-duplicates';
 import {
   buildFieldsArray,
   composeAddress,
-  getFieldValue,
-  getWitnessDetails,
   getStatusQueryValue,
   normalizeAddress,
   normalizeEmail,
@@ -15,22 +14,6 @@ import {
   normalizeText,
   validateLeadPayload,
 } from '@/lib/lead-utils';
-
-const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-const buildDuplicateScope = (decoded: any, user: any) => {
-  if (decoded.role === 'super_admin') return {};
-  if (user?.organizationId) return { organizationId: user.organizationId };
-  return { createdBy: decoded.id };
-};
-
-const buildLeadInfo = (lead: any) => ({
-  id: lead._id,
-  name: `${lead.firstName} ${lead.lastName}`,
-  status: lead.status,
-  createdBy: lead.createdBy ? lead.createdBy.name : 'Unknown',
-  createdAt: lead.createdAt
-});
 
 const parseDateOnly = (value: string) => {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
@@ -161,7 +144,6 @@ export async function POST(request: NextRequest) {
     const fullAddress = composeAddress(body);
 
     // Server-side validation for required fields
-    const { applicationType, fields } = body;
     const validationErrors = validateLeadPayload(body);
     if (validationErrors.length > 0) {
       return NextResponse.json({
@@ -170,118 +152,17 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Check for duplicate email or phone
-    let isDuplicate = false;
-    let duplicateReason = '';
-    let existingLeadInfo = null;
-
-    // Build duplicate query with proper scope
-    let duplicateQuery: any = buildDuplicateScope(decoded, user);
-
-    if (normalizedEmail) {
-      duplicateQuery = { ...duplicateQuery, emailNormalized: normalizedEmail };
-
-      const duplicateEmail = await Lead.findOne(duplicateQuery)
-        .populate('createdBy', 'name email');
-
-      if (duplicateEmail) {
-        isDuplicate = true;
-        duplicateReason = 'email';
-        existingLeadInfo = buildLeadInfo(duplicateEmail);
-      }
-    }
-
-    // Reset duplicate query except for scope filter
-    duplicateQuery = buildDuplicateScope(decoded, user);
-
-    // If not duplicate by email, check phone
-    if (!isDuplicate && normalizedPhone) {
-      duplicateQuery = { ...duplicateQuery, phoneNormalized: normalizedPhone };
-
-      const duplicatePhone = await Lead.findOne(duplicateQuery)
-        .populate('createdBy', 'name email');
-
-      if (duplicatePhone) {
-        isDuplicate = true;
-        duplicateReason = 'phone number';
-        existingLeadInfo = buildLeadInfo(duplicatePhone);
-      }
-    }
-
-    duplicateQuery = buildDuplicateScope(decoded, user);
-
-    if (!isDuplicate && normalizedAddress) {
-      const duplicateAddress = await Lead.findOne({
-        ...duplicateQuery,
-        $or: [
-          { addressNormalized: normalizedAddress },
-          { address: { $regex: new RegExp(`^${escapeRegex(fullAddress)}$`, 'i') } },
-        ],
-      }).populate('createdBy', 'name email');
-
-      if (duplicateAddress) {
-        isDuplicate = true;
-        duplicateReason = 'full address';
-        existingLeadInfo = buildLeadInfo(duplicateAddress);
-      }
-    }
-
-    duplicateQuery = buildDuplicateScope(decoded, user);
-
-    if (!isDuplicate && (applicationType === 'Rideshare' || applicationType === 'Roblox')) {
-      const witness = getWitnessDetails(fields);
-      const witnessName = normalizeText(witness.name);
-      const witnessNumber = normalizePhone(witness.phone);
-
-      if (witnessNumber) {
-        const rideshareLeads = await Lead.find({
-          ...duplicateQuery,
-          applicationType,
-          fields: {
-            $all: [
-              { $elemMatch: { key: { $in: ['Witness Number', 'Incident Reported Person Number'] } } }
-            ]
-          }
-        }).populate('createdBy', 'name email');
-
-        const duplicateWitness = rideshareLeads.find((lead: any) => {
-          const existingFields = Array.isArray(lead.fields) ? lead.fields : [];
-          const existingWitness = getWitnessDetails(existingFields);
-          const existingName = normalizeText(existingWitness.name);
-          const existingNumber = normalizePhone(existingWitness.phone);
-
-          return existingNumber === witnessNumber &&
-            (!witnessName || !existingName || existingName === witnessName);
-        });
-
-        if (duplicateWitness) {
-          isDuplicate = true;
-          duplicateReason = 'witness details';
-          existingLeadInfo = buildLeadInfo(duplicateWitness);
-        }
-      }
-    }
-
-    duplicateQuery = buildDuplicateScope(decoded, user);
-
-    if (!isDuplicate && fullNameNormalized) {
-      const duplicateName = await Lead.findOne({
-        ...duplicateQuery,
-        $or: [
-          { fullNameNormalized },
-          {
-            firstName: { $regex: new RegExp(`^${escapeRegex(body.firstName || '')}$`, 'i') },
-            lastName: { $regex: new RegExp(`^${escapeRegex(body.lastName || '')}$`, 'i') },
-          },
-        ],
-      }).populate('createdBy', 'name email');
-
-      if (duplicateName) {
-        isDuplicate = true;
-        duplicateReason = 'customer name';
-        existingLeadInfo = buildLeadInfo(duplicateName);
-      }
-    }
+    const {
+      isDuplicate,
+      duplicateReason,
+      existingLeadInfo,
+    } = await findDuplicateLead({
+      decoded,
+      user,
+      email: body.email,
+      firstName: body.firstName,
+      lastName: body.lastName,
+    });
 
     // Set status to DUPLICATE if a duplicate was found
     const status = isDuplicate ? 'DUPLICATE' : (body.status || 'PENDING');
@@ -301,9 +182,9 @@ export async function POST(request: NextRequest) {
       lastName: body.lastName,
       fullNameNormalized,
       email: body.email,
-      emailNormalized: isDuplicate ? undefined : (normalizedEmail || undefined),
+      emailNormalized: normalizedEmail || undefined,
       phone: body.phone,
-      phoneNormalized: isDuplicate ? undefined : (normalizedPhone || undefined),
+      phoneNormalized: normalizedPhone || undefined,
       dateOfBirth: body.dateOfBirth,
       address: fullAddress,
       streetAddress: body.streetAddress,

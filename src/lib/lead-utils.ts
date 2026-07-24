@@ -168,7 +168,6 @@ export const validateLeadPayload = (body: any) => {
   if (!applicationType) errors.push('Application type is required.');
   if (!normalizeText(body?.firstName)) errors.push('First name is required.');
   if (!normalizeText(body?.lastName)) errors.push('Last name is required.');
-  if (!normalizeEmail(body?.email)) errors.push('Email address is required.');
   if (!normalizeText(body?.streetAddress)) errors.push('Street Address is required.');
   if (!normalizeText(body?.city)) errors.push('City is required.');
   if (!normalizeText(body?.state)) errors.push('State is required.');
