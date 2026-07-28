@@ -217,7 +217,11 @@ export default function LeadDetailsPage() {
         return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
       case 'VM':
         return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400';
+      case 'REPLACE':
+      case 'Replace':
+        return 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400';
       case 'REFRESH':
+      case 'REDO-TCPA':
       case 'REDOTCPA':
       case 'ONCALL':
       case 'INVERIFICATION':

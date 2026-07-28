@@ -41,6 +41,7 @@ export const DYNAMIC_FIELDS: Record<
     { key: 'Incident Date', label: 'Date Of Incident', type: 'date', required: true },
     { key: 'Witness Name', label: 'Witness Name', type: 'text', required: true },
     { key: 'Witness Number', label: 'Witness Number', type: 'phone', required: true },
+    { key: 'Witness Email', label: 'Witness Email', type: 'email' },
     { key: 'Type Of Assault', label: 'Type Of Assault', type: 'radio', required: true, options: [
         { label: 'Exposure Of Genitals', value: 'Exposure of genitals' },
         { label: 'Fondling', value: 'Fondling' },
@@ -95,6 +96,7 @@ export const DYNAMIC_FIELDS: Record<
     { key: 'Incident Date', label: 'Date Of Incident', type: 'date', required: true },
     { key: 'Witness Name', label: 'Witness Name', type: 'text', required: true },
     { key: 'Witness Number', label: 'Witness Number', type: 'phone', required: true },
+    { key: 'Witness Email', label: 'Witness Email', type: 'email' },
     { key: 'Roblox Id And User', label: 'Roblox ID And User Name', type: 'text', required: true },
     { key: 'Abuser Roblox Id', label: 'Abuser’s Roblox ID', type: 'text', required: true },
     { key: 'Type Of Issue', label: 'Type Of Issue', type: 'text', required: true },

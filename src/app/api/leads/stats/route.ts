@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
                 { case: { $eq: ["$status", "Posted"] }, then: "POSTED" },
                 { case: { $eq: ["$status", "Transferred"] }, then: "TRANSFERRED" },
                 { case: { $eq: ["$status", "SEND TO ANOTHER BUYER"] }, then: "SEND_TO_ANOTHER_BUYER" },
+                { case: { $eq: ["$status", "RedoTCPA"] }, then: "REDOTCPA" },
               ],
               default: "$status",
             },

@@ -28,7 +28,7 @@ export const STATUS_CONFIG: Record<
     color: '#14b8a6', // teal
     description: 'Validated for invoicing',
   },
-  SENT_CLIENT: {
+  SENT_TO_CLIENT: {
     icon: <ArrowUpRight />,
     color: '#1e40af', // emerald
     description: 'Transferred to client portal',
@@ -96,10 +96,20 @@ export const STATUS_CONFIG: Record<
     color: '#eab308', // yellow
     description: 'Pending identity documents',
   },
+  REPLACE: {
+    icon: <Copy />,
+    color: '#0f766e',
+    description: 'Lead should be replaced',
+  },
   REFRESH: {
     icon: <Timer />,
     color: '#0891b2',
     description: 'Lead queued for refresh',
+  },
+  'REDO-TCPA': {
+    icon: <FileQuestion />,
+    color: '#ea580c',
+    description: 'TCPA review needs to be redone',
   },
   REDOTCPA: {
     icon: <FileQuestion />,
@@ -194,7 +204,7 @@ export const STATUS_SEQUENCE = [
   "PAID", "BILLABLE", "SIGNED", "POSTED", "TRANSFERRED", "SEND_TO_ANOTHER_BUYER", "SENT_TO_CLIENT", "SENT_TO_LAW_FIRM", "ID_VERIFIED", "VERIFIED",
   "WORKING", "QC", "CALL_BACK", "ONCALL", "INVERIFICATION", "WAITING_ID", "PENDING",
   "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4",
-  "VM", "REFRESH", "REDOTCPA", "CAMPAIGN_PAUSED", "ON_HOLD", "NOT_RESPONDING", "REJECTED", "REJECTED_BY_CLIENT", "DUPLICATE", "RETURNED", "FRAUD", "FELONY", "CHARGEBACK", "DEAD_LEAD"
+  "VM", "REPLACE", "REFRESH", "REDO-TCPA", "REDOTCPA", "CAMPAIGN_PAUSED", "ON_HOLD", "NOT_RESPONDING", "REJECTED", "REJECTED_BY_CLIENT", "DUPLICATE", "RETURNED", "FRAUD", "FELONY", "CHARGEBACK", "DEAD_LEAD"
 ];
 
 /**
@@ -203,7 +213,7 @@ export const STATUS_SEQUENCE = [
 export const BUCKETS = {
   PIPELINE: ["WORKING", "QC", "VM", "ONCALL", "INVERIFICATION", "ATTEMPT_1", "ATTEMPT_2", "ATTEMPT_3", "ATTEMPT_4", "CALL_BACK"],
   CONVERSION: ["VERIFIED", "ID_VERIFIED", "SIGNED", "POSTED", "TRANSFERRED", "SEND_TO_ANOTHER_BUYER", "SENT_TO_CLIENT", "PAID", "BILLABLE", "SENT_TO_LAW_FIRM"],
-  RISK: ["REJECTED", "REJECTED_BY_CLIENT", "DUPLICATE", "RETURNED", "ON_HOLD", "REFRESH", "REDOTCPA", "NOT_RESPONDING", "FRAUD", "FELONY", "DEAD_LEAD", "CHARGEBACK"]
+  RISK: ["REJECTED", "REJECTED_BY_CLIENT", "DUPLICATE", "RETURNED", "ON_HOLD", "REPLACE", "REFRESH", "REDO-TCPA", "REDOTCPA", "NOT_RESPONDING", "FRAUD", "FELONY", "DEAD_LEAD", "CHARGEBACK"]
 };
 
 /**

@@ -308,7 +308,11 @@ export default function LeadManagement() {
         return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20';
       case 'VM':
         return 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-500/20';
+      case 'REPLACE':
+      case 'Replace':
+        return 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-500/10 dark:text-teal-400 dark:border-teal-500/20';
       case 'REFRESH':
+      case 'REDO-TCPA':
       case 'REDOTCPA':
       case 'ONCALL':
       case 'INVERIFICATION':
