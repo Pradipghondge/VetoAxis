@@ -266,11 +266,11 @@ export default function CreateLeadClient({ mode = 'create', leadId }: CreateLead
       .map(([field]) => FORM_FIELD_LABELS[field as keyof FormValues] || field);
 
     toast({
-      title: 'Required fields missing',
+      title: 'Action Required',
       description: missingFields.length > 0
         ? `Please fill out: ${missingFields.join(', ')}.`
         : String(firstMessage || 'Please correct the highlighted fields.'),
-      variant: 'destructive',
+      variant: 'warning',
     });
   };
 
