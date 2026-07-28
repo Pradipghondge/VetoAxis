@@ -187,3 +187,28 @@ export const findDuplicateLead = async ({
     existingLeadInfo: buildLeadInfo(duplicate),
   };
 };
+
+export const markExistingLeadAsDuplicate = async ({
+  leadId,
+  changedBy,
+  reason,
+}: {
+  leadId?: unknown;
+  changedBy: string;
+  reason?: string;
+}) => {
+  if (!leadId) return;
+
+  const lead = await Lead.findById(leadId).select('status statusHistory');
+  if (!lead || lead.status === 'DUPLICATE') return;
+
+  lead.statusHistory.push({
+    fromStatus: lead.status,
+    toStatus: 'DUPLICATE',
+    notes: `Existing lead automatically marked as DUPLICATE because a matching lead was saved. ${reason || ''}`.trim(),
+    changedBy,
+    timestamp: new Date(),
+  });
+  lead.status = 'DUPLICATE';
+  await lead.save();
+};

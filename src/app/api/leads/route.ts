@@ -3,7 +3,7 @@ import Lead from '@/models/Lead';
 import { getAuthToken } from '@/lib/auth';
 import { dbConnect } from '@/lib/dbConnect';
 import User from '@/models/User';
-import { findDuplicateLead } from '@/lib/lead-duplicates';
+import { findDuplicateLead, markExistingLeadAsDuplicate } from '@/lib/lead-duplicates';
 import {
   buildFieldsArray,
   composeAddress,
@@ -176,6 +176,11 @@ export async function POST(request: NextRequest) {
     let notes = body.notes || '';
     if (isDuplicate && existingLeadInfo) {
       notes = `${notes}\n\n[SYSTEM] This lead has been marked as a duplicate. ${duplicateReason} Existing lead: ${existingLeadInfo.name}.`.trim();
+      await markExistingLeadAsDuplicate({
+        leadId: existingLeadInfo.id,
+        changedBy: decoded.id,
+        reason: duplicateReason,
+      });
     }
 
     // Transform dynamic fields from object to array format
