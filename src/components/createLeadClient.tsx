@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { FieldErrors, useForm } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,13 +62,28 @@ const formSchema = z.object({
   streetAddress: z.string().min(1, 'Street Address is required'),
   city: z.string().min(1, 'City is required'),
   state: z.string().min(1, 'State is required'),
-  zipCode: z.string().min(1, 'Zip Code is required'),
+  zipCode: z.string().min(1, 'ZIP code is required').regex(/^\d{5}(-\d{4})?$/, 'ZIP code format is incorrect.'),
   applicationType: z.string().min(1, 'Application type is required'),
   lawsuit: z.string().optional(),
   notes: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
+
+const FORM_FIELD_LABELS: Record<keyof FormValues, string> = {
+  firstName: 'First name',
+  lastName: 'Last name',
+  email: 'Email',
+  phone: 'Phone number',
+  dateOfBirth: 'Date of birth',
+  streetAddress: 'Street Address',
+  city: 'City',
+  state: 'State',
+  zipCode: 'ZIP code',
+  applicationType: 'Application type',
+  lawsuit: 'Lawsuit',
+  notes: 'Notes',
+};
 
 interface CreateLeadClientProps {
   mode?: 'create' | 'edit';
@@ -93,6 +108,7 @@ export default function CreateLeadClient({ mode = 'create', leadId }: CreateLead
   const [initialLoading, setInitialLoading] = useState(isEditMode);
   const [selectedType, setSelectedType] = useState<string>('');
   const [dynamicFields, setDynamicFields] = useState<Record<string, string>>({});
+  const [dynamicErrors, setDynamicErrors] = useState<Record<string, string>>({});
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -145,6 +161,7 @@ export default function CreateLeadClient({ mode = 'create', leadId }: CreateLead
 
         setSelectedType(existingLead.applicationType || '');
         setDynamicFields(mappedDynamicFields);
+        setDynamicErrors({});
       } catch (error: any) {
         toast({
           title: 'Error',
@@ -193,6 +210,7 @@ export default function CreateLeadClient({ mode = 'create', leadId }: CreateLead
       return;
     }
 
+    setDynamicErrors({});
     setLoading(true);
     try {
       const payload = {
@@ -215,6 +233,22 @@ export default function CreateLeadClient({ mode = 'create', leadId }: CreateLead
       });
       setTimeout(() => router.push('/leads'), 1500);
     } catch (error: any) {
+      const fieldErrors = error.response?.data?.fieldErrors || error.response?.data?.errors || [];
+      const nextDynamicErrors: Record<string, string> = {};
+
+      fieldErrors.forEach((fieldError: { field?: string; message?: string }) => {
+        if (!fieldError?.field || !fieldError?.message) return;
+        if (fieldError.field.startsWith('fields.')) {
+          nextDynamicErrors[fieldError.field.replace('fields.', '')] = fieldError.message;
+          return;
+        }
+
+        if (fieldError.field in form.getValues()) {
+          form.setError(fieldError.field as keyof FormValues, { type: 'server', message: fieldError.message });
+        }
+      });
+
+      setDynamicErrors(nextDynamicErrors);
       toast({
         title: 'Error',
         description: error.response?.data?.message || (isEditMode ? 'Failed to update lead' : 'Failed to create lead'),
@@ -223,6 +257,21 @@ export default function CreateLeadClient({ mode = 'create', leadId }: CreateLead
     } finally {
       setLoading(false);
     }
+  };
+
+  const onInvalidSubmit = (errors: FieldErrors<FormValues>) => {
+    const firstMessage = Object.values(errors).find(error => error?.message)?.message;
+    const missingFields = Object.entries(errors)
+      .filter(([, error]) => typeof error?.message === 'string' && error.message.toLowerCase().includes('required'))
+      .map(([field]) => FORM_FIELD_LABELS[field as keyof FormValues] || field);
+
+    toast({
+      title: 'Required fields missing',
+      description: missingFields.length > 0
+        ? `Please fill out: ${missingFields.join(', ')}.`
+        : String(firstMessage || 'Please correct the highlighted fields.'),
+      variant: 'destructive',
+    });
   };
 
   const renderDynamicFields = () => {
@@ -251,21 +300,27 @@ export default function CreateLeadClient({ mode = 'create', leadId }: CreateLead
             inputMode={field.type === 'phone' ? 'numeric' : undefined}
             maxLength={field.type === 'phone' ? 10 : undefined}
             value={dynamicFields[field.key] || ''}
-            onChange={e => setDynamicFields(prev => ({
-              ...prev,
-              [field.key]: field.type === 'phone' ? normalizePhone(e.target.value).slice(0, 10) : e.target.value
-            }))}
+            onChange={e => {
+              setDynamicErrors(prev => ({ ...prev, [field.key]: '' }));
+              setDynamicFields(prev => ({
+                ...prev,
+                [field.key]: field.type === 'phone' ? normalizePhone(e.target.value).slice(0, 10) : e.target.value
+              }));
+            }}
             placeholder={placeholder}
-            className="bg-background"
+            className={`bg-background ${dynamicErrors[field.key] ? 'border-destructive focus-visible:ring-destructive' : ''}`}
           />
         );
       } else if (field.type === 'textarea') {
         inputComponent = (
           <Textarea
             value={dynamicFields[field.key] || ''}
-            onChange={e => setDynamicFields(prev => ({ ...prev, [field.key]: e.target.value }))}
+            onChange={e => {
+              setDynamicErrors(prev => ({ ...prev, [field.key]: '' }));
+              setDynamicFields(prev => ({ ...prev, [field.key]: e.target.value }));
+            }}
             placeholder={`Enter ${field.label.toLowerCase()}`}
-            className="bg-background"
+            className={`bg-background ${dynamicErrors[field.key] ? 'border-destructive focus-visible:ring-destructive' : ''}`}
           />
         );
       } else {
@@ -273,10 +328,13 @@ export default function CreateLeadClient({ mode = 'create', leadId }: CreateLead
         inputComponent = (
           <Select
             value={dynamicFields[field.key] || ''}
-            onValueChange={val => setDynamicFields(prev => ({ ...prev, [field.key]: val }))}
+            onValueChange={val => {
+              setDynamicErrors(prev => ({ ...prev, [field.key]: '' }));
+              setDynamicFields(prev => ({ ...prev, [field.key]: val }));
+            }}
           >
             <FormControl>
-              <SelectTrigger className="bg-background">
+              <SelectTrigger className={`bg-background ${dynamicErrors[field.key] ? 'border-destructive focus:ring-destructive' : ''}`}>
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
             </FormControl>
@@ -293,6 +351,9 @@ export default function CreateLeadClient({ mode = 'create', leadId }: CreateLead
         <FormItem key={field.key}>
           <FormLabel className="text-sm">{field.label}{isRequired && '*'}</FormLabel>
           <FormControl>{inputComponent}</FormControl>
+          {dynamicErrors[field.key] && (
+            <p className="text-sm font-medium text-destructive">{dynamicErrors[field.key]}</p>
+          )}
           <FormMessage />
         </FormItem>
       );
@@ -335,7 +396,7 @@ export default function CreateLeadClient({ mode = 'create', leadId }: CreateLead
         </div>
       ) : (
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit, onInvalidSubmit)} className="space-y-6">
             <Card className="rounded-xl border shadow-sm bg-card/40 overflow-hidden">
               <CardHeader className="p-4 md:p-6">
                 <div className="flex items-center space-x-2">
@@ -410,6 +471,7 @@ export default function CreateLeadClient({ mode = 'create', leadId }: CreateLead
                         field.onChange(val);
                         setSelectedType(val);
                         setDynamicFields({});
+                        setDynamicErrors({});
                       }}
                       value={field.value}
                     >

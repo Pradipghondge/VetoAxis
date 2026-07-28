@@ -83,7 +83,12 @@ export async function GET(request: NextRequest) {
         { firstName: { $regex: search, $options: 'i' } },
         { lastName: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } },
-        { phone: { $regex: search, $options: 'i' } }
+        { phone: { $regex: search, $options: 'i' } },
+        { streetAddress: { $regex: search, $options: 'i' } },
+        { city: { $regex: search, $options: 'i' } },
+        { state: { $regex: search, $options: 'i' } },
+        { zipCode: { $regex: search, $options: 'i' } },
+        { address: { $regex: search, $options: 'i' } }
       ];
     }
     if (entryDate) {
@@ -147,8 +152,9 @@ export async function POST(request: NextRequest) {
     const validationErrors = validateLeadPayload(body);
     if (validationErrors.length > 0) {
       return NextResponse.json({
-        message: validationErrors.join(' '),
+        message: validationErrors.map(error => error.message).join(' '),
         errors: validationErrors,
+        fieldErrors: validationErrors,
       }, { status: 400 });
     }
 
@@ -156,21 +162,20 @@ export async function POST(request: NextRequest) {
       isDuplicate,
       duplicateReason,
       existingLeadInfo,
+      fieldErrors,
     } = await findDuplicateLead({
       decoded,
       user,
       email: body.email,
-      firstName: body.firstName,
-      lastName: body.lastName,
+      phone: body.phone,
+      address: body,
+      fields: body.fields,
     });
 
-    // Set status to DUPLICATE if a duplicate was found
     const status = isDuplicate ? 'DUPLICATE' : (body.status || 'PENDING');
-
-    // Create notes with duplicate information if applicable
     let notes = body.notes || '';
     if (isDuplicate && existingLeadInfo) {
-      notes = `${notes}\n\n[SYSTEM] This lead has been marked as a duplicate because the ${duplicateReason} matches an existing lead (${existingLeadInfo.name}).`;
+      notes = `${notes}\n\n[SYSTEM] This lead has been marked as a duplicate. ${duplicateReason} Existing lead: ${existingLeadInfo.name}.`.trim();
     }
 
     // Transform dynamic fields from object to array format
@@ -194,7 +199,7 @@ export async function POST(request: NextRequest) {
       addressNormalized: normalizedAddress || undefined,
       applicationType: body.applicationType,
       lawsuit: body.lawsuit,
-      notes: notes,
+      notes,
       status: status,
       fields: fieldsArray,
       createdBy: decoded.id,
@@ -205,7 +210,7 @@ export async function POST(request: NextRequest) {
           fromStatus: '',
           toStatus: status,
           notes: isDuplicate
-            ? `Lead created and automatically marked as DUPLICATE (matching ${duplicateReason})`
+            ? `Lead created and automatically marked as DUPLICATE. ${duplicateReason}`
             : 'Lead created',
           changedBy: decoded.id,
           timestamp: new Date()
@@ -215,11 +220,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       message: isDuplicate
-        ? `Lead created but marked as DUPLICATE (matching ${duplicateReason})`
+        ? 'Lead saved and marked as DUPLICATE.'
         : 'Lead created successfully',
       lead,
       isDuplicate,
-      duplicateInfo: isDuplicate ? existingLeadInfo : null
+      duplicateInfo: isDuplicate ? existingLeadInfo : null,
+      fieldErrors: isDuplicate ? fieldErrors : [],
     }, { status: 201 });
   } catch (error) {
     const mongoError = error as { code?: number };

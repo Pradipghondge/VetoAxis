@@ -94,6 +94,11 @@ export async function GET(request: NextRequest) {
         { lastName: regex },
         { email: regex },
         { phone: regex },
+        { streetAddress: regex },
+        { city: regex },
+        { state: regex },
+        { zipCode: regex },
+        { address: regex },
       ];
     }
 

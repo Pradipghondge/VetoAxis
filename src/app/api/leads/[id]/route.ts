@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthToken } from '@/lib/auth';
 import Lead from '@/models/Lead';
 import { dbConnect } from '@/lib/dbConnect';
+import User from '@/models/User';
+import { findDuplicateLead } from '@/lib/lead-duplicates';
 import {
   buildFieldsArray,
   composeAddress,
+  LEAD_STATUSES,
   normalizeAddress,
   normalizeEmail,
   normalizeLeadStatus,
@@ -62,6 +65,8 @@ export async function PUT(
     const lead = await Lead.findById(leadId);
     if (!lead) return NextResponse.json({ message: 'Lead not found' }, { status: 404 });
 
+    const detailFields = ['firstName', 'lastName', 'email', 'phone', 'dateOfBirth', 'applicationType', 'lawsuit', 'notes', 'streetAddress', 'city', 'state', 'zipCode', 'fields'];
+    const isLeadDetailSave = detailFields.some(field => Object.prototype.hasOwnProperty.call(body, field));
     const existingFields = Array.isArray(lead.fields)
       ? lead.fields.reduce((acc: Record<string, string>, field: { key: string; value: string }) => {
           if (field?.key) acc[field.key] = field.value || '';
@@ -73,17 +78,35 @@ export async function PUT(
       ...body,
       fields: body.fields && typeof body.fields === 'object' ? body.fields : existingFields,
     };
-    const validationErrors = validateLeadPayload(mergedPayload);
+    const validationErrors = isLeadDetailSave ? validateLeadPayload(mergedPayload) : [];
 
     if (validationErrors.length > 0) {
       return NextResponse.json({
-        message: validationErrors.join(' '),
+        message: validationErrors.map(error => error.message).join(' '),
         errors: validationErrors,
+        fieldErrors: validationErrors,
       }, { status: 400 });
+    }
+
+    let duplicateResult: Awaited<ReturnType<typeof findDuplicateLead>> | null = null;
+    if (isLeadDetailSave) {
+      const user = await User.findById(decoded.id).select('organizationId');
+      duplicateResult = await findDuplicateLead({
+        decoded,
+        user,
+        email: mergedPayload.email,
+        phone: mergedPayload.phone,
+        address: mergedPayload,
+        fields: mergedPayload.fields,
+        excludeLeadId: leadId,
+      });
     }
 
     // Handle status history and dynamic fields as before
     const incomingStatus = body.status ? normalizeLeadStatus(body.status) : body.status;
+    if (incomingStatus && !LEAD_STATUSES.includes(incomingStatus as any)) {
+      return NextResponse.json({ message: 'Invalid status selected' }, { status: 400 });
+    }
 
     if (incomingStatus && incomingStatus !== lead.status) {
       lead.statusHistory.push({
@@ -96,13 +119,24 @@ export async function PUT(
       lead.status = incomingStatus;
     }
 
+    if (duplicateResult?.isDuplicate && lead.status !== 'DUPLICATE') {
+      lead.statusHistory.push({
+        fromStatus: lead.status,
+        toStatus: 'DUPLICATE',
+        notes: `Lead updated and automatically marked as DUPLICATE. ${duplicateResult.duplicateReason}`,
+        changedBy: decoded.id,
+        timestamp: new Date()
+      });
+      lead.status = 'DUPLICATE';
+    }
+
     // Dynamic fields transformation
     if (body.fields && typeof body.fields === 'object') {
       lead.fields = buildFieldsArray(body.fields);
     }
 
     // Update basic fields
-    const updateable = ['firstName', 'lastName', 'email', 'phone', 'dateOfBirth', 'applicationType', 'lawsuit', 'notes', 'streetAddress', 'city', 'state', 'zipCode'];
+    const updateable = detailFields.filter(field => field !== 'fields');
     updateable.forEach(field => {
       if (Object.prototype.hasOwnProperty.call(body, field)) lead[field] = body[field];
     });
@@ -114,8 +148,20 @@ export async function PUT(
     lead.phoneNormalized = normalizePhone(lead.phone) || undefined;
     lead.addressNormalized = normalizeAddress({ ...lead.toObject(), ...body }) || undefined;
 
+    if (duplicateResult?.isDuplicate && duplicateResult.existingLeadInfo) {
+      lead.notes = `${lead.notes || ''}\n\n[SYSTEM] This lead has been marked as a duplicate. ${duplicateResult.duplicateReason} Existing lead: ${duplicateResult.existingLeadInfo.name}.`.trim();
+    }
+
     await lead.save();
-    return NextResponse.json({ message: 'Updated successfully', lead });
+    return NextResponse.json({
+      message: duplicateResult?.isDuplicate
+        ? 'Lead saved and marked as DUPLICATE.'
+        : 'Updated successfully',
+      lead,
+      isDuplicate: Boolean(duplicateResult?.isDuplicate),
+      duplicateInfo: duplicateResult?.existingLeadInfo || null,
+      fieldErrors: duplicateResult?.fieldErrors || [],
+    });
   } catch (error: any) {
     return NextResponse.json({ message: 'Server error', error: error.message }, { status: 500 });
   }

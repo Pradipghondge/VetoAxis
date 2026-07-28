@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { FieldErrors, useForm } from 'react-hook-form';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,7 +60,7 @@ const formSchema = z.object({
   streetAddress: z.string().min(1, 'Street Address is required'),
   city: z.string().min(1, 'City is required'),
   state: z.string().min(1, 'State is required'),
-  zipCode: z.string().min(1, 'Zip Code is required'),
+  zipCode: z.string().min(1, 'ZIP code is required').regex(/^\d{5}(-\d{4})?$/, 'ZIP code format is incorrect.'),
   applicationType: z.string().min(1, 'Application type is required'),
   lawsuit: z.string().optional(),
   notes: z.string().optional(),
@@ -68,12 +68,28 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+const FORM_FIELD_LABELS: Record<keyof FormValues, string> = {
+  firstName: 'First name',
+  lastName: 'Last name',
+  email: 'Email',
+  phone: 'Phone number',
+  dateOfBirth: 'Date of birth',
+  streetAddress: 'Street Address',
+  city: 'City',
+  state: 'State',
+  zipCode: 'ZIP code',
+  applicationType: 'Application type',
+  lawsuit: 'Lawsuit',
+  notes: 'Notes',
+};
+
 export default function PublicLeadPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [selectedType, setSelectedType] = useState('');
   const [dynamicFields, setDynamicFields] = useState<Record<string, any>>({});
+  const [dynamicErrors, setDynamicErrors] = useState<Record<string, string>>({});
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -136,6 +152,7 @@ export default function PublicLeadPage() {
       return;
     }
 
+    setDynamicErrors({});
     setLoading(true);
     try {
       const formattedDOB = values.dateOfBirth
@@ -165,6 +182,22 @@ export default function PublicLeadPage() {
       });
       setTimeout(() => router.push('/leads'), 1500);
     } catch (error: any) {
+      const fieldErrors = error.response?.data?.fieldErrors || error.response?.data?.errors || [];
+      const nextDynamicErrors: Record<string, string> = {};
+
+      fieldErrors.forEach((fieldError: { field?: string; message?: string }) => {
+        if (!fieldError?.field || !fieldError?.message) return;
+        if (fieldError.field.startsWith('fields.')) {
+          nextDynamicErrors[fieldError.field.replace('fields.', '')] = fieldError.message;
+          return;
+        }
+
+        if (fieldError.field in form.getValues()) {
+          form.setError(fieldError.field as keyof FormValues, { type: 'server', message: fieldError.message });
+        }
+      });
+
+      setDynamicErrors(nextDynamicErrors);
       toast({
         title: 'Error',
         description:
@@ -173,6 +206,21 @@ export default function PublicLeadPage() {
       });
       setLoading(false);
     }
+  };
+
+  const onInvalidSubmit = (errors: FieldErrors<FormValues>) => {
+    const firstMessage = Object.values(errors).find(error => error?.message)?.message;
+    const missingFields = Object.entries(errors)
+      .filter(([, error]) => typeof error?.message === 'string' && error.message.toLowerCase().includes('required'))
+      .map(([field]) => FORM_FIELD_LABELS[field as keyof FormValues] || field);
+
+    toast({
+      title: 'Required fields missing',
+      description: missingFields.length > 0
+        ? `Please fill out: ${missingFields.join(', ')}.`
+        : String(firstMessage || 'Please correct the highlighted fields.'),
+      variant: 'destructive',
+    });
   };
 
   const renderDynamicFields = () =>
@@ -188,12 +236,14 @@ export default function PublicLeadPage() {
           {field.type === 'textarea' ? (
             <Textarea
               value={dynamicFields[field.key] || ''}
-              onChange={e =>
+              onChange={e => {
+                setDynamicErrors(p => ({ ...p, [field.key]: '' }));
                 setDynamicFields(p => ({
                   ...p,
                   [field.key]: e.target.value,
-                }))
-              }
+                }));
+              }}
+              className={dynamicErrors[field.key] ? 'border-destructive focus-visible:ring-destructive' : ''}
             />
           ) : (
             <Input
@@ -206,15 +256,20 @@ export default function PublicLeadPage() {
                   : undefined
               }
               value={dynamicFields[field.key] || ''}
-              onChange={e =>
+              onChange={e => {
+                setDynamicErrors(p => ({ ...p, [field.key]: '' }));
                 setDynamicFields(p => ({
                   ...p,
                   [field.key]: field.type === 'phone' ? normalizePhone(e.target.value).slice(0, 10) : e.target.value,
-                }))
-              }
+                }));
+              }}
+              className={dynamicErrors[field.key] ? 'border-destructive focus-visible:ring-destructive' : ''}
             />
           )}
         </FormControl>
+        {dynamicErrors[field.key] && (
+          <p className="text-sm font-medium text-destructive">{dynamicErrors[field.key]}</p>
+        )}
       </FormItem>
     ));
 
@@ -251,7 +306,7 @@ export default function PublicLeadPage() {
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit, onInvalidSubmit)} className="space-y-6">
 
             {/* Client Details */}
             <Card>
@@ -314,6 +369,7 @@ export default function PublicLeadPage() {
                           field.onChange(val);
                           setSelectedType(val);
                           setDynamicFields({});
+                          setDynamicErrors({});
                         }}
                         defaultValue={field.value}
                       >
