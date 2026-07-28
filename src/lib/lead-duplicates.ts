@@ -24,10 +24,8 @@ export type LeadDuplicateResult = {
   } | null;
 };
 
-export const buildLeadDuplicateScope = (decoded: any, user: any): DuplicateScope => {
-  if (decoded.role === 'super_admin') return {};
-  if (user?.organizationId) return { organizationId: user.organizationId };
-  return { createdBy: decoded.id };
+export const buildLeadDuplicateScope = (): DuplicateScope => {
+  return {};
 };
 
 const buildLeadInfo = (lead: any) => ({
@@ -79,7 +77,7 @@ export const findDuplicateLead = async ({
   fields?: unknown;
   excludeLeadId?: string | null;
 }): Promise<LeadDuplicateResult> => {
-  const scope = buildLeadDuplicateScope(decoded, user);
+  const scope = buildLeadDuplicateScope();
   const emailNormalized = normalizeEmail(email);
   const phoneNormalized = normalizePhone(phone);
   const addressNormalized = address ? normalizeAddress(address) : '';
