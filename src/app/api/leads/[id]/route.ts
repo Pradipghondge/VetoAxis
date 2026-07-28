@@ -3,7 +3,7 @@ import { getAuthToken } from '@/lib/auth';
 import Lead from '@/models/Lead';
 import { dbConnect } from '@/lib/dbConnect';
 import User from '@/models/User';
-import { findDuplicateLead } from '@/lib/lead-duplicates';
+import { findDuplicateLead, markExistingLeadAsDuplicate } from '@/lib/lead-duplicates';
 import {
   buildFieldsArray,
   composeAddress,
@@ -150,6 +150,11 @@ export async function PUT(
 
     if (duplicateResult?.isDuplicate && duplicateResult.existingLeadInfo) {
       lead.notes = `${lead.notes || ''}\n\n[SYSTEM] This lead has been marked as a duplicate. ${duplicateResult.duplicateReason} Existing lead: ${duplicateResult.existingLeadInfo.name}.`.trim();
+      await markExistingLeadAsDuplicate({
+        leadId: duplicateResult.existingLeadInfo.id,
+        changedBy: decoded.id,
+        reason: duplicateResult.duplicateReason,
+      });
     }
 
     await lead.save();
